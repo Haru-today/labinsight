@@ -349,13 +349,19 @@
     const status = byId("bookingStatus");
     if (selected) selected.textContent = `선택 병원: ${hospitalName}`;
     if (status) status.textContent = "";
-    if (modal) modal.hidden = false;
+    if (modal) {
+      modal.hidden = false;
+      modal.classList.add("is-open");
+    }
     byId("bookName")?.focus();
   }
 
   function closeBookingModal() {
     const modal = byId("bookingModal");
-    if (modal) modal.hidden = true;
+    if (modal) {
+      modal.classList.remove("is-open");
+      modal.hidden = true;
+    }
   }
 
   function saveBooking(event) {
