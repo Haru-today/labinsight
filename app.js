@@ -199,6 +199,7 @@
     const grade = score <= 30 ? "안정" : score <= 60 ? "주의" : "관리 필요";
     const gradeClass = score <= 30 ? "normal" : score <= 60 ? "caution" : "danger";
     const guides = buildGuides(data);
+    const checkups = buildRecommendedCheckups(data, score);
     const report = byId("report");
     if (!report) return;
     report.innerHTML = `
@@ -212,6 +213,16 @@
             <p class="notice">이 리포트는 참고용이며 진단이나 치료를 대신하지 않습니다.</p>
           </div>
         </div>
+        <section class="recommendation-panel" aria-label="추천 건강검진">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Recommended Checkups</p>
+              <h3>결과 기반 추천 건강검진</h3>
+            </div>
+            <p>입력된 이상 항목을 바탕으로 다음에 확인하면 좋은 검진 패키지를 제안합니다.</p>
+          </div>
+          <div class="checkup-grid">${checkups.map(renderCheckupCard).join("")}</div>
+        </section>
         <div class="report-grid">
           <div class="report-card"><h3>주요 이상 항목</h3>${renderList(abnormal.map((r) => `${r.item.name}: ${r.value} ${r.item.unit} (${r.judge.label})`), "이상 항목이 없습니다.")}</div>
           <div class="report-card"><h3>권장 식습관</h3>${renderList(guides.food)}</div>
@@ -235,6 +246,26 @@
         if (row) row.hidden = !row.hidden;
       });
     });
+    report.querySelectorAll("[data-recommend-package]").forEach((button) => {
+      button.addEventListener("click", () => {
+        applyHospitalFilter(button.dataset.recommendPackage || "all", button.dataset.recommendDept || "all");
+      });
+    });
+  }
+
+  function renderCheckupCard(checkup) {
+    return `
+      <article class="checkup-card">
+        <div class="checkup-card-top">
+          <span class="checkup-priority ${checkup.priorityClass}">${checkup.priority}</span>
+          <span>${checkup.dept}</span>
+        </div>
+        <h4>${checkup.title}</h4>
+        <p>${checkup.reason}</p>
+        <div class="tag-list">${checkup.tests.map((test) => `<span class="tag">${test}</span>`).join("")}</div>
+        <button class="button secondary" type="button" data-recommend-package="${checkup.package}" data-recommend-dept="${checkup.deptFilter}">관련 병원 보기</button>
+      </article>
+    `;
   }
 
   function renderResultRow(result) {
@@ -298,6 +329,114 @@
       guides.tests.push("철분, 페리틴, 비타민 B12, 엽산 검사");
     }
     return guides;
+  }
+
+  function buildRecommendedCheckups(data, score) {
+    const recommendations = [];
+    const add = (item) => recommendations.push(item);
+    const priority = score > 60 ? ["빠른 상담", "danger"] : score > 30 ? ["추적 권장", "caution"] : ["정기 확인", "normal"];
+
+    if (isHigh(data.ast, 40) || isHigh(data.alt, 40) || isHigh(data.ggtp, 60)) {
+      add({
+        title: "간 기능 정밀 검진",
+        dept: "소화기내과",
+        deptFilter: "소화기내과",
+        package: "간 기능",
+        priority: priority[0],
+        priorityClass: priority[1],
+        reason: "AST, ALT, γ-GTP 상승 가능성이 있어 지방간, 간염, 담도계 상태를 함께 확인하는 흐름이 적합합니다.",
+        tests: ["복부초음파", "간염 바이러스", "간 기능 재검"]
+      });
+    }
+
+    if (isHigh(data.glucose, 99) || isHigh(data.hba1c, 5.6)) {
+      add({
+        title: "당대사·당뇨 위험 검진",
+        dept: "내분비내과",
+        deptFilter: "내분비내과",
+        package: "당뇨",
+        priority: priority[0],
+        priorityClass: priority[1],
+        reason: "공복혈당 또는 HbA1c가 높으면 당뇨 전단계 여부와 생활습관 개입 필요성을 확인하는 것이 좋습니다.",
+        tests: ["HbA1c 재검", "공복혈당", "소변 미세알부민"]
+      });
+    }
+
+    if (isHigh(data.ldl, 129) || isHigh(data.triglyceride, 149) || isHigh(data.totalChol, 199) || isLow(data.hdl, 40)) {
+      add({
+        title: "심혈관·지질 위험 검진",
+        dept: "심장내과",
+        deptFilter: "심장내과",
+        package: "이상지질혈증",
+        priority: priority[0],
+        priorityClass: priority[1],
+        reason: "LDL, 중성지방, HDL 변화는 심혈관 위험도 평가와 함께 보는 것이 유용합니다.",
+        tests: ["지질 재검", "혈압", "심전도"]
+      });
+    }
+
+    if (isHigh(data.creatinine, 1.2) || isLow(data.egfr, 90)) {
+      add({
+        title: "신장 기능 추적 검진",
+        dept: "신장내과",
+        deptFilter: "신장내과",
+        package: "신장 기능",
+        priority: priority[0],
+        priorityClass: priority[1],
+        reason: "크레아티닌 상승 또는 eGFR 저하는 반복 검사와 소변 검사를 함께 확인하는 편이 안전합니다.",
+        tests: ["eGFR 재검", "소변검사", "미세알부민뇨"]
+      });
+    }
+
+    if (isHigh(data.uricAcid, 7.0)) {
+      add({
+        title: "요산·대사 상태 검진",
+        dept: "내과",
+        deptFilter: "내과",
+        package: "종합검진",
+        priority: "생활관리",
+        priorityClass: "caution",
+        reason: "요산 상승은 통풍 증상, 식습관, 신장 배설 상태와 함께 확인하면 좋습니다.",
+        tests: ["요산 재검", "신장 기능", "통풍 증상 평가"]
+      });
+    }
+
+    if (isLow(data.hemoglobin, 12) || isLow(data.wbc, 4000) || isLow(data.platelet, 150)) {
+      add({
+        title: "혈액·빈혈 원인 검진",
+        dept: "가정의학과",
+        deptFilter: "가정의학과",
+        package: "빈혈",
+        priority: "추적 권장",
+        priorityClass: "caution",
+        reason: "혈색소, 백혈구, 혈소판 이상은 빈혈, 염증, 면역 상태를 함께 확인해야 합니다.",
+        tests: ["CBC 재검", "철분", "페리틴"]
+      });
+    }
+
+    if (!recommendations.length) {
+      add({
+        title: "정기 종합검진 유지",
+        dept: "가정의학과",
+        deptFilter: "가정의학과",
+        package: "종합검진",
+        priority: "정기 확인",
+        priorityClass: "normal",
+        reason: "현재 입력값에서는 큰 이상 신호가 적어 정기 검진과 전년도 대비 변화 확인이 우선입니다.",
+        tests: ["기본 혈액검사", "혈압", "생활습관 점검"]
+      });
+    }
+
+    return recommendations.slice(0, 4);
+  }
+
+  function applyHospitalFilter(packageName, deptName) {
+    const packageFilter = byId("packageFilter");
+    const deptFilter = byId("deptFilter");
+    if (packageFilter) packageFilter.value = packageName;
+    if (deptFilter) deptFilter.value = deptName;
+    renderHospitals();
+    byId("hospitals")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function isHigh(value, limit) { return value !== null && value > limit; }

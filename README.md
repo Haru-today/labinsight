@@ -23,8 +23,9 @@ CSS와 JavaScript는 하위 경로 배포에서도 깨지지 않도록 `./styles
 - Tesseract.js CDN 기반 OCR 이미지 업로드 데모
 - AST, ALT, γ-GTP, 공복혈당, HbA1c, 지질, 신장, 요산, 혈액 항목 판정
 - 건강관리 위험도 점수와 등급 생성
+- 결과 기반 추천 건강검진 카드 생성
 - 생활관리, 운동, 식습관, 권장 검사, 의료진 상담 질문 제공
-- mock 병원 데이터 필터링
+- 추천 검진에서 mock 병원 데이터 필터 자동 연결
 - 예약 모달과 localStorage 기반 예약 내역 저장
 
 ## GitHub Pages 배포 방법

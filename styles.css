@@ -63,6 +63,14 @@ button, input, select, textarea { font: inherit; }
   margin: 0 auto;
   padding: 76px 0;
 }
+.section-band {
+  margin-block: 22px;
+  padding: 38px;
+  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 16px 44px rgba(15, 48, 65, 0.07);
+}
 .hero {
   min-height: calc(100vh - 68px);
   display: grid;
@@ -123,6 +131,30 @@ h2 { font-size: clamp(1.65rem, 3vw, 2.55rem); }
 .score-ring small { display: block; color: var(--muted); font-weight: 800; }
 .mini-report { background: white; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
 
+.service-flow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  padding-top: 0;
+  padding-bottom: 28px;
+}
+.service-flow article {
+  min-height: 150px;
+  padding: 20px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 30px rgba(15, 48, 65, 0.06);
+}
+.service-flow span {
+  display: inline-flex;
+  margin-bottom: 12px;
+  color: var(--blue);
+  font-weight: 900;
+}
+.service-flow strong { display: block; font-size: 1.1rem; }
+.service-flow p { margin: 8px 0 0; color: var(--muted); }
+
 .section-heading { max-width: 760px; margin-bottom: 26px; }
 .feature-grid, .hospital-grid {
   display: grid;
@@ -182,6 +214,54 @@ small { color: var(--muted); font-weight: 600; }
 .badge.danger { background: var(--red); }
 .report-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
 .report-card { padding: 18px; }
+.recommendation-panel {
+  margin-top: 22px;
+  padding: 22px;
+  background: linear-gradient(180deg, #f2fbfa, #ffffff);
+  border: 1px solid rgba(24, 183, 160, 0.28);
+  border-radius: var(--radius);
+}
+.panel-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 0.75fr);
+  gap: 18px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+.panel-heading p:last-child { margin: 0; color: var(--muted); }
+.checkup-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.checkup-card {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.checkup-card h4 { margin: 0; font-size: 1.08rem; }
+.checkup-card p { margin: 0; color: var(--muted); }
+.checkup-card .button { justify-self: start; margin-top: 2px; }
+.checkup-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+.checkup-priority {
+  border-radius: 999px;
+  padding: 4px 9px;
+  color: white;
+}
+.checkup-priority.normal { background: var(--green); }
+.checkup-priority.caution { background: var(--amber); }
+.checkup-priority.danger { background: var(--red); }
 .result-table { width: 100%; border-collapse: collapse; margin-top: 14px; overflow: hidden; }
 .result-table th, .result-table td { border-bottom: 1px solid var(--line); padding: 10px; text-align: left; vertical-align: top; }
 .result-table button { border: 0; background: transparent; color: var(--blue); font-weight: 800; cursor: pointer; padding: 0; text-align: left; }
@@ -258,17 +338,19 @@ small { color: var(--muted); font-weight: 600; }
     box-shadow: var(--shadow);
   }
   .nav-links.open { display: flex; }
-  .hero, .split, .report-top { grid-template-columns: 1fr; }
+  .hero, .split, .report-top, .panel-heading { grid-template-columns: 1fr; }
   .hero { min-height: auto; }
   .hero-panel { min-height: 300px; }
-  .feature-grid, .hospital-grid, .report-grid { grid-template-columns: 1fr; }
+  .service-flow, .feature-grid, .hospital-grid, .report-grid, .checkup-grid { grid-template-columns: 1fr; }
   .form-grid, .filters, .booking-form { grid-template-columns: 1fr; }
   .footer { flex-direction: column; }
 }
 
 @media (max-width: 520px) {
   .section { width: min(100% - 24px, 1120px); padding: 54px 0; }
+  .section-band { padding: 24px 16px; }
   .button { width: 100%; }
+  .checkup-card .button { justify-self: stretch; }
   .result-table { font-size: 0.9rem; }
   .result-table th, .result-table td { padding: 8px 6px; }
 }
