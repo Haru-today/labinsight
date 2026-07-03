@@ -24,7 +24,8 @@
   ];
 
   const sampleData = {
-    gender: "male", age: 46, ast: 48, alt: 72, ggtp: 135, glucose: 112, hba1c: 6.1,
+    gender: "male", age: 46, height: 172, weight: 78, bpSys: 132, bpDia: 86,
+    ast: 48, alt: 72, ggtp: 135, glucose: 112, hba1c: 6.1,
     totalChol: 224, triglyceride: 210, hdl: 38, ldl: 151, creatinine: 1.08, egfr: 82,
     uricAcid: 7.8, hemoglobin: 14.3, wbc: 7200, platelet: 245
   };
@@ -46,6 +47,7 @@
     bindNav();
     bindOcr();
     bindForm();
+    bindBmiPreview();
     bindHospitals();
     bindBookingModal();
     renderHospitals();
@@ -146,14 +148,39 @@
 
   function bindForm() {
     const form = byId("healthForm");
-    byId("sampleBtn")?.addEventListener("click", () => fillForm(sampleData));
-    byId("clearBtn")?.addEventListener("click", () => form?.reset());
+    byId("sampleBtn")?.addEventListener("click", () => {
+      fillForm(sampleData);
+      updateBmiPreview();
+    });
+    byId("clearBtn")?.addEventListener("click", () => {
+      form?.reset();
+      updateBmiPreview();
+    });
     form?.addEventListener("submit", (event) => {
       event.preventDefault();
       const data = collectFormData();
       renderReport(data);
       byId("report")?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
+  }
+
+  function bindBmiPreview() {
+    ["height", "weight"].forEach((id) => byId(id)?.addEventListener("input", updateBmiPreview));
+    updateBmiPreview();
+  }
+
+  function updateBmiPreview() {
+    const preview = byId("bmiPreview");
+    if (!preview) return;
+    const bmi = calculateBmi(safeNumber(byId("height")?.value), safeNumber(byId("weight")?.value));
+    if (bmi === null) {
+      preview.textContent = "키와 몸무게를 입력하면 BMI가 자동 계산됩니다.";
+      preview.className = "bmi-preview";
+      return;
+    }
+    const status = bmi < 18.5 ? "저체중" : bmi < 23 ? "정상" : bmi < 25 ? "과체중" : "비만 관리 필요";
+    preview.textContent = `자동 계산 BMI: ${bmi.toFixed(1)} (${status})`;
+    preview.className = `bmi-preview ${bmi >= 25 ? "danger" : bmi >= 23 || bmi < 18.5 ? "caution" : "normal"}`;
   }
 
   function fillForm(data) {
@@ -166,8 +193,13 @@
   function collectFormData() {
     const data = {
       gender: byId("gender")?.value || "female",
-      age: safeNumber(byId("age")?.value)
+      age: safeNumber(byId("age")?.value),
+      height: safeNumber(byId("height")?.value),
+      weight: safeNumber(byId("weight")?.value),
+      bpSys: safeNumber(byId("bpSys")?.value),
+      bpDia: safeNumber(byId("bpDia")?.value)
     };
+    data.bmi = calculateBmi(data.height, data.weight);
     labItems.forEach((item) => data[item.id] = safeNumber(byId(item.id)?.value));
     return data;
   }
@@ -175,6 +207,11 @@
   function safeNumber(value) {
     const number = Number(String(value ?? "").replace(",", "."));
     return Number.isFinite(number) ? number : null;
+  }
+
+  function calculateBmi(height, weight) {
+    if (!height || !weight || height <= 0 || weight <= 0) return null;
+    return weight / Math.pow(height / 100, 2);
   }
 
   function judgeItem(item, value) {
@@ -225,6 +262,7 @@
         </section>
         <div class="report-grid">
           <div class="report-card"><h3>주요 이상 항목</h3>${renderList(abnormal.map((r) => `${r.item.name}: ${r.value} ${r.item.unit} (${r.judge.label})`), "이상 항목이 없습니다.")}</div>
+          <div class="report-card"><h3>기본 건강지표</h3>${renderBasicMetrics(data)}</div>
           <div class="report-card"><h3>권장 식습관</h3>${renderList(guides.food)}</div>
           <div class="report-card"><h3>운동 가이드</h3>${renderList(guides.exercise)}</div>
           <div class="report-card"><h3>생활습관 가이드</h3>${renderList(guides.lifestyle)}</div>
@@ -289,6 +327,18 @@
     return `<ul>${list.map((item) => `<li>${item}</li>`).join("")}</ul>`;
   }
 
+  function renderBasicMetrics(data) {
+    const items = [];
+    if (data.bmi !== null) {
+      const bmiStatus = data.bmi < 18.5 ? "저체중" : data.bmi < 23 ? "정상" : data.bmi < 25 ? "과체중" : "비만 관리 필요";
+      items.push(`BMI: ${data.bmi.toFixed(1)} (${bmiStatus})`);
+    }
+    if (data.bpSys !== null || data.bpDia !== null) {
+      items.push(`혈압: ${data.bpSys ?? "-"} / ${data.bpDia ?? "-"} mmHg (${judgeBloodPressure(data.bpSys, data.bpDia)})`);
+    }
+    return renderList(items, "키, 몸무게, 혈압을 입력하면 기본 건강지표가 함께 표시됩니다.");
+  }
+
   function buildGuides(data) {
     const guides = {
       food: ["채소, 단백질, 통곡물 중심으로 식사를 구성하세요."],
@@ -327,6 +377,16 @@
     if (isLow(data.hemoglobin, 12)) {
       guides.questions.push("빈혈 원인 평가와 철분 검사 필요성을 상담하세요.");
       guides.tests.push("철분, 페리틴, 비타민 B12, 엽산 검사");
+    }
+    if (data.bmi !== null && data.bmi >= 25) {
+      guides.food.push("BMI가 높은 범위라면 총 섭취 열량, 야식, 음료 섭취를 함께 조절하세요.");
+      guides.exercise.push("체중 관리를 위해 유산소 운동과 하체·코어 근력 운동을 병행하세요.");
+      guides.tests.push("대사증후군 평가, 혈압, 허리둘레 확인");
+    }
+    if (judgeBloodPressure(data.bpSys, data.bpDia) !== "미입력" && judgeBloodPressure(data.bpSys, data.bpDia) !== "정상") {
+      guides.lifestyle.push("혈압이 높은 편이면 가정혈압을 반복 측정하고 염분 섭취와 수면 상태를 함께 점검하세요.");
+      guides.questions.push("혈압 재측정과 심혈관 위험도 평가가 필요한지 질문하세요.");
+      guides.tests.push("혈압 재측정, 심전도, 신장 기능 확인");
     }
     return guides;
   }
@@ -414,6 +474,19 @@
       });
     }
 
+    if ((data.bmi !== null && data.bmi >= 25) || judgeBloodPressure(data.bpSys, data.bpDia) === "고혈압 관리 필요") {
+      add({
+        title: "대사증후군·혈압 검진",
+        dept: "가정의학과",
+        deptFilter: "가정의학과",
+        package: "종합검진",
+        priority: priority[0],
+        priorityClass: priority[1],
+        reason: "BMI 또는 혈압이 높은 범위라면 혈당, 지질, 허리둘레, 심전도를 함께 확인하는 검진 흐름이 좋습니다.",
+        tests: ["혈압 재측정", "심전도", "대사증후군 평가"]
+      });
+    }
+
     if (!recommendations.length) {
       add({
         title: "정기 종합검진 유지",
@@ -441,6 +514,13 @@
 
   function isHigh(value, limit) { return value !== null && value > limit; }
   function isLow(value, limit) { return value !== null && value < limit; }
+
+  function judgeBloodPressure(sys, dia) {
+    if (sys === null && dia === null) return "미입력";
+    if ((sys !== null && sys >= 130) || (dia !== null && dia >= 85)) return "고혈압 관리 필요";
+    if ((sys !== null && sys >= 120) || (dia !== null && dia >= 80)) return "주의";
+    return "정상";
+  }
 
   function bindHospitals() {
     ["regionFilter", "deptFilter", "packageFilter"].forEach((id) => byId(id)?.addEventListener("change", renderHospitals));

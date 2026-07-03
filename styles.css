@@ -188,6 +188,48 @@ small { color: var(--muted); font-weight: 600; }
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
 }
+.checkup-accordion {
+  display: grid;
+  gap: 12px;
+}
+.checkup-accordion details {
+  overflow: hidden;
+  background: #fbfefd;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.checkup-accordion summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  min-height: 56px;
+  padding: 14px 16px;
+  cursor: pointer;
+  background: #f3faf8;
+  font-weight: 900;
+}
+.checkup-accordion summary::marker { color: var(--mint); }
+.checkup-accordion summary small {
+  color: var(--muted);
+  font-weight: 700;
+}
+.checkup-accordion details .form-grid {
+  padding: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.bmi-preview {
+  margin: 0 16px 16px;
+  padding: 12px 14px;
+  border: 1px solid #ccebe6;
+  border-radius: var(--radius);
+  background: #eefaf7;
+  color: #0e5049;
+  font-weight: 800;
+}
+.bmi-preview.normal { background: #eefaf1; color: #1b7f38; border-color: #c6ecd0; }
+.bmi-preview.caution { background: #fff8e8; color: #9a5d00; border-color: #f7d58a; }
+.bmi-preview.danger { background: #fff1f1; color: #b42323; border-color: #f1b3b3; }
 .top-actions { margin-top: 0; margin-bottom: 18px; }
 .filters { grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: end; margin-bottom: 20px; }
 
@@ -342,13 +384,14 @@ small { color: var(--muted); font-weight: 600; }
   .hero { min-height: auto; }
   .hero-panel { min-height: 300px; }
   .service-flow, .feature-grid, .hospital-grid, .report-grid, .checkup-grid { grid-template-columns: 1fr; }
-  .form-grid, .filters, .booking-form { grid-template-columns: 1fr; }
+  .form-grid, .filters, .booking-form, .checkup-accordion details .form-grid { grid-template-columns: 1fr; }
   .footer { flex-direction: column; }
 }
 
 @media (max-width: 520px) {
   .section { width: min(100% - 24px, 1120px); padding: 54px 0; }
   .section-band { padding: 24px 16px; }
+  .checkup-accordion summary { align-items: flex-start; flex-direction: column; }
   .button { width: 100%; }
   .checkup-card .button { justify-self: stretch; }
   .result-table { font-size: 0.9rem; }
