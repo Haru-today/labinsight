@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="LabInsight 건강검진 결과 해석 및 병원 예약 데모 MVP">
+    <title>LabInsight | 건강검진 결과 해석 MVP</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="주요 메뉴">
+        <a class="brand" href="#top" aria-label="LabInsight 홈">
+          <span class="brand-mark">L</span>
+          <span>LabInsight</span>
+        </a>
+        <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks">☰</button>
+        <div class="nav-links" id="navLinks">
+          <a href="#features">서비스 소개</a>
+          <a href="#input">검사 결과 해석</a>
+          <a href="#ocr">OCR 업로드</a>
+          <a href="#hospitals">병원 예약</a>
+          <a class="nav-cta" href="#input">데모 시작</a>
+        </div>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero section">
+        <div class="hero-copy">
+          <p class="eyebrow">건강검진 리포트 플랫폼 MVP</p>
+          <h1>건강검진 결과, 이제 혼자 해석하지 마세요.</h1>
+          <p class="hero-text">LabInsight는 검진 수치를 해석하고, 생활관리 가이드와 필요한 병원 예약까지 연결하는 건강검진 리포트 플랫폼입니다.</p>
+          <div class="hero-actions">
+            <a class="button primary" href="#input">검진 결과 입력하기</a>
+            <a class="button secondary" href="#ocr">결과지 업로드하기</a>
+          </div>
+          <p class="notice">본 서비스는 데모이며 의료 정보는 참고용입니다. 진단, 치료, 처방은 반드시 의료진과 상담하세요.</p>
+        </div>
+        <div class="hero-panel" aria-label="서비스 미리보기">
+          <div class="score-ring">
+            <span>42</span>
+            <small>주의</small>
+          </div>
+          <div class="mini-report">
+            <strong>맞춤 리포트</strong>
+            <p>간 기능, 당대사, 지질, 신장, 혈액 항목을 한 번에 요약합니다.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="features">
+        <div class="section-heading">
+          <p class="eyebrow">What LabInsight Does</p>
+          <h2>검진 결과를 이해 가능한 다음 행동으로 바꿉니다.</h2>
+        </div>
+        <div class="feature-grid">
+          <article><strong>OCR 결과지 인식</strong><span>이미지에서 검사명과 수치를 추출합니다.</span></article>
+          <article><strong>항목별 판정</strong><span>정상, 주의, 위험 상태를 표로 정리합니다.</span></article>
+          <article><strong>위험도 점수</strong><span>0~100점 건강관리 위험도를 생성합니다.</span></article>
+          <article><strong>생활 가이드</strong><span>식습관, 운동, 생활습관 제안을 제공합니다.</span></article>
+          <article><strong>상담 질문</strong><span>의료진에게 물어볼 질문을 준비합니다.</span></article>
+          <article><strong>예약 데모</strong><span>mock 병원 데이터로 예약 흐름을 체험합니다.</span></article>
+        </div>
+      </section>
+
+      <section class="section split" id="ocr">
+        <div>
+          <p class="eyebrow">OCR Upload Demo</p>
+          <h2>결과지 이미지를 업로드해 수치를 자동 입력해보세요.</h2>
+          <p class="muted">Tesseract.js CDN을 사용하는 브라우저 데모입니다. OCR이 부정확하거나 실패해도 아래 입력 폼에서 직접 수정할 수 있습니다.</p>
+          <div class="upload-box">
+            <input id="ocrFile" type="file" accept="image/*">
+            <button class="button primary" id="runOcrBtn" type="button">OCR 실행</button>
+            <p id="ocrStatus" class="status" role="status">이미지를 선택한 뒤 OCR 실행을 누르세요.</p>
+          </div>
+        </div>
+        <div>
+          <label class="label" for="ocrText">추출된 텍스트</label>
+          <textarea id="ocrText" rows="12" placeholder="OCR 결과가 여기에 표시됩니다."></textarea>
+          <button class="button secondary full" id="applyOcrBtn" type="button">추출 텍스트에서 수치 반영</button>
+        </div>
+      </section>
+
+      <section class="section" id="input">
+        <div class="section-heading">
+          <p class="eyebrow">Health Check Input</p>
+          <h2>건강검진 수치 입력</h2>
+          <p class="muted">샘플 데이터를 불러오거나 직접 입력한 뒤 리포트를 생성하세요.</p>
+        </div>
+        <form id="healthForm" class="lab-form">
+          <div class="form-actions top-actions">
+            <button class="button secondary" id="sampleBtn" type="button">샘플 데이터 불러오기</button>
+            <button class="button ghost" id="clearBtn" type="button">입력 초기화</button>
+          </div>
+          <div class="form-grid">
+            <label>성별<select id="gender"><option value="female">여성</option><option value="male">남성</option></select></label>
+            <label>나이<input id="age" type="number" min="1" max="120" placeholder="예: 42"></label>
+            <label>AST <small>U/L</small><input id="ast" type="number" step="0.1"></label>
+            <label>ALT <small>U/L</small><input id="alt" type="number" step="0.1"></label>
+            <label>γ-GTP <small>U/L</small><input id="ggtp" type="number" step="0.1"></label>
+            <label>공복혈당 <small>mg/dL</small><input id="glucose" type="number" step="0.1"></label>
+            <label>HbA1c <small>%</small><input id="hba1c" type="number" step="0.1"></label>
+            <label>총콜레스테롤 <small>mg/dL</small><input id="totalChol" type="number" step="0.1"></label>
+            <label>중성지방 <small>mg/dL</small><input id="triglyceride" type="number" step="0.1"></label>
+            <label>HDL 콜레스테롤 <small>mg/dL</small><input id="hdl" type="number" step="0.1"></label>
+            <label>LDL 콜레스테롤 <small>mg/dL</small><input id="ldl" type="number" step="0.1"></label>
+            <label>크레아티닌 <small>mg/dL</small><input id="creatinine" type="number" step="0.01"></label>
+            <label>eGFR <small>mL/min/1.73㎡</small><input id="egfr" type="number" step="0.1"></label>
+            <label>요산 <small>mg/dL</small><input id="uricAcid" type="number" step="0.1"></label>
+            <label>혈색소 <small>g/dL</small><input id="hemoglobin" type="number" step="0.1"></label>
+            <label>백혈구 <small>/µL</small><input id="wbc" type="number" step="1"></label>
+            <label>혈소판 <small>×10³/µL</small><input id="platelet" type="number" step="1"></label>
+          </div>
+          <div class="form-actions">
+            <button class="button primary large" type="submit">리포트 생성하기</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="section report-section" id="report" aria-live="polite">
+        <div class="empty-report">
+          <h2>Demo Report</h2>
+          <p>수치를 입력하고 리포트를 생성하면 위험도 점수, 항목별 판정, 생활 가이드가 표시됩니다.</p>
+        </div>
+      </section>
+
+      <section class="section" id="hospitals">
+        <div class="section-heading">
+          <p class="eyebrow">Hospital Booking Demo</p>
+          <h2>병원 검진 및 내원 예약 데모</h2>
+          <p class="muted">실제 예약이 아닌 localStorage 기반 데모입니다. 병원 DB, 결제, 회원가입, 실제 예약 API는 추후 백엔드에서 연동합니다.</p>
+        </div>
+        <div class="filters" aria-label="병원 필터">
+          <label>지역<select id="regionFilter"><option value="all">전체</option><option>부산</option><option>서울</option><option>대구</option><option>온라인 상담</option></select></label>
+          <label>진료과<select id="deptFilter"><option value="all">전체</option><option>내과</option><option>가정의학과</option><option>소화기내과</option><option>내분비내과</option><option>신장내과</option><option>심장내과</option></select></label>
+          <label>검진 항목<select id="packageFilter"><option value="all">전체</option><option>종합검진</option><option>간 기능</option><option>당뇨</option><option>이상지질혈증</option><option>신장 기능</option><option>빈혈</option></select></label>
+          <button class="button secondary" id="viewBookingsBtn" type="button">예약 내역 보기</button>
+        </div>
+        <div class="hospital-grid" id="hospitalList"></div>
+        <div class="booking-list" id="bookingList" hidden></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <strong>LabInsight</strong>
+      <span>의료 정보는 참고용이며 전문적인 진단이나 치료를 대신하지 않습니다.</span>
+    </footer>
+
+    <div class="modal-backdrop" id="bookingModal" hidden>
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="bookingTitle">
+        <button class="modal-close" id="closeModalBtn" type="button" aria-label="닫기">×</button>
+        <h2 id="bookingTitle">예약 신청</h2>
+        <p class="muted" id="selectedHospital">선택 병원</p>
+        <form id="bookingForm" class="booking-form">
+          <label>이름<input id="bookName" required autocomplete="name"></label>
+          <label>연락처<input id="bookPhone" required inputmode="tel" placeholder="010-0000-0000"></label>
+          <label>희망 날짜<input id="bookDate" required type="date"></label>
+          <label>희망 시간<select id="bookTime" required><option value="">선택</option><option>09:00</option><option>10:30</option><option>14:00</option><option>16:00</option></select></label>
+          <label>상담 목적<textarea id="bookPurpose" rows="4" placeholder="검진 결과 상담, 재검 문의 등"></textarea></label>
+          <button class="button primary full" type="submit">예약 신청</button>
+        </form>
+        <p class="status" id="bookingStatus"></p>
+      </div>
+    </div>
+  </body>
+</html>
