@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LabInsight | 나만의 건강검진 결과 해석</title>
+  <meta name="description" content="LabInsight는 건강검진 수치를 입력하면 이상 항목, 위험도, 생활 가이드를 한눈에 정리해주는 교육·데모용 건강검진 결과 해석 웹서비스입니다.">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://haru-today.github.io/caffeine-atlas/health-checkup-service/index.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="LabInsight">
+  <meta property="og:title" content="LabInsight | 나만의 건강검진 결과 해석">
+  <meta property="og:description" content="복잡한 검사결과를 이해 가능한 언어로 바꾸고, 개인 맞춤 해석과 행동 가이드를 제공합니다.">
+  <meta property="og:url" content="https://haru-today.github.io/caffeine-atlas/health-checkup-service/index.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="stylesheet" href="./styles.css?v=health-demo-20260703">
+  <script type="application/ld+json">
+    {
+      "@context":"https://schema.org",
+      "@type":"WebApplication",
+      "name":"LabInsight",
+      "applicationCategory":"HealthApplication",
+      "operatingSystem":"Web",
+      "url":"https://haru-today.github.io/caffeine-atlas/health-checkup-service/index.html",
+      "description":"건강검진 수치를 입력해 이상 항목과 생활 가이드를 확인하는 교육·데모용 웹 리포트입니다."
+    }
+  </script>
+</head>
+<body>
+  <div class="app-shell">
+    <nav class="site-nav" aria-label="주요 메뉴">
+      <a class="brand-mark" href="#home">
+        <span>LI</span>
+        LabInsight
+      </a>
+      <div class="nav-links">
+        <a href="#service">서비스 소개</a>
+        <a href="#analyzer">리포트 만들기</a>
+        <a href="#family">가족 관리</a>
+        <a href="#model">판독 기준</a>
+        <a href="#roadmap">확장 계획</a>
+      </div>
+      <a class="nav-cta" href="#analyzer">검진 결과 입력</a>
+    </nav>
+
+    <header class="hero" id="home">
+      <div class="hero-copy">
+        <p class="eyebrow">Personal health-check report</p>
+        <h1>검사결과는 숫자가 아니라<br>건강의 언어가 되어야 합니다.</h1>
+        <p class="hero-lead">
+          건강검진 결과지를 입력하면 이상 항목, 위험 신호, 전년도 대비 변화, 생활 가이드를 한 번에 정리하는 개인 맞춤 건강검진 해석 서비스입니다.
+        </p>
+        <div class="hero-actions">
+          <a class="primary-button" href="#analyzer">데모 리포트 생성</a>
+          <a class="secondary-button" href="#service">서비스 구조 보기</a>
+        </div>
+      </div>
+      <aside class="hero-card" aria-label="서비스 요약">
+        <div class="hero-card-top">
+          <span class="pulse-dot"></span>
+          <strong>LabInsight Demo</strong>
+        </div>
+        <div class="score-preview">
+          <span>Health risk index</span>
+          <strong id="heroScore">--</strong>
+          <small>입력 후 자동 계산</small>
+        </div>
+        <div class="mini-report">
+          <div><span>이상 항목</span><strong id="heroAbnormal">0개</strong></div>
+          <div><span>관리 우선순위</span><strong id="heroPriority">대기</strong></div>
+          <div><span>리포트 방식</span><strong>브라우저 내부 계산</strong></div>
+        </div>
+      </aside>
+    </header>
+
+    <section class="status-strip" aria-label="핵심 기능 요약">
+      <div class="status-card">
+        <span>Input</span>
+        <strong>검진 수치 / 결과지 OCR</strong>
+      </div>
+      <div class="status-card">
+        <span>Analysis</span>
+        <strong>기준치 비교 + 위험도 분류</strong>
+      </div>
+      <div class="status-card">
+        <span>Report</span>
+        <strong>개인 맞춤 해석</strong>
+      </div>
+      <div class="status-card">
+        <span>Connect</span>
+        <strong>검진·병원 예약 연계</strong>
+      </div>
+    </section>
+
+    <main>
+      <section class="section" id="service">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Service concept</p>
+            <h2>건강검진 결과를 이해하고 행동으로 연결합니다.</h2>
+          </div>
+          <p>
+            기존 건강 앱이 데이터를 모아두는 데 그쳤다면, LabInsight는 검사결과를 해석하고 다음 행동까지 안내하는 리포트형 서비스입니다.
+          </p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card">
+            <span>01</span>
+            <h3>OCR 기반 결과지 인식</h3>
+            <p>건강검진 결과지를 업로드하면 검사명, 수치, 단위, 기준치를 자동 추출하는 구조로 확장할 수 있습니다.</p>
+          </article>
+          <article class="feature-card">
+            <span>02</span>
+            <h3>이상 항목 자동 분류</h3>
+            <p>간기능, 신장기능, 혈당, 지질, 혈액 항목을 기준치와 비교해 정상·주의·위험으로 구분합니다.</p>
+          </article>
+          <article class="feature-card">
+            <span>03</span>
+            <h3>전년도 대비 변화 분석</h3>
+            <p>검진 결과를 누적 저장하면 수치가 좋아졌는지, 나빠졌는지, 유지되는지 추세 중심으로 보여줍니다.</p>
+          </article>
+          <article class="feature-card">
+            <span>04</span>
+            <h3>예약·가격 비교 연계</h3>
+            <p>검진기관, 백신, 병원 진료과 예약을 비교해 사용자가 바로 다음 행동을 선택하도록 연결합니다.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section analyzer-section" id="analyzer">
+        <div class="section-head compact">
+          <div>
+            <p class="eyebrow">Report generator</p>
+            <h2>나만의 건강검진 리포트 만들기</h2>
+          </div>
+          <button class="tool-button ghost" id="resetBtn" type="button">초기화</button>
+        </div>
+
+        <div class="notice-card">
+          <strong>데모 버전 안내</strong>
+          <p>현재 버전은 실제 OCR·의료기관 연동 전 단계입니다. 수치를 직접 입력하면 브라우저 안에서 교육용 리포트를 생성합니다. 실제 진단과 치료 결정은 의료진 상담이 필요합니다.</p>
+        </div>
+
+        <div class="input-layout">
+          <form class="input-panel" id="reportForm">
+            <div class="form-grid">
+              <div class="field">
+                <label for="userName">이름 또는 별칭</label>
+                <input id="userName" type="text" placeholder="예: SAMPLE-001">
+              </div>
+              <div class="field">
+                <label for="age">나이</label>
+                <input id="age" type="number" min="1" max="120" placeholder="예: 45">
+              </div>
+              <div class="field">
+                <label for="sex">성별</label>
+                <select id="sex">
+                  <option value="male">남성</option>
+                  <option value="female">여성</option>
+                  <option value="unknown">미기재</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="reportDate">검진일</label>
+                <input id="reportDate" type="date">
+              </div>
+              <div class="field">
+                <label for="height">키(cm)</label>
+                <input id="height" type="number" step="0.1" placeholder="예: 170">
+              </div>
+              <div class="field">
+                <label for="weight">몸무게(kg)</label>
+                <input id="weight" type="number" step="0.1" placeholder="예: 70">
+              </div>
+            </div>
+
+            <div class="upload-box" id="uploadBox">
+              <input id="fileInput" type="file" accept="image/*,.pdf" hidden>
+              <button type="button" class="tool-button ghost" id="uploadBtn">결과지 파일 선택</button>
+              <div>
+                <strong id="fileName">선택된 파일 없음</strong>
+                <p>현재는 파일명만 표시됩니다. 추후 OCR 엔진과 연결하면 자동 입력으로 확장됩니다.</p>
+              </div>
+            </div>
+
+            <div class="metric-tabs" role="tablist" aria-label="검사 항목 그룹">
+              <button type="button" class="tab-button active" data-filter="all">전체</button>
+              <button type="button" class="tab-button" data-filter="liver">간기능</button>
+              <button type="button" class="tab-button" data-filter="kidney">신장·대사</button>
+              <button type="button" class="tab-button" data-filter="lipid">지질</button>
+              <button type="button" class="tab-button" data-filter="blood">혈액</button>
+            </div>
+
+            <div class="metric-grid" id="metricGrid"></div>
+
+            <div class="submit-panel">
+              <div>
+                <strong>리포트 준비 상태</strong>
+                <p id="validationText">검사 수치를 입력한 뒤 리포트 생성을 눌러주세요.</p>
+              </div>
+              <button class="tool-button primary" type="submit">리포트 생성</button>
+            </div>
+          </form>
+
+          <section class="result-panel" id="resultPanel" aria-live="polite">
+            <div class="empty-result" id="emptyResult">
+              <span>리포트 대기</span>
+              <strong>검진 수치를 입력해 주세요</strong>
+              <p>간기능, 혈당, 지질, 신장기능 등 입력된 항목을 바탕으로 결과가 생성됩니다.</p>
+            </div>
+
+            <div class="result-content" id="resultContent" hidden>
+              <div class="report-hero-card">
+                <div>
+                  <span class="type-badge" id="riskBadge">대기</span>
+                  <h3 id="riskTitle">결과 대기</h3>
+                  <p id="riskDescription">입력된 항목을 바탕으로 전체 관리 우선순위를 정리합니다.</p>
+                </div>
+                <div class="score-stage">
+                  <span>건강관리 위험도</span>
+                  <strong><span id="riskScore">--</span><small>점</small></strong>
+                  <div class="gauge">
+                    <div class="gauge-track"><div class="gauge-fill" id="gaugeFill"></div></div>
+                    <div class="gauge-scale"><span>낮음</span><span>주의</span><span>높음</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="report-meta" id="reportMeta"></div>
+
+              <div class="result-detail-grid">
+                <div><span>입력 항목</span><strong id="enteredCount">0개</strong></div>
+                <div><span>이상 항목</span><strong id="abnormalCount">0개</strong></div>
+                <div><span>우선 확인</span><strong id="topPriority">-</strong></div>
+              </div>
+
+              <div class="result-section">
+                <h3>검사 항목별 판독</h3>
+                <div class="finding-list" id="findingList"></div>
+              </div>
+
+              <div class="result-section">
+                <h3>맞춤 생활 가이드</h3>
+                <div class="guide-list" id="guideList"></div>
+              </div>
+
+              <div class="result-section">
+                <h3>다음 행동 제안</h3>
+                <div class="action-list" id="actionList"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="section" id="family">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Family health timeline</p>
+            <h2>가족 단위 건강 이력 관리로 확장합니다.</h2>
+          </div>
+          <p>개인 리포트가 쌓이면 가족별 검진 주기, 만성질환 위험, 병원 방문 기록을 함께 관리하는 플랫폼이 됩니다.</p>
+        </div>
+        <div class="timeline-grid">
+          <article class="timeline-card active">
+            <span>2026</span>
+            <h3>올해 건강검진</h3>
+            <p>검진 결과 입력 → 이상 항목 자동 분류 → 생활 가이드 생성</p>
+          </article>
+          <article class="timeline-card">
+            <span>2027</span>
+            <h3>전년도 대비 변화</h3>
+            <p>혈당, 지질, 간기능, 신장기능 수치 변화 추적</p>
+          </article>
+          <article class="timeline-card">
+            <span>확장</span>
+            <h3>가족 관리</h3>
+            <p>부모님·배우자·자녀의 검진 주기와 병원 방문 이력 통합</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section model-section" id="model">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Interpretation model</p>
+            <h2>판독 기준은 투명하게 보여줍니다.</h2>
+          </div>
+          <p>현재 데모 기준치는 일반적인 참고 범위를 사용했습니다. 실제 서비스에서는 검사기관 기준치, 성별·연령, 임상 상황을 반영해야 합니다.</p>
+        </div>
+        <div class="model-table-wrap">
+          <table class="model-table">
+            <thead>
+              <tr><th>영역</th><th>대표 항목</th><th>리포트 해석</th><th>주의사항</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>간기능</td><td>AST, ALT, γ-GTP</td><td>간세포 손상·음주·약물 영향 가능성 확인</td><td>일시적 상승 가능, 반복 검사 필요</td></tr>
+              <tr><td>혈당</td><td>공복혈당, HbA1c</td><td>당대사 위험과 생활습관 관리 필요성 확인</td><td>식사 상태와 검사 조건 확인</td></tr>
+              <tr><td>지질</td><td>TC, TG, HDL, LDL</td><td>심혈관 위험 관리를 위한 우선순위 정리</td><td>공복 여부와 약물 복용 확인</td></tr>
+              <tr><td>신장</td><td>BUN, Creatinine, eGFR</td><td>신장 여과 기능과 수분 상태 확인</td><td>근육량·탈수·약물 영향 확인</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section roadmap-section" id="roadmap">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Roadmap</p>
+            <h2>실제 서비스화를 위한 다음 단계</h2>
+          </div>
+        </div>
+        <div class="roadmap-grid">
+          <div class="roadmap-card"><strong>1단계</strong><span>정적 웹 데모</span><p>수기 입력 기반 리포트 생성</p></div>
+          <div class="roadmap-card"><strong>2단계</strong><span>OCR 연결</span><p>결과지 이미지·PDF 자동 인식</p></div>
+          <div class="roadmap-card"><strong>3단계</strong><span>데이터 저장</span><p>연도별 추세·가족 계정 관리</p></div>
+          <div class="roadmap-card"><strong>4단계</strong><span>예약 연계</span><p>검진기관·백신·병원 비교 및 예약</p></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <strong>LabInsight</strong>
+        <p>AI-Based Health Check Interpretation System</p>
+      </div>
+      <p>교육·사업구상 데모용입니다. 실제 진단·치료·처방을 대체하지 않습니다.</p>
+    </footer>
+  </div>
+
+  <script src="./app.js?v=health-demo-20260703"></script>
+</body>
+</html>
