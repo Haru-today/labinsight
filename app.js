@@ -4,6 +4,12 @@
   const $ = (selector) => document.querySelector(selector);
   const byId = (id) => document.getElementById(id);
   const storageKey = "labinsight-bookings";
+  const statusLabels = {
+    requested: "접수",
+    confirmed: "확정",
+    completed: "완료",
+    cancelled: "취소"
+  };
 
   const labItems = [
     { id: "ast", name: "AST", unit: "U/L", normal: [0, 40], caution: [41, 80], desc: "간세포 손상과 관련된 효소입니다." },
@@ -31,15 +37,16 @@
   };
 
   const hospitals = [
-    { name: "부산 메디체크 내과", region: "부산", dept: "내과", packages: ["종합검진", "간 기능", "당뇨"], price: "90,000원~", rating: 4.7, date: "7월 8일" },
-    { name: "센텀 소화기클리닉", region: "부산", dept: "소화기내과", packages: ["간 기능", "종합검진"], price: "120,000원~", rating: 4.8, date: "7월 10일" },
-    { name: "서울 라이프내분비센터", region: "서울", dept: "내분비내과", packages: ["당뇨", "이상지질혈증"], price: "110,000원~", rating: 4.6, date: "7월 9일" },
-    { name: "대구 신장건강의원", region: "대구", dept: "신장내과", packages: ["신장 기능", "종합검진"], price: "100,000원~", rating: 4.5, date: "7월 12일" },
-    { name: "온라인 검진상담 Lab", region: "온라인 상담", dept: "가정의학과", packages: ["종합검진", "빈혈", "당뇨"], price: "30,000원~", rating: 4.4, date: "오늘 가능" },
-    { name: "서울 하트리스크 클리닉", region: "서울", dept: "심장내과", packages: ["이상지질혈증", "종합검진"], price: "150,000원~", rating: 4.9, date: "7월 11일" }
+    { id: "busan-med", name: "부산 메디체크 내과", region: "부산", dept: "내과", address: "부산 부산진구 중앙대로 672", phone: "051-000-1100", packages: ["종합검진", "간 기능", "당뇨"], price: "90,000원~", rating: 4.7, duration: 50, slots: ["09:00", "10:30", "13:30", "15:00"] },
+    { id: "centum-gi", name: "센텀 소화기클리닉", region: "부산", dept: "소화기내과", address: "부산 해운대구 센텀중앙로 48", phone: "051-000-2200", packages: ["간 기능", "종합검진"], price: "120,000원~", rating: 4.8, duration: 60, slots: ["09:30", "11:00", "14:00", "16:00"] },
+    { id: "seoul-endo", name: "서울 라이프내분비센터", region: "서울", dept: "내분비내과", address: "서울 강남구 테헤란로 152", phone: "02-000-3300", packages: ["당뇨", "이상지질혈증"], price: "110,000원~", rating: 4.6, duration: 45, slots: ["09:00", "10:00", "14:30", "16:30"] },
+    { id: "daegu-kidney", name: "대구 신장건강의원", region: "대구", dept: "신장내과", address: "대구 중구 달구벌대로 2095", phone: "053-000-4400", packages: ["신장 기능", "종합검진"], price: "100,000원~", rating: 4.5, duration: 50, slots: ["09:20", "10:40", "13:40", "15:20"] },
+    { id: "online-lab", name: "온라인 검진상담 Lab", region: "온라인 상담", dept: "가정의학과", address: "비대면 상담", phone: "1588-0000", packages: ["종합검진", "빈혈", "당뇨"], price: "30,000원~", rating: 4.4, duration: 25, slots: ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"] },
+    { id: "seoul-heart", name: "서울 하트리스크 클리닉", region: "서울", dept: "심장내과", address: "서울 송파구 올림픽로 300", phone: "02-000-5500", packages: ["이상지질혈증", "종합검진"], price: "150,000원~", rating: 4.9, duration: 70, slots: ["09:10", "10:50", "14:10", "15:50"] }
   ];
 
-  let selectedHospitalName = "";
+  let selectedHospital = null;
+  let apiAvailable = false;
 
   document.addEventListener("DOMContentLoaded", init);
 
@@ -50,7 +57,9 @@
     bindBmiPreview();
     bindHospitals();
     bindBookingModal();
+    detectBookingApi();
     renderHospitals();
+    updateBookingSummary();
   }
 
   function bindNav() {
@@ -525,32 +534,41 @@
   function bindHospitals() {
     ["regionFilter", "deptFilter", "packageFilter"].forEach((id) => byId(id)?.addEventListener("change", renderHospitals));
     byId("viewBookingsBtn")?.addEventListener("click", renderBookings);
+    byId("exportBookingsBtn")?.addEventListener("click", exportBookingsCsv);
   }
 
-  function renderHospitals() {
+  async function renderHospitals() {
     const list = byId("hospitalList");
     if (!list) return;
     const region = byId("regionFilter")?.value || "all";
     const dept = byId("deptFilter")?.value || "all";
     const pack = byId("packageFilter")?.value || "all";
+    const bookings = await readBookings();
     const filtered = hospitals.filter((hospital) =>
       (region === "all" || hospital.region === region) &&
       (dept === "all" || hospital.dept === dept) &&
       (pack === "all" || hospital.packages.includes(pack))
     );
-    list.innerHTML = filtered.length ? filtered.map((hospital) => `
+    list.innerHTML = filtered.length ? filtered.map((hospital) => {
+      const availableCount = countAvailableSlots(hospital, bookings);
+      return `
       <article class="hospital-card">
         <h3>${hospital.name}</h3>
         <p class="hospital-meta">${hospital.region} · ${hospital.dept} · 평점 ${hospital.rating}</p>
+        <p class="muted">${hospital.address} · ${hospital.phone}</p>
         <div class="tag-list">${hospital.packages.map((item) => `<span class="tag">${item}</span>`).join("")}</div>
         <p><strong>예상 가격:</strong> ${hospital.price}</p>
-        <p><strong>가능 예약 날짜:</strong> ${hospital.date}</p>
-        <button class="button primary" type="button" data-book="${hospital.name}">예약하기</button>
+        <p><strong>소요 시간:</strong> 약 ${hospital.duration}분</p>
+        <p><strong>14일 내 잔여 슬롯:</strong> ${availableCount}개</p>
+        <div class="slot-preview">${hospital.slots.map((slot) => `<span>${slot}</span>`).join("")}</div>
+        <button class="button primary" type="button" data-book="${hospital.id}">예약하기</button>
       </article>
-    `).join("") : `<p class="muted">조건에 맞는 병원이 없습니다.</p>`;
+    `;
+    }).join("") : `<p class="muted">조건에 맞는 병원이 없습니다.</p>`;
     list.querySelectorAll("[data-book]").forEach((button) => {
       button.addEventListener("click", () => openBookingModal(button.dataset.book || ""));
     });
+    updateBookingSummary(bookings);
   }
 
   function bindBookingModal() {
@@ -559,15 +577,28 @@
       if (event.target.id === "bookingModal") closeBookingModal();
     });
     byId("bookingForm")?.addEventListener("submit", saveBooking);
+    byId("bookDate")?.addEventListener("change", updateTimeOptions);
   }
 
-  function openBookingModal(hospitalName) {
-    selectedHospitalName = hospitalName;
+  async function openBookingModal(hospitalId) {
+    selectedHospital = hospitals.find((hospital) => hospital.id === hospitalId) || null;
+    if (!selectedHospital) return;
     const modal = byId("bookingModal");
     const selected = byId("selectedHospital");
     const status = byId("bookingStatus");
-    if (selected) selected.textContent = `선택 병원: ${hospitalName}`;
+    const dateInput = byId("bookDate");
+    const packageSelect = byId("bookPackage");
+    if (selected) selected.textContent = `선택 병원: ${selectedHospital.name} · ${selectedHospital.dept} · ${selectedHospital.phone}`;
+    if (packageSelect) {
+      packageSelect.innerHTML = `<option value="">선택</option>${selectedHospital.packages.map((item) => `<option>${item}</option>`).join("")}`;
+    }
+    if (dateInput) {
+      dateInput.min = formatDate(addDays(new Date(), 1));
+      dateInput.max = formatDate(addDays(new Date(), 30));
+      dateInput.value = dateInput.min;
+    }
     if (status) status.textContent = "";
+    await updateTimeOptions();
     if (modal) {
       modal.hidden = false;
       modal.classList.add("is-open");
@@ -583,57 +614,333 @@
     }
   }
 
-  function saveBooking(event) {
+  async function saveBooking(event) {
     event.preventDefault();
     const booking = {
-      hospital: selectedHospitalName || "선택 병원",
+      hospitalId: selectedHospital?.id || "",
+      hospital: selectedHospital?.name || "선택 병원",
+      department: selectedHospital?.dept || "",
       name: byId("bookName")?.value.trim() || "",
       phone: byId("bookPhone")?.value.trim() || "",
+      birthDate: byId("bookBirthDate")?.value || "",
+      packageName: byId("bookPackage")?.value || "",
       date: byId("bookDate")?.value || "",
       time: byId("bookTime")?.value || "",
       purpose: byId("bookPurpose")?.value.trim() || "",
-      createdAt: new Date().toISOString()
+      consent: Boolean(byId("bookConsent")?.checked),
+      status: "requested"
     };
-    if (!booking.name || !booking.phone || !booking.date || !booking.time) {
-      setStatus("bookingStatus", "이름, 연락처, 희망 날짜, 희망 시간을 입력해주세요.");
+    if (!booking.hospitalId || !booking.name || !booking.phone || !booking.birthDate || !booking.packageName || !booking.date || !booking.time) {
+      setStatus("bookingStatus", "이름, 연락처, 생년월일, 검진 항목, 희망 날짜와 시간을 모두 입력해주세요.");
       return;
     }
-    const bookings = readBookings();
-    bookings.unshift(booking);
+    if (!booking.consent) {
+      setStatus("bookingStatus", "예약 접수를 위해 개인정보 수집·이용 동의가 필요합니다.");
+      return;
+    }
     try {
-      localStorage.setItem(storageKey, JSON.stringify(bookings));
-      setStatus("bookingStatus", "예약 신청이 완료되었습니다. 실제 예약이 아닌 데모 기능입니다.");
+      const saved = await createBooking(booking);
+      setStatus("bookingStatus", `예약 신청이 완료되었습니다. 예약번호: ${saved.id}`);
       byId("bookingForm")?.reset();
-      renderBookings();
+      await renderBookings();
+      await renderHospitals();
+      await updateTimeOptions();
     } catch (error) {
       console.error(error);
-      setStatus("bookingStatus", "예약 정보를 저장하지 못했습니다. 브라우저 저장소 설정을 확인해주세요.");
+      setStatus("bookingStatus", error.message || "예약 정보를 저장하지 못했습니다. 다시 시도해주세요.");
     }
   }
 
-  function readBookings() {
+  async function detectBookingApi() {
+    if (window.location.protocol === "file:") {
+      apiAvailable = false;
+      updateBookingModeNotice();
+      return;
+    }
+    try {
+      await apiRequest("/api/bookings");
+      apiAvailable = true;
+    } catch (error) {
+      apiAvailable = false;
+    }
+    updateBookingModeNotice();
+    updateBookingSummary();
+    renderHospitals();
+  }
+
+  async function apiRequest(path, options = {}) {
+    const response = await fetch(path, {
+      headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+      ...options
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || "요청 처리 중 오류가 발생했습니다.");
+    }
+    return payload;
+  }
+
+  async function createBooking(booking) {
+    if (apiAvailable) {
+      return apiRequest("/api/bookings", {
+        method: "POST",
+        body: JSON.stringify(booking)
+      });
+    }
+    return createLocalBooking(booking);
+  }
+
+  async function updateBookingStatus(id, status) {
+    if (apiAvailable) {
+      await apiRequest(`/api/bookings/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status })
+      });
+      return;
+    }
+    const bookings = await readLocalBookings();
+    const target = bookings.find((booking) => booking.id === id);
+    if (target) {
+      target.status = status;
+      target.updatedAt = new Date().toISOString();
+      writeLocalBookings(bookings);
+    }
+  }
+
+  async function readBookings() {
+    if (apiAvailable) {
+      try {
+        const payload = await apiRequest("/api/bookings");
+        return Array.isArray(payload.bookings) ? payload.bookings : [];
+      } catch (error) {
+        apiAvailable = false;
+        updateBookingModeNotice();
+      }
+    }
+    return readLocalBookings();
+  }
+
+  async function readLocalBookings() {
     try {
       const parsed = JSON.parse(localStorage.getItem(storageKey) || "[]");
-      return Array.isArray(parsed) ? parsed : [];
+      return Array.isArray(parsed) ? parsed.map(normalizeBooking) : [];
     } catch (error) {
       console.error(error);
       return [];
     }
   }
 
-  function renderBookings() {
+  function writeLocalBookings(bookings) {
+    localStorage.setItem(storageKey, JSON.stringify(bookings));
+  }
+
+  async function createLocalBooking(booking) {
+    const bookings = await readLocalBookings();
+    const conflict = bookings.some((item) =>
+      item.hospitalId === booking.hospitalId &&
+      item.date === booking.date &&
+      item.time === booking.time &&
+      item.status !== "cancelled"
+    );
+    if (conflict) {
+      throw new Error("이미 예약된 시간입니다. 다른 시간을 선택해주세요.");
+    }
+    const saved = normalizeBooking({
+      ...booking,
+      id: makeBookingId(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+    bookings.unshift(saved);
+    writeLocalBookings(bookings);
+    return saved;
+  }
+
+  function normalizeBooking(booking) {
+    return {
+      id: booking.id || makeBookingId(),
+      hospitalId: booking.hospitalId || findHospitalIdByName(booking.hospital),
+      hospital: booking.hospital || "선택 병원",
+      department: booking.department || "",
+      name: booking.name || "",
+      phone: booking.phone || "",
+      birthDate: booking.birthDate || "",
+      packageName: booking.packageName || booking.package || "",
+      date: booking.date || "",
+      time: booking.time || "",
+      purpose: booking.purpose || "",
+      consent: booking.consent !== false,
+      status: booking.status || "requested",
+      createdAt: booking.createdAt || new Date().toISOString(),
+      updatedAt: booking.updatedAt || booking.createdAt || new Date().toISOString()
+    };
+  }
+
+  async function renderBookings() {
     const box = byId("bookingList");
+    const items = byId("bookingItems");
     if (!box) return;
-    const bookings = readBookings();
+    const bookings = await readBookings();
     box.hidden = false;
-    box.innerHTML = `<h3>예약 내역</h3><p class="notice">아래 내역은 실제 예약이 아닌 데모 저장 데이터입니다.</p>` +
-      (bookings.length ? bookings.map((booking) => `
-        <div class="booking-item">
-          <strong>${booking.hospital}</strong>
-          <p>${booking.name} · ${booking.phone} · ${booking.date} ${booking.time}</p>
-          <p class="muted">${booking.purpose || "상담 목적 미입력"}</p>
+    updateBookingModeNotice();
+    if (!items) return;
+    items.innerHTML = bookings.length ? bookings.map(renderBookingItem).join("") : `<p class="muted">저장된 예약 내역이 없습니다.</p>`;
+    items.querySelectorAll("[data-status-id]").forEach((select) => {
+      select.addEventListener("change", async () => {
+        await updateBookingStatus(select.dataset.statusId || "", select.value);
+        await renderBookings();
+        await renderHospitals();
+      });
+    });
+    updateBookingSummary(bookings);
+  }
+
+  function renderBookingItem(booking) {
+    const status = booking.status || "requested";
+    return `
+      <div class="booking-item">
+        <div class="booking-item-top">
+          <div>
+            <strong>${escapeHtml(booking.hospital)}</strong>
+            <span class="booking-code">${escapeHtml(booking.id)}</span>
+          </div>
+          <span class="booking-status ${status}">${statusLabels[status] || status}</span>
         </div>
-      `).join("") : `<p class="muted">저장된 예약 내역이 없습니다.</p>`);
+        <p>${escapeHtml(booking.name)} · ${escapeHtml(maskPhone(booking.phone))} · ${escapeHtml(booking.packageName || "검진 항목 미입력")}</p>
+        <p><strong>${escapeHtml(booking.date)} ${escapeHtml(booking.time)}</strong> · ${escapeHtml(booking.department || "진료과 미지정")}</p>
+        <p class="muted">${escapeHtml(booking.purpose || "상담 목적 미입력")}</p>
+        <label class="status-control">상태 변경
+          <select data-status-id="${escapeHtml(booking.id)}">
+            ${Object.entries(statusLabels).map(([value, label]) => `<option value="${value}" ${value === status ? "selected" : ""}>${label}</option>`).join("")}
+          </select>
+        </label>
+      </div>
+    `;
+  }
+
+  async function updateTimeOptions() {
+    const timeSelect = byId("bookTime");
+    const date = byId("bookDate")?.value || "";
+    if (!timeSelect || !selectedHospital) return;
+    if (!date) {
+      timeSelect.innerHTML = `<option value="">날짜를 먼저 선택</option>`;
+      return;
+    }
+    const bookings = await readBookings();
+    const reserved = new Set(bookings
+      .filter((booking) => booking.hospitalId === selectedHospital.id && booking.date === date && booking.status !== "cancelled")
+      .map((booking) => booking.time));
+    const options = selectedHospital.slots.map((slot) => {
+      const disabled = reserved.has(slot);
+      return `<option value="${slot}" ${disabled ? "disabled" : ""}>${slot}${disabled ? " 마감" : ""}</option>`;
+    });
+    timeSelect.innerHTML = `<option value="">선택</option>${options.join("")}`;
+  }
+
+  async function updateBookingSummary(bookings) {
+    const box = byId("bookingSummary");
+    if (!box) return;
+    const list = bookings || await readBookings();
+    const active = list.filter((booking) => booking.status !== "cancelled");
+    const requested = active.filter((booking) => booking.status === "requested").length;
+    const confirmed = active.filter((booking) => booking.status === "confirmed").length;
+    box.innerHTML = `
+      <article><strong>${active.length}</strong><span>활성 예약</span></article>
+      <article><strong>${requested}</strong><span>접수 대기</span></article>
+      <article><strong>${confirmed}</strong><span>확정 예약</span></article>
+      <article><strong>${apiAvailable ? "API" : "Local"}</strong><span>저장 모드</span></article>
+    `;
+  }
+
+  function updateBookingModeNotice() {
+    const notice = byId("bookingModeNotice");
+    if (!notice) return;
+    notice.textContent = apiAvailable
+      ? "Node 서버 API와 data/bookings.json에 예약을 저장합니다."
+      : "정적 실행 환경이라 브라우저 localStorage에 예약을 저장합니다.";
+  }
+
+  async function exportBookingsCsv() {
+    const bookings = await readBookings();
+    if (!bookings.length) {
+      alert("내보낼 예약 내역이 없습니다.");
+      return;
+    }
+    const headers = ["예약번호", "상태", "병원", "진료과", "검진항목", "이름", "연락처", "생년월일", "날짜", "시간", "상담목적", "접수일시"];
+    const rows = bookings.map((booking) => [
+      booking.id,
+      statusLabels[booking.status] || booking.status,
+      booking.hospital,
+      booking.department,
+      booking.packageName,
+      booking.name,
+      booking.phone,
+      booking.birthDate,
+      booking.date,
+      booking.time,
+      booking.purpose,
+      booking.createdAt
+    ]);
+    const csv = [headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\n");
+    const blob = new Blob([`\ufeff${csv}`], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `labinsight-bookings-${formatDate(new Date())}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function countAvailableSlots(hospital, bookings) {
+    let count = 0;
+    for (let offset = 1; offset <= 14; offset += 1) {
+      const date = formatDate(addDays(new Date(), offset));
+      const reserved = new Set(bookings
+        .filter((booking) => booking.hospitalId === hospital.id && booking.date === date && booking.status !== "cancelled")
+        .map((booking) => booking.time));
+      count += hospital.slots.filter((slot) => !reserved.has(slot)).length;
+    }
+    return count;
+  }
+
+  function findHospitalIdByName(name) {
+    return hospitals.find((hospital) => hospital.name === name)?.id || "";
+  }
+
+  function makeBookingId() {
+    const stamp = formatDate(new Date()).replaceAll("-", "");
+    const random = Math.random().toString(36).slice(2, 6).toUpperCase();
+    return `LI-${stamp}-${random}`;
+  }
+
+  function addDays(date, days) {
+    const next = new Date(date);
+    next.setDate(next.getDate() + days);
+    return next;
+  }
+
+  function formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function maskPhone(phone) {
+    return String(phone || "").replace(/(\d{3})-?(\d{3,4})-?(\d{4})/, "$1-****-$3");
+  }
+
+  function csvCell(value) {
+    return `"${String(value ?? "").replaceAll("\"", "\"\"")}"`;
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll("\"", "&quot;")
+      .replaceAll("'", "&#039;");
   }
 
   function setStatus(id, message) {

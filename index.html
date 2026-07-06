@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="LabInsight 건강검진 결과 해석 및 병원 예약 데모 MVP">
-    <title>LabInsight | 건강검진 결과 해석 MVP</title>
+    <meta name="description" content="LabInsight 건강검진 결과 해석 및 병원 예약 운영 MVP">
+    <title>LabInsight | 건강검진 결과 해석 및 예약 시스템</title>
     <link rel="stylesheet" href="./styles.css?v=exam-env-20260703">
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
     <script src="./app.js?v=exam-env-20260703" defer></script>
@@ -22,7 +22,7 @@
           <a href="#input">검사 결과 해석</a>
           <a href="#ocr">OCR 업로드</a>
           <a href="#report">추천 검진</a>
-          <a href="#hospitals">병원 예약</a>
+          <a href="#hospitals">예약·관리</a>
           <a class="nav-cta" href="#input">데모 시작</a>
         </div>
       </nav>
@@ -195,17 +195,27 @@
       <section class="section section-band" id="hospitals">
         <div class="section-heading">
           <p class="eyebrow">Hospital Booking Demo</p>
-          <h2>병원 검진 및 내원 예약 데모</h2>
-          <p class="muted">실제 예약이 아닌 localStorage 기반 데모입니다. 병원 DB, 결제, 회원가입, 실제 예약 API는 추후 백엔드에서 연동합니다.</p>
+          <h2>병원 검진 및 내원 예약</h2>
+          <p class="muted">로컬 서버 실행 시 예약 API와 JSON 저장소를 사용하고, 정적 배포 환경에서는 브라우저 저장소로 자동 전환됩니다.</p>
         </div>
         <div class="filters" aria-label="병원 필터">
           <label>지역<select id="regionFilter"><option value="all">전체</option><option>부산</option><option>서울</option><option>대구</option><option>온라인 상담</option></select></label>
           <label>진료과<select id="deptFilter"><option value="all">전체</option><option>내과</option><option>가정의학과</option><option>소화기내과</option><option>내분비내과</option><option>신장내과</option><option>심장내과</option></select></label>
           <label>검진 항목<select id="packageFilter"><option value="all">전체</option><option>종합검진</option><option>간 기능</option><option>당뇨</option><option>이상지질혈증</option><option>신장 기능</option><option>빈혈</option></select></label>
-          <button class="button secondary" id="viewBookingsBtn" type="button">예약 내역 보기</button>
+          <button class="button secondary" id="viewBookingsBtn" type="button">예약 관리 열기</button>
         </div>
+        <div class="booking-summary" id="bookingSummary" aria-live="polite"></div>
         <div class="hospital-grid" id="hospitalList"></div>
-        <div class="booking-list" id="bookingList" hidden></div>
+        <div class="booking-list" id="bookingList" hidden>
+          <div class="booking-list-head">
+            <div>
+              <h3>예약 관리</h3>
+              <p class="notice" id="bookingModeNotice">예약 데이터를 불러오는 중입니다.</p>
+            </div>
+            <button class="button ghost" id="exportBookingsBtn" type="button">CSV 내보내기</button>
+          </div>
+          <div id="bookingItems"></div>
+        </div>
       </section>
     </main>
 
@@ -222,9 +232,12 @@
         <form id="bookingForm" class="booking-form">
           <label>이름<input id="bookName" required autocomplete="name"></label>
           <label>연락처<input id="bookPhone" required inputmode="tel" placeholder="010-0000-0000"></label>
+          <label>생년월일<input id="bookBirthDate" required type="date"></label>
+          <label>검진 항목<select id="bookPackage" required><option value="">선택</option></select></label>
           <label>희망 날짜<input id="bookDate" required type="date"></label>
-          <label>희망 시간<select id="bookTime" required><option value="">선택</option><option>09:00</option><option>10:30</option><option>14:00</option><option>16:00</option></select></label>
-          <label>상담 목적<textarea id="bookPurpose" rows="4" placeholder="검진 결과 상담, 재검 문의 등"></textarea></label>
+          <label>희망 시간<select id="bookTime" required><option value="">날짜를 먼저 선택</option></select></label>
+          <label class="wide-field">상담 목적<textarea id="bookPurpose" rows="4" placeholder="검진 결과 상담, 재검 문의 등"></textarea></label>
+          <label class="consent-row"><input id="bookConsent" type="checkbox" required> 예약 접수와 안내 연락을 위한 개인정보 수집·이용에 동의합니다.</label>
           <button class="button primary full" type="submit">예약 신청</button>
         </form>
         <p class="status" id="bookingStatus"></p>

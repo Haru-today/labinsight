@@ -232,6 +232,29 @@ small { color: var(--muted); font-weight: 600; }
 .bmi-preview.danger { background: #fff1f1; color: #b42323; border-color: #f1b3b3; }
 .top-actions { margin-top: 0; margin-bottom: 18px; }
 .filters { grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: end; margin-bottom: 20px; }
+.booking-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.booking-summary article {
+  padding: 16px;
+  background: #fbfefd;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.booking-summary strong {
+  display: block;
+  font-size: 1.65rem;
+  line-height: 1;
+}
+.booking-summary span {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-weight: 800;
+}
 
 .report-section { padding-top: 24px; }
 .empty-report, .report-wrap {
@@ -309,13 +332,66 @@ small { color: var(--muted); font-weight: 600; }
 .result-table button { border: 0; background: transparent; color: var(--blue); font-weight: 800; cursor: pointer; padding: 0; text-align: left; }
 .desc-row td { color: var(--muted); background: #fbfefd; }
 
-.hospital-card { padding: 18px; display: grid; gap: 10px; }
+.hospital-card { padding: 18px; display: grid; gap: 10px; align-content: start; }
 .hospital-meta { color: var(--muted); font-size: 0.94rem; }
 .tag-list { display: flex; flex-wrap: wrap; gap: 7px; }
 .tag { background: #eef8ff; color: #1657c8; border-radius: 999px; padding: 4px 9px; font-size: 0.82rem; font-weight: 800; }
+.slot-preview { display: flex; flex-wrap: wrap; gap: 6px; }
+.slot-preview span {
+  min-width: 58px;
+  text-align: center;
+  padding: 5px 8px;
+  border: 1px solid #bfe9e2;
+  border-radius: var(--radius);
+  background: #f0fbf8;
+  color: #0e5049;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
 .booking-list { padding: 18px; margin-top: 18px; }
-.booking-item { border-top: 1px solid var(--line); padding: 12px 0; }
+.booking-list-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+.booking-list-head h3 { margin: 0; }
+.booking-item { border-top: 1px solid var(--line); padding: 14px 0; display: grid; gap: 8px; }
 .booking-item:first-child { border-top: 0; }
+.booking-item p { margin: 0; }
+.booking-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.booking-code {
+  display: inline-flex;
+  margin-left: 8px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+.booking-status {
+  display: inline-flex;
+  min-width: 54px;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 4px 9px;
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+.booking-status.requested { background: var(--amber); }
+.booking-status.confirmed { background: var(--blue); }
+.booking-status.completed { background: var(--green); }
+.booking-status.cancelled { background: var(--muted); }
+.status-control {
+  max-width: 180px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
 
 .modal-backdrop {
   position: fixed;
@@ -350,7 +426,18 @@ small { color: var(--muted); font-weight: 600; }
   font-size: 1.4rem;
 }
 .booking-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.booking-form label:last-of-type, .booking-form button { grid-column: 1 / -1; }
+.booking-form .wide-field, .booking-form button, .consent-row { grid-column: 1 / -1; }
+.consent-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+.consent-row input {
+  width: auto;
+  margin-top: 5px;
+}
 .footer {
   width: min(1120px, calc(100% - 32px));
   margin: 0 auto;
@@ -383,8 +470,9 @@ small { color: var(--muted); font-weight: 600; }
   .hero, .split, .report-top, .panel-heading { grid-template-columns: 1fr; }
   .hero { min-height: auto; }
   .hero-panel { min-height: 300px; }
-  .service-flow, .feature-grid, .hospital-grid, .report-grid, .checkup-grid { grid-template-columns: 1fr; }
+  .service-flow, .feature-grid, .hospital-grid, .report-grid, .checkup-grid, .booking-summary { grid-template-columns: 1fr; }
   .form-grid, .filters, .booking-form, .checkup-accordion details .form-grid { grid-template-columns: 1fr; }
+  .booking-list-head, .booking-item-top { flex-direction: column; align-items: stretch; }
   .footer { flex-direction: column; }
 }
 
