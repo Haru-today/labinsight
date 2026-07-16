@@ -230,11 +230,11 @@
     const highDanger = value > cMax;
     const lowDanger = item.lowDanger && value < cMin;
     const bothHighDanger = item.bothSides && value > nMax;
-    if (value >= nMin && value <= nMax) return { level: "normal", label: "정상", points: 0 };
-    if (value >= cMin && value <= cMax) return { level: "caution", label: "주의", points: 6 };
-    if (lowDanger || highDanger || bothHighDanger) return { level: "danger", label: "위험", points: 12 };
-    if (item.bothSides && value < cMin) return { level: "danger", label: "위험", points: 12 };
-    return { level: "caution", label: "주의", points: 6 };
+    if (value >= nMin && value <= nMax) return { level: "normal", label: "참고 범위", points: 0 };
+    if (value >= cMin && value <= cMax) return { level: "caution", label: "확인 필요", points: 6 };
+    if (lowDanger || highDanger || bothHighDanger) return { level: "danger", label: "범위 벗어남", points: 12 };
+    if (item.bothSides && value < cMin) return { level: "danger", label: "범위 벗어남", points: 12 };
+    return { level: "caution", label: "확인 필요", points: 6 };
   }
 
   function renderReport(data) {
@@ -242,7 +242,7 @@
     const abnormal = results.filter((result) => result.judge.level === "caution" || result.judge.level === "danger");
     const rawScore = results.reduce((sum, result) => sum + result.judge.points, 0);
     const score = Math.min(100, Math.round(rawScore * 100 / 120));
-    const grade = score <= 30 ? "안정" : score <= 60 ? "주의" : "관리 필요";
+    const grade = score <= 30 ? "입력 범위 양호" : score <= 60 ? "추가 확인" : "상담 권장";
     const gradeClass = score <= 30 ? "normal" : score <= 60 ? "caution" : "danger";
     const guides = buildGuides(data);
     const checkups = buildRecommendedCheckups(data, score);
@@ -251,11 +251,11 @@
     report.innerHTML = `
       <div class="report-wrap">
         <div class="report-top">
-          <div class="score-box"><div><strong>${score}</strong><p>위험도 점수</p><span class="badge ${gradeClass}">${grade}</span></div></div>
+          <div class="score-box"><div><strong>${score}</strong><p>주의 항목 지수</p><span class="badge ${gradeClass}">${grade}</span></div></div>
           <div>
             <p class="eyebrow">Demo Report</p>
             <h2>현재 상태 요약</h2>
-            <p>${abnormal.length ? `주의가 필요한 항목은 ${abnormal.map((r) => r.item.name).join(", ")}입니다.` : "입력된 주요 항목에서 뚜렷한 이상 신호가 적습니다."}</p>
+            <p>${abnormal.length ? `참고 범위를 추가로 확인할 항목은 ${abnormal.map((r) => r.item.name).join(", ")}입니다.` : "입력된 주요 항목이 설정된 참고 범위 안에 있습니다."}</p>
             <p class="notice">이 리포트는 참고용이며 진단이나 치료를 대신하지 않습니다.</p>
           </div>
         </div>
@@ -276,7 +276,7 @@
           <div class="report-card"><h3>운동 가이드</h3>${renderList(guides.exercise)}</div>
           <div class="report-card"><h3>생활습관 가이드</h3>${renderList(guides.lifestyle)}</div>
           <div class="report-card"><h3>의료진 상담 질문</h3>${renderList(guides.questions)}</div>
-          <div class="report-card"><h3>권장 추가 검사</h3>${renderList(guides.tests)}<p><strong>다음 검진 권장 시기:</strong> ${score > 60 ? "1~3개월 내 재검 또는 진료 상담" : score > 30 ? "3~6개월 내 추적 확인" : "정기 검진 주기에 맞춰 확인"}</p></div>
+          <div class="report-card"><h3>권장 추가 검사</h3>${renderList(guides.tests)}<p><strong>재검 시점:</strong> 검사기관 참고치와 의료진 상담에 따라 결정하세요.</p></div>
         </div>
         <div class="report-card">
           <h3>검사항목별 판정표</h3>
@@ -553,15 +553,15 @@
       const availableCount = countAvailableSlots(hospital, bookings);
       return `
       <article class="hospital-card">
-        <h3>${hospital.name}</h3>
-        <p class="hospital-meta">${hospital.region} · ${hospital.dept} · 평점 ${hospital.rating}</p>
+        <h3>샘플 · ${hospital.name}</h3>
+        <p class="hospital-meta">${hospital.region} · ${hospital.dept} · 데모 평점 ${hospital.rating}</p>
         <p class="muted">${hospital.address} · ${hospital.phone}</p>
         <div class="tag-list">${hospital.packages.map((item) => `<span class="tag">${item}</span>`).join("")}</div>
         <p><strong>예상 가격:</strong> ${hospital.price}</p>
         <p><strong>소요 시간:</strong> 약 ${hospital.duration}분</p>
         <p><strong>14일 내 잔여 슬롯:</strong> ${availableCount}개</p>
         <div class="slot-preview">${hospital.slots.map((slot) => `<span>${slot}</span>`).join("")}</div>
-        <button class="button primary" type="button" data-book="${hospital.id}">예약하기</button>
+        <button class="button primary" type="button" data-book="${hospital.id}">예약 흐름 체험</button>
       </article>
     `;
     }).join("") : `<p class="muted">조건에 맞는 병원이 없습니다.</p>`;
@@ -640,7 +640,7 @@
     }
     try {
       const saved = await createBooking(booking);
-      setStatus("bookingStatus", `예약 신청이 완료되었습니다. 예약번호: ${saved.id}`);
+      setStatus("bookingStatus", `데모 예약이 저장되었습니다. 실제 병원에는 전송되지 않습니다. 예약번호: ${saved.id}`);
       byId("bookingForm")?.reset();
       await renderBookings();
       await renderHospitals();
@@ -857,7 +857,7 @@
     if (!notice) return;
     notice.textContent = apiAvailable
       ? "Node 서버 API와 data/bookings.json에 예약을 저장합니다."
-      : "정적 실행 환경이라 브라우저 localStorage에 예약을 저장합니다.";
+      : "정적 데모 환경이라 이 브라우저의 localStorage에만 예약을 저장하며 실제 병원에는 전송하지 않습니다.";
   }
 
   async function exportBookingsCsv() {

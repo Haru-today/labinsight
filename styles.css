@@ -26,6 +26,7 @@ body {
 }
 a { color: inherit; text-decoration: none; }
 button, input, select, textarea { font: inherit; }
+main[id], section[id] { scroll-margin-top: 88px; }
 
 .site-header {
   position: sticky;
@@ -72,7 +73,7 @@ button, input, select, textarea { font: inherit; }
   box-shadow: 0 16px 44px rgba(15, 48, 65, 0.07);
 }
 .hero {
-  min-height: calc(100vh - 68px);
+  min-height: 660px;
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
   align-items: center;
@@ -81,12 +82,21 @@ button, input, select, textarea { font: inherit; }
 }
 .eyebrow { margin: 0 0 10px; color: var(--mint); font-weight: 800; letter-spacing: 0; }
 h1, h2, h3 { line-height: 1.2; margin: 0; letter-spacing: 0; }
-h1 { font-size: clamp(2.4rem, 6vw, 4.7rem); max-width: 780px; }
+h1 { font-size: clamp(2.4rem, 5vw, 4rem); max-width: 720px; }
 h2 { font-size: clamp(1.65rem, 3vw, 2.55rem); }
 .hero-text { font-size: 1.12rem; color: var(--muted); max-width: 680px; margin: 22px 0; }
 .hero-actions, .form-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
 .notice, .muted, .status { color: var(--muted); }
 .notice { font-size: 0.92rem; margin-top: 20px; }
+.range-notice {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border-left: 4px solid var(--amber);
+  background: #fff8e8;
+  color: #7a5200;
+  font-size: 0.92rem;
+  font-weight: 750;
+}
 .button {
   border: 0;
   border-radius: var(--radius);
@@ -484,4 +494,5 @@ small { color: var(--muted); font-weight: 600; }
   .checkup-card .button { justify-self: stretch; }
   .result-table { font-size: 0.9rem; }
   .result-table th, .result-table td { padding: 8px 6px; }
+  h1 { font-size: 2.5rem; }
 }
