@@ -1,0 +1,85 @@
+{
+  "name": "labinsight",
+  "version": "1.0.0",
+  "description": "건강검진 결과 해석 및 예약 데스크톱 앱",
+  "main": "electron/main.js",
+  "author": "LabInsight",
+  "license": "MIT",
+  "private": true,
+  "packageManager": "pnpm@11.9.0",
+  "scripts": {
+    "start": "node server.js",
+    "desktop": "electron .",
+    "test": "node --test tests/*.test.js",
+    "dist": "electron-builder",
+    "mobile:prepare": "node scripts/prepare-mobile.js",
+    "mobile:sync": "pnpm mobile:prepare && cap sync",
+    "mobile:sync:ios": "pnpm mobile:prepare && cap sync ios",
+    "mobile:sync:android": "pnpm mobile:prepare && cap sync android",
+    "mobile:ios": "pnpm mobile:sync:ios && cap open ios",
+    "mobile:android": "pnpm mobile:sync:android && cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/ios": "^7.4.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3",
+    "@electron/notarize": "^3.0.1",
+    "electron": "^37.2.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.labinsight.desktop",
+    "productName": "LabInsight",
+    "asar": true,
+    "afterSign": "build/notarize.js",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "app.js",
+      "index.html",
+      "styles.css",
+      "manifest.webmanifest",
+      "service-worker.js",
+      "server.js",
+      "icons/**/*",
+      "electron/**/*",
+      "data/bookings.json"
+    ],
+    "mac": {
+      "category": "public.app-category.medical",
+      "icon": "build/icon.icns",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["universal"]
+        }
+      ],
+      "artifactName": "LabInsight-macOS-${arch}.${ext}"
+    },
+    "dmg": {
+      "title": "LabInsight 설치"
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "LabInsight-Windows-Setup-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "LabInsight"
+    }
+  }
+}

@@ -4,9 +4,15 @@ const path = require("path");
 const crypto = require("crypto");
 
 const PORT = Number(process.env.PORT || 8000);
+const HOST = process.env.HOST || "127.0.0.1";
 const ROOT_DIR = __dirname;
-const DATA_DIR = path.join(ROOT_DIR, "data");
+const DATA_DIR = process.env.LABINSIGHT_DATA_DIR || path.join(ROOT_DIR, "data");
 const BOOKINGS_FILE = path.join(DATA_DIR, "bookings.json");
+const defaultAllowedOrigins = ["capacitor://localhost", "https://localhost", "http://localhost"];
+const allowedOrigins = new Set([
+  ...defaultAllowedOrigins,
+  ...String(process.env.LABINSIGHT_ALLOWED_ORIGINS || "").split(",").map((origin) => origin.trim()).filter(Boolean)
+]);
 
 const statusLabels = new Set(["requested", "confirmed", "completed", "cancelled"]);
 
@@ -24,6 +30,8 @@ const mimeTypes = {
   ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
+  ".webmanifest": "application/manifest+json; charset=utf-8",
+  ".zip": "application/zip",
   ".png": "image/png",
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
@@ -35,6 +43,14 @@ ensureDataFile();
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host}`);
+
+    if (url.pathname.startsWith("/api/")) {
+      if (!applyApiCors(req, res)) return sendJson(res, 403, { error: "허용되지 않은 앱 출처입니다." });
+      if (req.method === "OPTIONS") {
+        res.writeHead(204);
+        return res.end();
+      }
+    }
 
     if (url.pathname === "/api/health") {
       return sendJson(res, 200, { ok: true });
@@ -66,9 +82,24 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
-  console.log(`LabInsight server running at http://localhost:${PORT}`);
-});
+function startServer(port = PORT, host = HOST) {
+  return new Promise((resolve, reject) => {
+    const handleError = (error) => {
+      server.off("listening", handleListening);
+      reject(error);
+    };
+    const handleListening = () => {
+      server.off("error", handleError);
+      const address = server.address();
+      console.log(`LabInsight server running at http://${host}:${address.port}`);
+      resolve(address);
+    };
+
+    server.once("error", handleError);
+    server.once("listening", handleListening);
+    server.listen(port, host);
+  });
+}
 
 function createBooking(res, payload) {
   const hospital = hospitals.find((item) => item.id === payload.hospitalId);
@@ -212,3 +243,24 @@ function sendText(res, statusCode, text) {
   res.writeHead(statusCode, { "Content-Type": "text/plain; charset=utf-8" });
   res.end(text);
 }
+
+function applyApiCors(req, res) {
+  const origin = req.headers.origin;
+  if (!origin) return true;
+  if (!allowedOrigins.has("*") && !allowedOrigins.has(origin)) return false;
+
+  res.setHeader("Access-Control-Allow-Origin", allowedOrigins.has("*") ? "*" : origin);
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Vary", "Origin");
+  return true;
+}
+
+if (require.main === module) {
+  startServer().catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = { server, startServer };

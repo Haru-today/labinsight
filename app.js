@@ -4,6 +4,7 @@
   const $ = (selector) => document.querySelector(selector);
   const byId = (id) => document.getElementById(id);
   const storageKey = "labinsight-bookings";
+  const apiBaseUrl = String(window.LABINSIGHT_CONFIG?.apiBaseUrl || "").trim().replace(/\/$/, "");
   const statusLabels = {
     requested: "접수",
     confirmed: "확정",
@@ -47,6 +48,7 @@
 
   let selectedHospital = null;
   let apiAvailable = false;
+  let deferredInstallPrompt = null;
 
   document.addEventListener("DOMContentLoaded", init);
 
@@ -57,9 +59,81 @@
     bindBmiPreview();
     bindHospitals();
     bindBookingModal();
+    bindAppShell();
     detectBookingApi();
     renderHospitals();
     updateBookingSummary();
+  }
+
+  function bindAppShell() {
+    const installButtons = [byId("installAppBtn"), byId("tabInstallBtn")].filter(Boolean);
+    const mode = byId("appModeStatus");
+    const network = byId("networkStatus");
+    const cache = byId("cacheStatus");
+    const desktop = new URLSearchParams(window.location.search).get("desktop") === "1";
+    const nativeMobile = Boolean(window.Capacitor?.isNativePlatform?.());
+    const standalone = window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator.standalone;
+
+    if (desktop) document.body.classList.add("desktop-app");
+    if (nativeMobile) document.body.classList.add("native-mobile");
+    if (mode) mode.textContent = desktop ? "데스크톱 앱 모드" : nativeMobile ? "모바일 앱 모드" : standalone ? "설치된 앱 모드" : "브라우저 앱 모드";
+
+    const setNetworkStatus = () => {
+      if (!network) return;
+      network.textContent = navigator.onLine ? "온라인" : "오프라인";
+      network.className = navigator.onLine ? "" : "is-offline";
+    };
+    setNetworkStatus();
+    window.addEventListener("online", setNetworkStatus);
+    window.addEventListener("offline", setNetworkStatus);
+
+    window.addEventListener("beforeinstallprompt", (event) => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      installButtons.forEach((button) => {
+        button.hidden = false;
+      });
+    });
+
+    installButtons.forEach((button) => {
+      button.addEventListener("click", promptInstallApp);
+    });
+
+    window.addEventListener("appinstalled", () => {
+      deferredInstallPrompt = null;
+      if (mode) mode.textContent = "설치된 앱 모드";
+      installButtons.forEach((button) => {
+        button.hidden = true;
+      });
+    });
+
+    if (desktop || nativeMobile) {
+      installButtons.forEach((button) => {
+        button.hidden = true;
+      });
+      if (cache) cache.textContent = apiBaseUrl ? "예약 서버 연결 준비" : "기기 내 데이터 저장";
+    } else if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./service-worker.js")
+        .then(() => {
+          if (cache) cache.textContent = "오프라인 준비 완료";
+        })
+        .catch((error) => {
+          console.error(error);
+          if (cache) cache.textContent = "오프라인 캐시 대기";
+        });
+    } else if (cache) {
+      cache.textContent = "오프라인 미지원";
+    }
+  }
+
+  async function promptInstallApp() {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice.catch(() => null);
+    deferredInstallPrompt = null;
+    [byId("installAppBtn"), byId("tabInstallBtn")].filter(Boolean).forEach((button) => {
+      button.hidden = true;
+    });
   }
 
   function bindNav() {
@@ -667,7 +741,8 @@
   }
 
   async function detectBookingApi() {
-    if (window.location.protocol === "file:") {
+    const nativeMobile = Boolean(window.Capacitor?.isNativePlatform?.());
+    if (window.location.protocol === "file:" || (nativeMobile && !apiBaseUrl)) {
       apiAvailable = false;
       updateBookingModeNotice();
       return;
@@ -684,7 +759,7 @@
   }
 
   async function apiRequest(path, options = {}) {
-    const response = await fetch(path, {
+    const response = await fetch(`${apiBaseUrl}${path}`, {
       headers: { "Content-Type": "application/json", ...(options.headers || {}) },
       ...options
     });

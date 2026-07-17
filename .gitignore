@@ -1,0 +1,12 @@
+node_modules/
+.pnpm-store/
+dist/
+mobile-web/
+ios/App/Pods/
+ios/App/App/public/
+ios/DerivedData/
+android/.gradle/
+android/app/build/
+android/build/
+*.log
+.DS_Store
