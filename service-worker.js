@@ -1,9 +1,9 @@
-const CACHE_NAME = "labinsight-app-v20260718-mobile";
+const CACHE_NAME = "labinsight-app-v20260718-official-b";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=homepage-20260717",
-  "./app.js?v=homepage-20260717",
+  "./styles.css?v=official-20260718b",
+  "./app.js?v=official-20260718",
   "./runtime-config.js",
   "./manifest.webmanifest",
   "./icons/icon.svg",
