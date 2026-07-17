@@ -4,6 +4,7 @@
   const $ = (selector) => document.querySelector(selector);
   const byId = (id) => document.getElementById(id);
   const storageKey = "labinsight-bookings";
+  const apiBaseUrl = String(window.LABINSIGHT_CONFIG?.apiBaseUrl || "").trim().replace(/\/$/, "");
   const statusLabels = {
     requested: "접수",
     confirmed: "확정",
@@ -47,6 +48,7 @@
 
   let selectedHospital = null;
   let apiAvailable = false;
+  let deferredInstallPrompt = null;
 
   document.addEventListener("DOMContentLoaded", init);
 
@@ -57,9 +59,81 @@
     bindBmiPreview();
     bindHospitals();
     bindBookingModal();
+    bindAppShell();
     detectBookingApi();
     renderHospitals();
     updateBookingSummary();
+  }
+
+  function bindAppShell() {
+    const installButtons = [byId("installAppBtn"), byId("tabInstallBtn")].filter(Boolean);
+    const mode = byId("appModeStatus");
+    const network = byId("networkStatus");
+    const cache = byId("cacheStatus");
+    const desktop = new URLSearchParams(window.location.search).get("desktop") === "1";
+    const nativeMobile = Boolean(window.Capacitor?.isNativePlatform?.());
+    const standalone = window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator.standalone;
+
+    if (desktop) document.body.classList.add("desktop-app");
+    if (nativeMobile) document.body.classList.add("native-mobile");
+    if (mode) mode.textContent = desktop ? "데스크톱 앱 모드" : nativeMobile ? "모바일 앱 모드" : standalone ? "설치된 앱 모드" : "브라우저 앱 모드";
+
+    const setNetworkStatus = () => {
+      if (!network) return;
+      network.textContent = navigator.onLine ? "온라인" : "오프라인";
+      network.className = navigator.onLine ? "" : "is-offline";
+    };
+    setNetworkStatus();
+    window.addEventListener("online", setNetworkStatus);
+    window.addEventListener("offline", setNetworkStatus);
+
+    window.addEventListener("beforeinstallprompt", (event) => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      installButtons.forEach((button) => {
+        button.hidden = false;
+      });
+    });
+
+    installButtons.forEach((button) => {
+      button.addEventListener("click", promptInstallApp);
+    });
+
+    window.addEventListener("appinstalled", () => {
+      deferredInstallPrompt = null;
+      if (mode) mode.textContent = "설치된 앱 모드";
+      installButtons.forEach((button) => {
+        button.hidden = true;
+      });
+    });
+
+    if (desktop || nativeMobile) {
+      installButtons.forEach((button) => {
+        button.hidden = true;
+      });
+      if (cache) cache.textContent = apiBaseUrl ? "예약 서버 연결 준비" : "기기 내 데이터 저장";
+    } else if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./service-worker.js")
+        .then(() => {
+          if (cache) cache.textContent = "오프라인 준비 완료";
+        })
+        .catch((error) => {
+          console.error(error);
+          if (cache) cache.textContent = "오프라인 캐시 대기";
+        });
+    } else if (cache) {
+      cache.textContent = "오프라인 미지원";
+    }
+  }
+
+  async function promptInstallApp() {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice.catch(() => null);
+    deferredInstallPrompt = null;
+    [byId("installAppBtn"), byId("tabInstallBtn")].filter(Boolean).forEach((button) => {
+      button.hidden = true;
+    });
   }
 
   function bindNav() {
@@ -81,6 +155,13 @@
   function bindOcr() {
     const runBtn = byId("runOcrBtn");
     const applyBtn = byId("applyOcrBtn");
+    const ocrOption = byId("ocr");
+    document.querySelectorAll('a[href="#ocr"]').forEach((link) => {
+      link.addEventListener("click", () => {
+        if (ocrOption) ocrOption.open = true;
+      });
+    });
+    if (window.location.hash === "#ocr" && ocrOption) ocrOption.open = true;
     if (runBtn) runBtn.addEventListener("click", runOcr);
     if (applyBtn) applyBtn.addEventListener("click", () => {
       const text = byId("ocrText")?.value || "";
@@ -157,6 +238,14 @@
 
   function bindForm() {
     const form = byId("healthForm");
+    const showSampleReport = () => {
+      fillForm(sampleData);
+      updateBmiPreview();
+      renderReport(collectFormData());
+      byId("report")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    byId("heroSampleBtn")?.addEventListener("click", showSampleReport);
+    byId("emptySampleBtn")?.addEventListener("click", showSampleReport);
     byId("sampleBtn")?.addEventListener("click", () => {
       fillForm(sampleData);
       updateBmiPreview();
@@ -253,7 +342,7 @@
         <div class="report-top">
           <div class="score-box"><div><strong>${score}</strong><p>주의 항목 지수</p><span class="badge ${gradeClass}">${grade}</span></div></div>
           <div>
-            <p class="eyebrow">Demo Report</p>
+            <p class="eyebrow">검진 리포트</p>
             <h2>현재 상태 요약</h2>
             <p>${abnormal.length ? `참고 범위를 추가로 확인할 항목은 ${abnormal.map((r) => r.item.name).join(", ")}입니다.` : "입력된 주요 항목이 설정된 참고 범위 안에 있습니다."}</p>
             <p class="notice">이 리포트는 참고용이며 진단이나 치료를 대신하지 않습니다.</p>
@@ -554,7 +643,7 @@
       return `
       <article class="hospital-card">
         <h3>샘플 · ${hospital.name}</h3>
-        <p class="hospital-meta">${hospital.region} · ${hospital.dept} · 데모 평점 ${hospital.rating}</p>
+        <p class="hospital-meta">${hospital.region} · ${hospital.dept} · 샘플 평점 ${hospital.rating}</p>
         <p class="muted">${hospital.address} · ${hospital.phone}</p>
         <div class="tag-list">${hospital.packages.map((item) => `<span class="tag">${item}</span>`).join("")}</div>
         <p><strong>예상 가격:</strong> ${hospital.price}</p>
@@ -640,7 +729,7 @@
     }
     try {
       const saved = await createBooking(booking);
-      setStatus("bookingStatus", `데모 예약이 저장되었습니다. 실제 병원에는 전송되지 않습니다. 예약번호: ${saved.id}`);
+      setStatus("bookingStatus", `예약 요청이 저장되었습니다. 실제 병원에는 전송되지 않습니다. 예약번호: ${saved.id}`);
       byId("bookingForm")?.reset();
       await renderBookings();
       await renderHospitals();
@@ -652,7 +741,8 @@
   }
 
   async function detectBookingApi() {
-    if (window.location.protocol === "file:") {
+    const nativeMobile = Boolean(window.Capacitor?.isNativePlatform?.());
+    if (window.location.protocol === "file:" || (nativeMobile && !apiBaseUrl)) {
       apiAvailable = false;
       updateBookingModeNotice();
       return;
@@ -669,7 +759,7 @@
   }
 
   async function apiRequest(path, options = {}) {
-    const response = await fetch(path, {
+    const response = await fetch(`${apiBaseUrl}${path}`, {
       headers: { "Content-Type": "application/json", ...(options.headers || {}) },
       ...options
     });
@@ -857,7 +947,7 @@
     if (!notice) return;
     notice.textContent = apiAvailable
       ? "Node 서버 API와 data/bookings.json에 예약을 저장합니다."
-      : "정적 데모 환경이라 이 브라우저의 localStorage에만 예약을 저장하며 실제 병원에는 전송하지 않습니다.";
+      : "정적 실행 환경에서는 이 브라우저의 localStorage에만 예약을 저장하며 실제 병원에는 전송하지 않습니다.";
   }
 
   async function exportBookingsCsv() {

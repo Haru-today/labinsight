@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="LabInsight">
+  <rect width="512" height="512" rx="108" fill="#1e6bff"/>
+  <path d="M96 346h320v42H96z" fill="#ffffff" opacity=".96"/>
+  <path d="M132 124h88v222h-88z" fill="#ffffff"/>
+  <path d="M252 188h92c23 0 42 19 42 42v116H252z" fill="#18b7a0"/>
+  <path d="M285 236h68v38h-68zM285 296h68v38h-68z" fill="#ffffff"/>
+  <path d="M154 157h44v44h-44zM154 230h44v44h-44z" fill="#1e6bff"/>
+</svg>

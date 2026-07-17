@@ -1,0 +1,50 @@
+{
+  "name": "LabInsight 건강검진 예약",
+  "short_name": "LabInsight",
+  "description": "건강검진 결과를 해석하고 추천 검진 예약을 접수·관리하는 앱입니다.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "background_color": "#f6faf9",
+  "theme_color": "#1e6bff",
+  "orientation": "portrait-primary",
+  "lang": "ko-KR",
+  "categories": ["health", "medical", "productivity"],
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "검진 결과 입력",
+      "short_name": "입력",
+      "description": "건강검진 수치를 입력합니다.",
+      "url": "./index.html#input",
+      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "예약 관리",
+      "short_name": "예약",
+      "description": "추천 검진 예약과 예약 내역을 확인합니다.",
+      "url": "./index.html#hospitals",
+      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

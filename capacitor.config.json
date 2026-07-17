@@ -1,0 +1,15 @@
+{
+  "appId": "com.labinsight.mobile",
+  "appName": "LabInsight",
+  "webDir": "mobile-web",
+  "server": {
+    "androidScheme": "https",
+    "iosScheme": "capacitor"
+  },
+  "ios": {
+    "contentInset": "automatic"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
