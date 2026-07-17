@@ -351,7 +351,7 @@
         <section class="recommendation-panel" aria-label="추천 건강검진">
           <div class="panel-heading">
             <div>
-              <p class="eyebrow">Recommended Checkups</p>
+              <p class="eyebrow">결과 기반 추천 검진</p>
               <h3>결과 기반 추천 건강검진</h3>
             </div>
             <p>입력된 이상 항목을 바탕으로 다음에 확인하면 좋은 검진 패키지를 제안합니다.</p>
@@ -367,12 +367,14 @@
           <div class="report-card"><h3>의료진 상담 질문</h3>${renderList(guides.questions)}</div>
           <div class="report-card"><h3>권장 추가 검사</h3>${renderList(guides.tests)}<p><strong>재검 시점:</strong> 검사기관 참고치와 의료진 상담에 따라 결정하세요.</p></div>
         </div>
-        <div class="report-card">
+        <div class="report-card report-table-card">
           <h3>검사항목별 판정표</h3>
-          <table class="result-table">
-            <thead><tr><th>항목</th><th>입력값</th><th>판정</th><th>설명</th></tr></thead>
-            <tbody>${results.map(renderResultRow).join("")}</tbody>
-          </table>
+          <div class="table-scroll" role="region" aria-label="검사항목별 판정표" tabindex="0">
+            <table class="result-table">
+              <thead><tr><th>항목</th><th>입력값</th><th>판정</th><th>설명</th></tr></thead>
+              <tbody>${results.map(renderResultRow).join("")}</tbody>
+            </table>
+          </div>
         </div>
       </div>
     `;
@@ -406,7 +408,7 @@
 
   function renderResultRow(result) {
     const key = result.item.id;
-    const badgeClass = result.judge.level === "danger" ? "danger" : result.judge.level === "caution" ? "caution" : "normal";
+    const badgeClass = result.judge.level === "danger" ? "danger" : result.judge.level === "caution" ? "caution" : result.judge.level === "missing" ? "missing" : "normal";
     const value = result.value === null ? "-" : `${result.value} ${result.item.unit}`;
     return `
       <tr>
@@ -642,13 +644,16 @@
       const availableCount = countAvailableSlots(hospital, bookings);
       return `
       <article class="hospital-card">
-        <h3>샘플 · ${hospital.name}</h3>
-        <p class="hospital-meta">${hospital.region} · ${hospital.dept} · 샘플 평점 ${hospital.rating}</p>
+        <div class="hospital-card-head"><span class="sample-label">샘플</span><h3>${hospital.name}</h3></div>
+        <p class="hospital-meta">${hospital.region} · ${hospital.dept} <span>★ ${hospital.rating}</span></p>
         <p class="muted">${hospital.address} · ${hospital.phone}</p>
         <div class="tag-list">${hospital.packages.map((item) => `<span class="tag">${item}</span>`).join("")}</div>
-        <p><strong>예상 가격:</strong> ${hospital.price}</p>
-        <p><strong>소요 시간:</strong> 약 ${hospital.duration}분</p>
-        <p><strong>14일 내 잔여 슬롯:</strong> ${availableCount}개</p>
+        <dl class="hospital-facts">
+          <div><dt>예상 가격</dt><dd>${hospital.price}</dd></div>
+          <div><dt>소요 시간</dt><dd>약 ${hospital.duration}분</dd></div>
+          <div><dt>14일 내 잔여</dt><dd>${availableCount}개</dd></div>
+        </dl>
+        <p class="slot-label">예약 가능 시간</p>
         <div class="slot-preview">${hospital.slots.map((slot) => `<span>${slot}</span>`).join("")}</div>
         <button class="button primary" type="button" data-book="${hospital.id}">예약 흐름 체험</button>
       </article>

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#1e6bff">
+    <meta name="theme-color" content="#1769e0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="LabInsight">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -12,45 +12,53 @@
     <link rel="manifest" href="./manifest.webmanifest">
     <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/icon-192.png">
-    <link rel="stylesheet" href="./styles.css?v=homepage-20260717">
+    <link rel="stylesheet" href="./styles.css?v=official-20260718b">
     <script src="./runtime-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
-    <script src="./app.js?v=homepage-20260717" defer></script>
+    <script src="./app.js?v=official-20260718" defer></script>
   </head>
   <body>
+    <a class="skip-link" href="#mainContent">본문으로 바로가기</a>
+    <div class="utility-bar">
+      <div>
+        <span>건강검진 결과 이해·예약 지원 서비스</span>
+        <span class="utility-notice">의료 정보는 참고용입니다.</span>
+      </div>
+    </div>
     <header class="site-header">
       <nav class="nav" aria-label="주요 메뉴">
         <a class="brand" href="./" aria-label="LabInsight 홈">
-          <span class="brand-mark">L</span>
-          <span>LabInsight</span>
+          <span class="brand-mark" aria-hidden="true">L</span>
+          <span class="brand-copy"><strong>LabInsight</strong><small>건강검진 결과 안내</small></span>
         </a>
-        <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks">☰</button>
+        <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks"><span aria-hidden="true">☰</span><span class="sr-only">전체 메뉴</span></button>
         <div class="nav-links" id="navLinks">
-          <a href="https://haru-today.github.io/caffeine-atlas/">통합 포털</a>
-          <a href="#features">서비스 소개</a>
-          <a href="#download">앱 다운로드</a>
-          <a href="#input">검사 결과 해석</a>
-          <a href="#ocr">OCR 업로드</a>
-          <a href="#report">추천 검진</a>
-          <a href="#hospitals">예약·관리</a>
-          <a class="nav-cta" href="#input">리포트 시작</a>
+          <a href="#features">서비스 안내</a>
+          <a href="#input">결과 입력</a>
+          <a href="#report">결과 리포트</a>
+          <a href="#hospitals">검진 예약</a>
+          <a class="nav-cta" href="#input">내 결과 확인하기</a>
         </div>
       </nav>
     </header>
 
-    <main id="top">
+    <main id="mainContent">
       <section class="hero section">
         <div class="hero-copy">
-          <p class="eyebrow">검진 결과 해석</p>
-          <h1>건강검진 결과를 이해하고, 다음 질문을 준비하세요.</h1>
-          <p class="hero-text">검진 수치를 참고 범위와 함께 정리하고, 생활관리 질문부터 필요한 추가 검진과 예약 흐름까지 확인할 수 있습니다.</p>
+          <p class="eyebrow">HEALTH SCREENING REPORT</p>
+          <h1>내 건강검진 결과,<br>이해하기 쉽게 확인하세요.</h1>
+          <p class="hero-text">어려운 검사 수치를 참고 범위와 함께 정리하고, 생활관리부터 추가 검진과 예약까지 한 흐름으로 안내합니다.</p>
           <div class="hero-actions">
-            <a class="button primary" href="#input">1분 리포트 시작</a>
-            <a class="button secondary" href="#download">앱 다운하기</a>
-            <button class="button secondary" id="heroSampleBtn" type="button">샘플 데이터로 리포트 보기</button>
+            <a class="button primary" href="#input">검사 결과 입력하기</a>
+            <button class="button secondary" id="heroSampleBtn" type="button">샘플 리포트 먼저 보기</button>
             <button class="button ghost install-button" id="installAppBtn" type="button" hidden>앱 설치</button>
           </div>
-          <p class="notice">제공되는 의료 정보는 참고용입니다. 진단, 치료, 처방은 반드시 의료진과 상담하세요.</p>
+          <ul class="trust-list" aria-label="서비스 특징">
+            <li>입력 즉시 결과 정리</li>
+            <li>검사 항목별 참고 범위</li>
+            <li>추가 검진·예약 연결</li>
+          </ul>
+          <p class="notice hero-notice">진단·치료·처방은 반드시 의료진과 상담하세요.</p>
           <div class="app-status-strip" aria-label="앱 실행 상태">
             <span id="appModeStatus">브라우저 앱 모드</span>
             <span id="networkStatus">온라인</span>
@@ -94,55 +102,18 @@
         </aside>
       </section>
 
-      <section class="service-flow section" aria-label="서비스 단계">
-        <article>
-          <span>01</span>
-          <strong>결과 입력</strong>
-          <p>샘플 또는 직접 입력으로 시작하고, 필요할 때 결과지 이미지 인식을 이용합니다.</p>
-        </article>
-        <article>
-          <span>02</span>
-          <strong>리포트 해석</strong>
-          <p>참고 범위, 확인 필요, 범위 벗어남 상태와 생활 가이드를 분리된 리포트로 보여줍니다.</p>
-        </article>
-        <article>
-          <span>03</span>
-          <strong>추천 검진 연결</strong>
-          <p>이상 항목에 맞는 추가 검진과 관련 병원 탐색 흐름을 바로 연결합니다.</p>
-        </article>
-      </section>
-
-      <section class="section download-section" id="download">
-        <div class="section-heading">
-          <p class="eyebrow">Desktop App</p>
-          <h2>LabInsight 앱 다운로드</h2>
-          <p class="muted">개발 중인 Mac과 Windows 환경에서 각각 실행할 수 있는 패키지입니다.</p>
-        </div>
-        <div class="download-grid">
-          <article class="download-card">
-            <div>
-              <span class="download-os">macOS</span>
-              <h3>Mac 다운</h3>
-              <p>압축 해제 후 <code>LabInsight.command</code>를 실행합니다. 차단되면 터미널에서 <code>xattr -dr com.apple.quarantine</code> 명령으로 허용합니다.</p>
-            </div>
-            <a class="button primary" href="./downloads/LabInsight-mac.zip" download>Mac 다운로드</a>
-          </article>
-          <article class="download-card">
-            <div>
-              <span class="download-os">Windows</span>
-              <h3>Windows 다운</h3>
-              <p>압축 해제 후 <code>LabInsight.bat</code>를 실행합니다.</p>
-            </div>
-            <a class="button primary" href="./downloads/LabInsight-windows.zip" download>Windows 다운로드</a>
-          </article>
-        </div>
-        <p class="download-note">개발용 패키지는 아직 Apple·Microsoft 코드서명이 없어 첫 실행 시 보안 확인이 나타날 수 있습니다. Node.js가 설치되어 있으면 예약 API 저장 모드로 실행되고, 없으면 브라우저 저장 모드로 열립니다.</p>
+      <section class="quick-services section" aria-label="주요 서비스 바로가기">
+        <a href="#input"><span class="quick-icon" aria-hidden="true">01</span><div><strong>결과 직접 입력</strong><small>검사 수치를 항목별로 입력</small></div><span class="quick-arrow" aria-hidden="true">→</span></a>
+        <a href="#ocr"><span class="quick-icon" aria-hidden="true">02</span><div><strong>결과지 OCR</strong><small>이미지에서 검사 수치 추출</small></div><span class="quick-arrow" aria-hidden="true">→</span></a>
+        <a href="#report"><span class="quick-icon" aria-hidden="true">03</span><div><strong>결과 리포트</strong><small>상태와 생활 가이드 확인</small></div><span class="quick-arrow" aria-hidden="true">→</span></a>
+        <a href="#hospitals"><span class="quick-icon" aria-hidden="true">04</span><div><strong>검진 예약</strong><small>추천 검진과 샘플 병원 연결</small></div><span class="quick-arrow" aria-hidden="true">→</span></a>
       </section>
 
       <section class="section section-band" id="features">
         <div class="section-heading">
-          <p class="eyebrow">What LabInsight Does</p>
-          <h2>검진 결과를 이해 가능한 다음 행동으로 바꿉니다.</h2>
+          <p class="eyebrow">서비스 안내</p>
+          <h2>검진 결과 확인부터 다음 행동까지</h2>
+          <p class="muted">결과를 한눈에 이해하고 의료진 상담을 준비할 수 있도록 필요한 기능을 단계별로 제공합니다.</p>
         </div>
         <div class="feature-grid">
           <article><strong>OCR 결과지 인식</strong><span>이미지에서 검사명과 수치를 추출합니다.</span></article>
@@ -156,11 +127,16 @@
 
       <section class="section section-band" id="input">
         <div class="section-heading">
-          <p class="eyebrow">검진 결과 입력</p>
-          <h2>건강검진 수치 입력</h2>
-          <p class="muted">샘플 데이터를 불러오거나 직접 입력한 뒤 리포트를 생성하세요.</p>
+          <p class="eyebrow">STEP 1</p>
+          <h2>건강검진 결과 입력</h2>
+          <p class="muted">결과지에 적힌 수치를 검사 영역별로 입력하세요. 모르는 항목은 비워두어도 됩니다.</p>
           <p class="range-notice">검사기관마다 참고 범위가 다를 수 있습니다. 원본 결과지에 표시된 참고치와 의료진 설명을 우선하세요.</p>
         </div>
+        <ol class="workflow-steps" aria-label="서비스 이용 단계">
+          <li class="active"><span>1</span><strong>결과 입력</strong></li>
+          <li><span>2</span><strong>리포트 확인</strong></li>
+          <li><span>3</span><strong>검진 예약</strong></li>
+        </ol>
         <form id="healthForm" class="lab-form">
           <div class="form-actions top-actions">
             <button class="button secondary" id="sampleBtn" type="button">샘플 데이터 불러오기</button>
@@ -197,7 +173,7 @@
               <div class="bmi-preview" id="bmiPreview">키와 몸무게를 입력하면 BMI가 자동 계산됩니다.</div>
             </details>
 
-            <details open>
+            <details>
               <summary><span>혈압</span><small>심혈관 기본 위험</small></summary>
               <div class="form-grid">
                 <label>수축기 혈압 <small>mmHg</small><input id="bpSys" type="number" step="1" placeholder="예: 124"></label>
@@ -205,7 +181,7 @@
               </div>
             </details>
 
-            <details open>
+            <details>
               <summary><span>간 기능</span><small>AST, ALT, γ-GTP</small></summary>
               <div class="form-grid">
                 <label>AST <small>U/L</small><input id="ast" type="number" step="0.1"></label>
@@ -214,7 +190,7 @@
               </div>
             </details>
 
-            <details open>
+            <details>
               <summary><span>당대사</span><small>공복혈당, HbA1c</small></summary>
               <div class="form-grid">
                 <label>공복혈당 <small>mg/dL</small><input id="glucose" type="number" step="0.1"></label>
@@ -258,8 +234,8 @@
 
       <section class="section section-band report-section" id="report" aria-live="polite">
         <div class="empty-report">
-          <p class="eyebrow">검진 리포트</p>
-          <h2>결과 화면을 먼저 확인해 보세요.</h2>
+          <p class="eyebrow">STEP 2 · 검진 리포트</p>
+          <h2>입력한 결과를 한눈에 확인하세요.</h2>
           <p>샘플 리포트에서 주의 항목 지수, 항목별 참고 범위와 추천 검진 흐름을 바로 확인할 수 있습니다.</p>
           <div class="empty-report-actions">
             <button class="button primary" id="emptySampleBtn" type="button">샘플 리포트 보기</button>
@@ -270,7 +246,7 @@
 
       <section class="section section-band" id="hospitals">
         <div class="section-heading">
-          <p class="eyebrow">예약 운영</p>
+          <p class="eyebrow">STEP 3 · 검진 예약</p>
           <h2>추천 검진 예약</h2>
           <p class="muted">병원 정보는 기능 확인을 위한 샘플입니다. 예약 요청은 실제 병원으로 전송되지 않습니다.</p>
         </div>
@@ -310,11 +286,24 @@
           <div id="bookingItems"></div>
         </div>
       </section>
+
+      <section class="section download-section" id="download">
+        <div class="download-copy">
+          <p class="eyebrow">LABINSIGHT APP</p>
+          <h2>PC에서도 이어서 확인하세요.</h2>
+          <p class="muted">Mac과 Windows용 개발 패키지를 제공합니다. 코드서명 전 패키지이므로 첫 실행 시 보안 확인이 나타날 수 있습니다.</p>
+        </div>
+        <div class="download-actions">
+          <a class="button secondary" href="./downloads/LabInsight-mac.zip" download>Mac용 다운로드</a>
+          <a class="button ghost" href="./downloads/LabInsight-windows.zip" download>Windows용 다운로드</a>
+        </div>
+      </section>
     </main>
 
     <footer class="footer">
-      <strong>LabInsight</strong>
-      <span>의료 정보는 참고용이며 전문적인 진단이나 치료를 대신하지 않습니다.</span>
+      <div class="footer-brand"><strong>LabInsight</strong><span>건강검진 결과 안내 서비스</span></div>
+      <p>본 서비스의 의료 정보는 참고용이며 전문적인 진단이나 치료를 대신하지 않습니다.<br>검사 결과와 건강 상태에 관한 결정은 의료진과 상담하세요.</p>
+      <div class="footer-links"><a href="#features">서비스 안내</a><a href="#input">결과 입력</a><a href="#hospitals">검진 예약</a><a href="https://haru-today.github.io/caffeine-atlas/">통합 포털</a></div>
     </footer>
 
     <nav class="app-tabbar" aria-label="앱 빠른 이동">
@@ -327,8 +316,9 @@
     <div class="modal-backdrop" id="bookingModal" hidden>
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="bookingTitle">
         <button class="modal-close" id="closeModalBtn" type="button" aria-label="닫기">×</button>
+        <p class="eyebrow">검진 예약 신청</p>
         <h2 id="bookingTitle">예약 요청 입력</h2>
-        <p class="muted" id="selectedHospital">선택 병원</p>
+        <p class="muted modal-description" id="selectedHospital">선택 병원</p>
         <form id="bookingForm" class="booking-form">
           <label>이름<input id="bookName" required autocomplete="name"></label>
           <label>연락처<input id="bookPhone" required inputmode="tel" placeholder="010-0000-0000"></label>
