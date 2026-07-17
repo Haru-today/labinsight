@@ -81,6 +81,13 @@
   function bindOcr() {
     const runBtn = byId("runOcrBtn");
     const applyBtn = byId("applyOcrBtn");
+    const ocrOption = byId("ocr");
+    document.querySelectorAll('a[href="#ocr"]').forEach((link) => {
+      link.addEventListener("click", () => {
+        if (ocrOption) ocrOption.open = true;
+      });
+    });
+    if (window.location.hash === "#ocr" && ocrOption) ocrOption.open = true;
     if (runBtn) runBtn.addEventListener("click", runOcr);
     if (applyBtn) applyBtn.addEventListener("click", () => {
       const text = byId("ocrText")?.value || "";
@@ -157,6 +164,14 @@
 
   function bindForm() {
     const form = byId("healthForm");
+    const showSampleReport = () => {
+      fillForm(sampleData);
+      updateBmiPreview();
+      renderReport(collectFormData());
+      byId("report")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    byId("heroSampleBtn")?.addEventListener("click", showSampleReport);
+    byId("emptySampleBtn")?.addEventListener("click", showSampleReport);
     byId("sampleBtn")?.addEventListener("click", () => {
       fillForm(sampleData);
       updateBmiPreview();
@@ -253,7 +268,7 @@
         <div class="report-top">
           <div class="score-box"><div><strong>${score}</strong><p>주의 항목 지수</p><span class="badge ${gradeClass}">${grade}</span></div></div>
           <div>
-            <p class="eyebrow">Demo Report</p>
+            <p class="eyebrow">검진 리포트</p>
             <h2>현재 상태 요약</h2>
             <p>${abnormal.length ? `참고 범위를 추가로 확인할 항목은 ${abnormal.map((r) => r.item.name).join(", ")}입니다.` : "입력된 주요 항목이 설정된 참고 범위 안에 있습니다."}</p>
             <p class="notice">이 리포트는 참고용이며 진단이나 치료를 대신하지 않습니다.</p>
@@ -554,7 +569,7 @@
       return `
       <article class="hospital-card">
         <h3>샘플 · ${hospital.name}</h3>
-        <p class="hospital-meta">${hospital.region} · ${hospital.dept} · 데모 평점 ${hospital.rating}</p>
+        <p class="hospital-meta">${hospital.region} · ${hospital.dept} · 샘플 평점 ${hospital.rating}</p>
         <p class="muted">${hospital.address} · ${hospital.phone}</p>
         <div class="tag-list">${hospital.packages.map((item) => `<span class="tag">${item}</span>`).join("")}</div>
         <p><strong>예상 가격:</strong> ${hospital.price}</p>
@@ -640,7 +655,7 @@
     }
     try {
       const saved = await createBooking(booking);
-      setStatus("bookingStatus", `데모 예약이 저장되었습니다. 실제 병원에는 전송되지 않습니다. 예약번호: ${saved.id}`);
+      setStatus("bookingStatus", `예약 요청이 저장되었습니다. 실제 병원에는 전송되지 않습니다. 예약번호: ${saved.id}`);
       byId("bookingForm")?.reset();
       await renderBookings();
       await renderHospitals();
@@ -857,7 +872,7 @@
     if (!notice) return;
     notice.textContent = apiAvailable
       ? "Node 서버 API와 data/bookings.json에 예약을 저장합니다."
-      : "정적 데모 환경이라 이 브라우저의 localStorage에만 예약을 저장하며 실제 병원에는 전송하지 않습니다.";
+      : "정적 실행 환경에서는 이 브라우저의 localStorage에만 예약을 저장하며 실제 병원에는 전송하지 않습니다.";
   }
 
   async function exportBookingsCsv() {
