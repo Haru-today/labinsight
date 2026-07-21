@@ -1,6 +1,9 @@
 # LabInsight
 
-LabInsight는 건강검진 결과 수치를 입력하거나 결과지 이미지를 업로드하면 주요 검사항목을 참고용으로 해석하고, 생활관리 가이드와 병원 예약 접수·관리 흐름을 제공하는 건강검진 예약 시스템 MVP입니다.
+LabInsight는 Personal Health Atlas의 건강검진 연결 서비스입니다. 건강검진 결과 수치를 입력하거나 결과지 이미지를 업로드하면 주요 검사항목을 참고 범위와 함께 정리하고, 생활관리 가이드와 샘플 병원 예약 접수·관리 흐름을 제공합니다.
+
+- Personal Health Atlas 통합 포털: <https://haru-today.github.io/caffeine-atlas/>
+- Caffeine Atlas 검사: <https://haru-today.github.io/caffeine-atlas/caffeine-sensitivity-app/analyzer.html>
 
 ## 배포 구조
 

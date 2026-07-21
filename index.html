@@ -7,32 +7,33 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="LabInsight">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="description" content="LabInsight 건강검진 결과 해석 및 병원 예약 운영 MVP">
-    <title>LabInsight | 건강검진 결과 해석 및 예약 시스템</title>
+    <meta name="description" content="Personal Health Atlas의 건강검진 결과 이해 및 샘플 예약 지원 서비스, LabInsight">
+    <title>LabInsight | Personal Health Atlas 건강검진 서비스</title>
     <link rel="manifest" href="./manifest.webmanifest">
     <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icons/icon-192.png">
-    <link rel="stylesheet" href="./styles.css?v=official-20260718b">
+    <link rel="stylesheet" href="./styles.css?v=health-atlas-20260721">
     <script src="./runtime-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
-    <script src="./app.js?v=official-20260718" defer></script>
+    <script src="./app.js?v=health-atlas-20260721" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#mainContent">본문으로 바로가기</a>
     <div class="utility-bar">
       <div>
-        <span>건강검진 결과 이해·예약 지원 서비스</span>
-        <span class="utility-notice">의료 정보는 참고용입니다.</span>
+        <span class="ecosystem-context"><a href="https://haru-today.github.io/caffeine-atlas/">Personal Health Atlas</a><span aria-hidden="true"> / </span><strong>LabInsight</strong></span>
+        <a class="utility-service-link" href="https://haru-today.github.io/caffeine-atlas/caffeine-sensitivity-app/analyzer.html">Caffeine Atlas 검사</a>
       </div>
     </div>
     <header class="site-header">
       <nav class="nav" aria-label="주요 메뉴">
         <a class="brand" href="./" aria-label="LabInsight 홈">
           <span class="brand-mark" aria-hidden="true">L</span>
-          <span class="brand-copy"><strong>LabInsight</strong><small>건강검진 결과 안내</small></span>
+          <span class="brand-copy"><strong>LabInsight</strong><small>Personal Health Atlas · 건강검진</small></span>
         </a>
         <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks"><span aria-hidden="true">☰</span><span class="sr-only">전체 메뉴</span></button>
         <div class="nav-links" id="navLinks">
+          <a class="nav-portal" href="https://haru-today.github.io/caffeine-atlas/">통합 포털</a>
           <a href="#features">서비스 안내</a>
           <a href="#input">결과 입력</a>
           <a href="#report">결과 리포트</a>
@@ -45,9 +46,9 @@
     <main id="mainContent">
       <section class="hero section">
         <div class="hero-copy">
-          <p class="eyebrow">HEALTH SCREENING REPORT</p>
+          <p class="eyebrow">PERSONAL HEALTH ATLAS · LABINSIGHT</p>
           <h1>내 건강검진 결과,<br>이해하기 쉽게 확인하세요.</h1>
-          <p class="hero-text">어려운 검사 수치를 참고 범위와 함께 정리하고, 생활관리부터 추가 검진과 예약까지 한 흐름으로 안내합니다.</p>
+          <p class="hero-text">Personal Health Atlas의 건강검진 연결 서비스로, 어려운 검사 수치를 참고 범위와 함께 정리하고 생활관리부터 추가 검진과 샘플 예약 흐름까지 안내합니다.</p>
           <div class="hero-actions">
             <a class="button primary" href="#input">검사 결과 입력하기</a>
             <button class="button secondary" id="heroSampleBtn" type="button">샘플 리포트 먼저 보기</button>
@@ -246,8 +247,8 @@
 
       <section class="section section-band" id="hospitals">
         <div class="section-heading">
-          <p class="eyebrow">STEP 3 · 검진 예약</p>
-          <h2>추천 검진 예약</h2>
+          <p class="eyebrow">STEP 3 · 샘플 예약 흐름</p>
+          <h2>추천 검진 예약 흐름 체험</h2>
           <p class="muted">병원 정보는 기능 확인을 위한 샘플입니다. 예약 요청은 실제 병원으로 전송되지 않습니다.</p>
         </div>
         <div class="operations-strip" aria-label="예약 운영 기능">
@@ -301,9 +302,9 @@
     </main>
 
     <footer class="footer">
-      <div class="footer-brand"><strong>LabInsight</strong><span>건강검진 결과 안내 서비스</span></div>
+      <div class="footer-brand"><strong>LabInsight</strong><span>Personal Health Atlas 건강검진 연결 서비스</span></div>
       <p>본 서비스의 의료 정보는 참고용이며 전문적인 진단이나 치료를 대신하지 않습니다.<br>검사 결과와 건강 상태에 관한 결정은 의료진과 상담하세요.</p>
-      <div class="footer-links"><a href="#features">서비스 안내</a><a href="#input">결과 입력</a><a href="#hospitals">검진 예약</a><a href="https://haru-today.github.io/caffeine-atlas/">통합 포털</a></div>
+      <div class="footer-links"><a href="#features">서비스 안내</a><a href="#input">결과 입력</a><a href="https://haru-today.github.io/caffeine-atlas/">Personal Health Atlas</a><a href="https://haru-today.github.io/caffeine-atlas/caffeine-sensitivity-app/analyzer.html">Caffeine Atlas</a></div>
     </footer>
 
     <nav class="app-tabbar" aria-label="앱 빠른 이동">
