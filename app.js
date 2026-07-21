@@ -368,10 +368,10 @@
           <div class="report-card"><h3>권장 추가 검사</h3>${renderList(guides.tests)}<p><strong>재검 시점:</strong> 검사기관 참고치와 의료진 상담에 따라 결정하세요.</p></div>
         </div>
         <div class="report-card report-table-card">
-          <h3>검사항목별 판정표</h3>
-          <div class="table-scroll" role="region" aria-label="검사항목별 판정표" tabindex="0">
+          <h3>검사항목별 참고 범위 확인표</h3>
+          <div class="table-scroll" role="region" aria-label="검사항목별 참고 범위 확인표" tabindex="0">
             <table class="result-table">
-              <thead><tr><th>항목</th><th>입력값</th><th>판정</th><th>설명</th></tr></thead>
+              <thead><tr><th>항목</th><th>입력값</th><th>상태</th><th>설명</th></tr></thead>
               <tbody>${results.map(renderResultRow).join("")}</tbody>
             </table>
           </div>
