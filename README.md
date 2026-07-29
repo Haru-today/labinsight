@@ -1,6 +1,6 @@
 # LabInsight
 
-LabInsight는 Personal Health Atlas의 건강검진 연결 서비스입니다. 건강검진 결과 수치를 입력하거나 결과지 이미지를 업로드하면 주요 검사항목을 참고 범위와 함께 정리하고, 생활관리 가이드와 샘플 병원 예약 접수·관리 흐름을 제공합니다.
+LabInsight는 Personal Health Atlas의 건강검진 연결 서비스입니다. 건강검진 결과 입력, 결과 해석 리포트, 병원·검진 패키지 비교와 샘플 예약을 각각의 독립 페이지로 제공하며 단계별로 이어서 사용할 수 있습니다.
 
 - Personal Health Atlas 통합 포털: <https://haru-today.github.io/caffeine-atlas/>
 - Caffeine Atlas 검사: <https://haru-today.github.io/caffeine-atlas/caffeine-sensitivity-app/analyzer.html>
@@ -11,7 +11,11 @@ GitHub Pages에서는 별도 빌드 없이 정적 화면을 실행할 수 있고
 
 ```text
 /
-├── index.html
+├── index.html              # 서비스 홈
+├── checkup.html            # STEP 1 결과 입력
+├── report.html             # STEP 2 결과 리포트
+├── hospitals.html          # STEP 3 병원·패키지 비교/예약
+├── hospital-data.js        # 공식 공개 병원·검진 패키지 데이터
 ├── styles.css
 ├── app.js
 ├── manifest.webmanifest
@@ -105,6 +109,7 @@ xattr -dr com.apple.quarantine "$HOME/Downloads/LabInsight-mac"
 ## 주요 기능
 
 - 건강검진 수치 직접 입력
+- STEP 1·2·3 독립 페이지 이동 및 최신 입력 결과 브라우저 저장
 - 샘플 데이터 불러오기
 - 접이식 검사 카테고리와 BMI 자동 계산
 - 혈압, BMI 기반 생활관리 및 검진 추천 보강
@@ -113,8 +118,12 @@ xattr -dr com.apple.quarantine "$HOME/Downloads/LabInsight-mac"
 - 건강관리 위험도 점수와 등급 생성
 - 결과 기반 추천 건강검진 카드 생성
 - 생활관리, 운동, 식습관, 권장 검사, 의료진 상담 질문 제공
-- 추천 검진에서 병원 필터 자동 연결
-- 병원별 예약 가능 시간표와 잔여 슬롯 표시
+- 추천 검진에서 병원 비교 페이지의 검진·진료과 필터 자동 연결
+- 공식 홈페이지에서 가격을 공개한 4개 기관의 78개 검진·선택검사 비교
+- 병원별 출처, 정보 확인일, 가격 기준과 공식 문의 링크 표시
+- 지역·진료분야·검진·가격·검색 필터와 추천/가격/패키지 수/병원명 정렬
+- 최대 3개 병원·패키지 비교표
+- 실제 병원 정보 조회와 LabInsight 샘플 예약 흐름 분리
 - 예약번호 생성, 중복 시간 예약 차단, 예약 상태 변경
 - 예약 관리 목록과 CSV 내보내기
 - Node 서버 실행 시 JSON 파일 기반 예약 API 저장
@@ -154,5 +163,6 @@ curl http://localhost:8000/api/bookings
 
 - 실제 OCR 품질은 이미지 해상도, 기울기, 표 형태에 따라 달라질 수 있습니다.
 - OCR이 실패해도 수동 입력과 리포트 생성 기능은 계속 사용할 수 있습니다.
-- 이 저장소의 병원 목록은 샘플 데이터입니다. 실제 병원 연동, SMS 발송, 결제, EMR/CRM 연동은 별도 외부 API 계약과 보안 검토가 필요합니다.
+- 병원·패키지·가격은 각 기관 공식 홈페이지의 공개정보를 2026-07-29에 확인해 정리했습니다. 구성과 가격은 변경될 수 있으므로 신청 전 공식 페이지에서 다시 확인해야 합니다.
+- 예약 저장 기능은 LabInsight 흐름 확인용 샘플이며 실제 병원으로 전송되지 않습니다. 실제 예약 연동, SMS 발송, 결제, EMR/CRM 연동은 별도 외부 API 계약과 보안 검토가 필요합니다.
 - 본 서비스의 의료 정보는 참고용이며 진단, 치료, 처방을 대신하지 않습니다.

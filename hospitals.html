@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#1769e0">
+    <meta name="description" content="LabInsight 추천 병원과 공식 건강검진 패키지 가격·구성 비교">
+    <title>STEP 3 병원·검진 패키지 비교 | LabInsight</title>
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./styles.css?v=real-packages-20260729a">
+    <script src="./runtime-config.js"></script>
+    <script src="./hospital-data.js?v=real-packages-20260729a"></script>
+    <script src="./app.js?v=real-packages-20260729a" defer></script>
+  </head>
+  <body data-page="hospitals">
+    <a class="skip-link" href="#mainContent">본문으로 바로가기</a>
+    <div class="utility-bar"><div><span class="ecosystem-context"><a href="https://haru-today.github.io/caffeine-atlas/">Personal Health Atlas</a><span aria-hidden="true"> / </span><strong>LabInsight</strong></span><a class="utility-service-link" href="https://haru-today.github.io/caffeine-atlas/caffeine-sensitivity-app/analyzer.html">Caffeine Atlas 검사</a></div></div>
+    <header class="site-header">
+      <nav class="nav" aria-label="주요 메뉴">
+        <a class="brand" href="./index.html" aria-label="LabInsight 홈"><span class="brand-mark" aria-hidden="true">L</span><span class="brand-copy"><strong>LabInsight</strong><small>Personal Health Atlas · 건강검진</small></span></a>
+        <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks"><span aria-hidden="true">☰</span><span class="sr-only">전체 메뉴</span></button>
+        <div class="nav-links" id="navLinks"><a class="nav-portal" href="https://haru-today.github.io/caffeine-atlas/">통합 포털</a><a href="./index.html">서비스 홈</a><a href="./checkup.html">결과 입력</a><a href="./report.html">결과 리포트</a><a class="is-current" href="./hospitals.html">병원 비교·예약</a><a class="nav-cta" href="#marketplace">조건 검색하기</a></div>
+      </nav>
+    </header>
+
+    <main id="mainContent">
+      <section class="page-masthead marketplace-masthead">
+        <div class="section">
+          <p class="breadcrumb"><a href="./index.html">홈</a><span aria-hidden="true">/</span> 병원·검진 패키지 비교</p>
+          <p class="eyebrow">STEP 3 · COMPARE &amp; BOOK</p>
+          <h1>내 결과에 맞는 검진,<br>구성과 가격까지 <span class="no-break">비교하세요.</span></h1>
+          <p>병원 공식 홈페이지에 공개된 건강검진 패키지의 구성과 가격을 모아 한눈에 비교합니다.</p>
+          <div class="marketplace-trust"><span>✓ 공식 출처 연결</span><span>✓ 총 78개 선택지</span><span>✓ 최대 3곳 비교</span></div>
+        </div>
+      </section>
+
+      <section class="section page-content-section" id="marketplace">
+        <nav class="workflow-steps page-workflow" aria-label="서비스 이용 단계">
+          <a href="./checkup.html"><span>1</span><strong>결과 입력</strong><small>검사 수치</small></a>
+          <a href="./report.html"><span>2</span><strong>리포트 확인</strong><small>결과 해석</small></a>
+          <a class="active" href="./hospitals.html" aria-current="step"><span>3</span><strong>병원 비교·예약</strong><small>현재 단계</small></a>
+        </nav>
+
+        <div class="source-disclaimer"><strong>공식 공개정보 기준</strong><span>KMI, 서울대학교병원, 서울아산병원, 한국건강관리협회의 공식 홈페이지에서 공개한 패키지·가격을 2026-07-29에 확인했습니다. 구성·가격·예약 가능 여부는 변경될 수 있으므로 신청 전 각 공식 페이지에서 최종 확인하세요.</span></div>
+        <div class="recommendation-context" id="recommendationContext" hidden></div>
+
+        <div class="category-shortcuts" aria-label="검진 유형 빠른 선택">
+          <button class="is-active" type="button" data-package-shortcut="all">전체 검진</button>
+          <button type="button" data-package-shortcut="종합검진">종합검진</button>
+          <button type="button" data-package-shortcut="암 정밀">암 정밀</button>
+          <button type="button" data-package-shortcut="심뇌혈관">심뇌혈관</button>
+          <button type="button" data-package-shortcut="뇌">뇌</button>
+          <button type="button" data-package-shortcut="심장">심장</button>
+          <button type="button" data-package-shortcut="폐">폐</button>
+          <button type="button" data-package-shortcut="소화기">소화기</button>
+          <button type="button" data-package-shortcut="여성">여성</button>
+          <button type="button" data-package-shortcut="간 기능">간 기능</button>
+          <button type="button" data-package-shortcut="당뇨">당뇨</button>
+          <button type="button" data-package-shortcut="이상지질혈증">심혈관·지질</button>
+          <button type="button" data-package-shortcut="신장 기능">신장 기능</button>
+          <button type="button" data-package-shortcut="빈혈">혈액·빈혈</button>
+        </div>
+
+        <div class="marketplace-layout">
+          <aside class="filter-panel" aria-label="병원 검색 조건">
+            <div class="filter-panel-heading"><div><span>조건 검색</span><strong>원하는 검진만 보기</strong></div><button id="resetFiltersBtn" type="button">초기화</button></div>
+            <label>병원·패키지 검색<input id="keywordFilter" type="search" placeholder="병원명, MRI, 대장내시경 등"></label>
+            <label>지역<select id="regionFilter"><option value="all">전체 지역</option><option>전국</option><option>서울</option></select></label>
+            <label>진료 분야<select id="deptFilter"><option value="all">전체 진료 분야</option><option>건강검진센터</option><option>내과</option><option>가정의학과</option><option>소화기내과</option><option>내분비내과</option><option>신장내과</option><option>심장내과</option></select></label>
+            <label>검진 항목<select id="packageFilter"><option value="all">전체 검진</option><option>종합검진</option><option>암 정밀</option><option>심뇌혈관</option><option>뇌</option><option>심장</option><option>폐</option><option>소화기</option><option>여성</option><option>남성</option><option>척추</option><option>알레르기</option><option>마음건강</option><option>간 기능</option><option>당뇨</option><option>이상지질혈증</option><option>신장 기능</option><option>빈혈</option></select></label>
+            <label>공개 가격<select id="priceFilter"><option value="all">가격 전체</option><option value="100000">10만원 이하</option><option value="300000">30만원 이하</option><option value="500000">50만원 이하</option><option value="1000000">100만원 이하</option><option value="2000000">200만원 이하</option><option value="3000000">300만원 이하</option><option value="5000000">500만원 이하</option></select></label>
+            <div class="filter-helper"><strong>비교 팁</strong><p>단독 프로그램인지 기본검진에 추가하는 선택검사인지 확인하고, 최종 구성·가격은 공식 페이지에서 다시 확인하세요.</p></div>
+          </aside>
+
+          <div class="marketplace-results">
+            <div class="result-toolbar">
+              <div><strong id="resultCount">병원 0곳</strong><span>공식 공개 패키지를 조건별로 비교해 보세요.</span></div>
+              <label><span class="sr-only">정렬 기준</span><select id="sortFilter"><option value="recommended">추천순</option><option value="price">낮은 가격순</option><option value="packages">패키지 많은순</option><option value="name">병원 이름순</option></select></label>
+            </div>
+            <div class="hospital-grid marketplace-grid" id="hospitalList" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <section class="compare-panel" id="comparePanel" hidden aria-live="polite">
+          <div class="compare-panel-head"><div><p class="eyebrow">선택 비교</p><h2>병원·패키지 한눈에 비교</h2></div><button class="button ghost" id="clearCompareBtn" type="button">비교 비우기</button></div>
+          <div class="table-scroll" id="compareItems"></div>
+        </section>
+
+        <section class="booking-management">
+          <div class="booking-management-head"><div><p class="eyebrow">LABINSIGHT DEMO</p><h2>예약 흐름 체험</h2><p class="muted">이 영역은 기능 확인용 샘플입니다. 입력 내용은 실제 병원에 전송되지 않으며, 실제 예약은 위의 병원 공식 페이지에서 진행하세요.</p></div><div class="booking-management-actions"><button class="button primary" id="tryBookingBtn" type="button">샘플 예약 체험</button><button class="button secondary" id="viewBookingsBtn" type="button">저장 내역 보기</button></div></div>
+          <div class="booking-summary" id="bookingSummary" aria-live="polite"></div>
+          <div class="booking-list" id="bookingList" hidden>
+            <div class="booking-list-head"><div><h3>예약 관리</h3><p class="notice" id="bookingModeNotice">예약 데이터를 불러오는 중입니다.</p></div><button class="button ghost" id="exportBookingsBtn" type="button">CSV 내보내기</button></div>
+            <div id="bookingItems"></div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <footer class="footer"><div class="footer-brand"><strong>LabInsight</strong><span>Personal Health Atlas 건강검진 연결 서비스</span></div><p>패키지·가격은 각 기관 공식 홈페이지의 공개정보를 바탕으로 정리했으며 변경될 수 있습니다.<br>이 정보는 비교 참고용이며 진단·치료를 대신하지 않습니다. 실제 예약 전 의료기관의 최신 안내를 확인하세요.</p><div class="footer-links"><a href="./index.html">서비스 홈</a><a href="./checkup.html">결과 입력</a><a href="./report.html">결과 리포트</a><a href="https://haru-today.github.io/caffeine-atlas/">통합 포털</a></div></footer>
+    <nav class="app-tabbar" aria-label="앱 빠른 이동"><a href="./index.html"><span>홈</span></a><a href="./checkup.html"><span>입력</span></a><a href="./report.html"><span>리포트</span></a><a class="is-current" href="./hospitals.html"><span>비교·예약</span></a></nav>
+
+    <div class="modal-backdrop" id="bookingModal" hidden>
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="bookingTitle">
+        <button class="modal-close" id="closeModalBtn" type="button" aria-label="닫기">×</button>
+        <p class="eyebrow">샘플 검진 예약</p>
+        <h2 id="bookingTitle">예약 요청 입력</h2>
+        <p class="muted modal-description" id="selectedHospital">선택 병원</p>
+        <form id="bookingForm" class="booking-form">
+          <label>이름<input id="bookName" required autocomplete="name"></label>
+          <label>연락처<input id="bookPhone" required inputmode="tel" placeholder="010-0000-0000"></label>
+          <label>생년월일<input id="bookBirthDate" required type="date"></label>
+          <label>검진 패키지<select id="bookPackage" required><option value="">선택</option></select></label>
+          <label>희망 날짜<input id="bookDate" required type="date"></label>
+          <label>희망 시간<select id="bookTime" required><option value="">날짜를 먼저 선택</option></select></label>
+          <label class="wide-field">상담 목적<textarea id="bookPurpose" rows="4" placeholder="검진 결과 상담, 재검 문의 등"></textarea></label>
+          <label class="consent-row"><input id="bookConsent" type="checkbox" required> 입력 정보가 이 브라우저 또는 로컬 서버에 저장되며 실제 병원에는 전송되지 않음을 확인합니다.</label>
+          <button class="button primary full" type="submit">샘플 예약 요청 저장</button>
+        </form>
+        <p class="status" id="bookingStatus"></p>
+      </div>
+    </div>
+  </body>
+</html>

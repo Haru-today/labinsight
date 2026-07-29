@@ -5,7 +5,11 @@ const root = path.resolve(__dirname, "..");
 const output = path.join(root, "mobile-web");
 const files = [
   "index.html",
+  "checkup.html",
+  "report.html",
+  "hospitals.html",
   "styles.css",
+  "hospital-data.js",
   "app.js",
   "manifest.webmanifest",
   "service-worker.js"

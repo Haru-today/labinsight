@@ -1,9 +1,13 @@
-const CACHE_NAME = "labinsight-app-v20260718-official-b";
+const CACHE_NAME = "labinsight-app-v20260729-real-packages-a";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=official-20260718b",
-  "./app.js?v=official-20260718",
+  "./checkup.html",
+  "./report.html",
+  "./hospitals.html",
+  "./styles.css?v=real-packages-20260729a",
+  "./hospital-data.js?v=real-packages-20260729a",
+  "./app.js?v=real-packages-20260729a",
   "./runtime-config.js",
   "./manifest.webmanifest",
   "./icons/icon.svg",
@@ -39,10 +43,10 @@ self.addEventListener("fetch", (event) => {
       fetch(request)
         .then((response) => {
           const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put("./index.html", copy));
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
           return response;
         })
-        .catch(() => caches.match("./index.html"))
+        .catch(() => caches.match(request, { ignoreSearch: true }).then((cached) => cached || caches.match("./index.html")))
     );
     return;
   }

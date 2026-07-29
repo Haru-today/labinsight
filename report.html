@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#1769e0">
+    <meta name="description" content="LabInsight 건강검진 결과 해석 리포트">
+    <title>STEP 2 결과 리포트 | LabInsight</title>
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./styles.css?v=real-packages-20260729a">
+    <script src="./runtime-config.js"></script>
+    <script src="./app.js?v=real-packages-20260729a" defer></script>
+  </head>
+  <body data-page="report">
+    <a class="skip-link" href="#mainContent">본문으로 바로가기</a>
+    <div class="utility-bar"><div><span class="ecosystem-context"><a href="https://haru-today.github.io/caffeine-atlas/">Personal Health Atlas</a><span aria-hidden="true"> / </span><strong>LabInsight</strong></span><a class="utility-service-link" href="https://haru-today.github.io/caffeine-atlas/caffeine-sensitivity-app/analyzer.html">Caffeine Atlas 검사</a></div></div>
+    <header class="site-header">
+      <nav class="nav" aria-label="주요 메뉴">
+        <a class="brand" href="./index.html" aria-label="LabInsight 홈"><span class="brand-mark" aria-hidden="true">L</span><span class="brand-copy"><strong>LabInsight</strong><small>Personal Health Atlas · 건강검진</small></span></a>
+        <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks"><span aria-hidden="true">☰</span><span class="sr-only">전체 메뉴</span></button>
+        <div class="nav-links" id="navLinks"><a class="nav-portal" href="https://haru-today.github.io/caffeine-atlas/">통합 포털</a><a href="./index.html">서비스 홈</a><a href="./checkup.html">결과 입력</a><a class="is-current" href="./report.html">결과 리포트</a><a href="./hospitals.html">병원 비교·예약</a><a class="nav-cta" href="./hospitals.html">병원·가격 비교</a></div>
+      </nav>
+    </header>
+
+    <main id="mainContent">
+      <section class="page-masthead report-masthead">
+        <div class="section">
+          <p class="breadcrumb"><a href="./index.html">홈</a><span aria-hidden="true">/</span> 결과 리포트</p>
+          <p class="eyebrow">STEP 2 · REPORT</p>
+          <h1>검진 결과를 이해하기 쉽게 정리했습니다.</h1>
+          <p>주의가 필요한 항목과 참고 범위, 생활 가이드, 다음에 확인할 검진을 살펴보세요. 추천 검진에서 바로 병원과 패키지 가격 비교로 이동할 수 있습니다.</p>
+        </div>
+      </section>
+      <section class="section page-content-section">
+        <nav class="workflow-steps page-workflow" aria-label="서비스 이용 단계">
+          <a href="./checkup.html"><span>1</span><strong>결과 입력</strong><small>입력 완료</small></a>
+          <a class="active" href="./report.html" aria-current="step"><span>2</span><strong>리포트 확인</strong><small>현재 단계</small></a>
+          <a href="./hospitals.html"><span>3</span><strong>병원 비교·예약</strong><small>패키지 선택</small></a>
+        </nav>
+        <section class="report-section report-page-surface" id="report" aria-live="polite">
+          <div class="empty-report">
+            <p class="eyebrow">아직 저장된 결과가 없습니다</p>
+            <h2>결과 입력 후 리포트를 확인하세요.</h2>
+            <p>직접 검사 수치를 입력하거나 샘플 리포트로 전체 흐름을 먼저 살펴볼 수 있습니다.</p>
+            <div class="empty-report-actions"><a class="button primary" href="./checkup.html">결과 입력하기</a><button class="button secondary" id="emptySampleBtn" type="button">샘플 리포트 보기</button></div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <footer class="footer"><div class="footer-brand"><strong>LabInsight</strong><span>Personal Health Atlas 건강검진 연결 서비스</span></div><p>본 리포트는 입력값을 기준으로 한 참고 정보이며 진단이나 치료를 대신하지 않습니다.<br>검사 결과와 다음 검진은 의료진과 상담하세요.</p><div class="footer-links"><a href="./index.html">서비스 홈</a><a href="./checkup.html">결과 입력</a><a href="./hospitals.html">병원 비교</a><a href="https://haru-today.github.io/caffeine-atlas/">통합 포털</a></div></footer>
+    <nav class="app-tabbar" aria-label="앱 빠른 이동"><a href="./index.html"><span>홈</span></a><a href="./checkup.html"><span>입력</span></a><a class="is-current" href="./report.html"><span>리포트</span></a><a href="./hospitals.html"><span>비교·예약</span></a></nav>
+  </body>
+</html>
