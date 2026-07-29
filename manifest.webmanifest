@@ -36,14 +36,14 @@
       "name": "검진 결과 입력",
       "short_name": "입력",
       "description": "건강검진 수치를 입력합니다.",
-      "url": "./index.html#input",
+      "url": "./checkup.html",
       "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "name": "예약 관리",
-      "short_name": "예약",
-      "description": "추천 검진 예약과 예약 내역을 확인합니다.",
-      "url": "./index.html#hospitals",
+      "name": "병원·패키지 비교",
+      "short_name": "비교·예약",
+      "description": "추천 병원과 검진 패키지 가격을 비교합니다.",
+      "url": "./hospitals.html",
       "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]

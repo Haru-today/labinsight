@@ -4,6 +4,7 @@
   const $ = (selector) => document.querySelector(selector);
   const byId = (id) => document.getElementById(id);
   const storageKey = "labinsight-bookings";
+  const reportStorageKey = "labinsight-latest-report";
   const apiBaseUrl = String(window.LABINSIGHT_CONFIG?.apiBaseUrl || "").trim().replace(/\/$/, "");
   const statusLabels = {
     requested: "접수",
@@ -37,18 +38,71 @@
     uricAcid: 7.8, hemoglobin: 14.3, wbc: 7200, platelet: 245
   };
 
-  const hospitals = [
-    { id: "busan-med", name: "부산 메디체크 내과", region: "부산", dept: "내과", address: "부산 부산진구 중앙대로 672", phone: "051-000-1100", packages: ["종합검진", "간 기능", "당뇨"], price: "90,000원~", rating: 4.7, duration: 50, slots: ["09:00", "10:30", "13:30", "15:00"] },
-    { id: "centum-gi", name: "센텀 소화기클리닉", region: "부산", dept: "소화기내과", address: "부산 해운대구 센텀중앙로 48", phone: "051-000-2200", packages: ["간 기능", "종합검진"], price: "120,000원~", rating: 4.8, duration: 60, slots: ["09:30", "11:00", "14:00", "16:00"] },
-    { id: "seoul-endo", name: "서울 라이프내분비센터", region: "서울", dept: "내분비내과", address: "서울 강남구 테헤란로 152", phone: "02-000-3300", packages: ["당뇨", "이상지질혈증"], price: "110,000원~", rating: 4.6, duration: 45, slots: ["09:00", "10:00", "14:30", "16:30"] },
-    { id: "daegu-kidney", name: "대구 신장건강의원", region: "대구", dept: "신장내과", address: "대구 중구 달구벌대로 2095", phone: "053-000-4400", packages: ["신장 기능", "종합검진"], price: "100,000원~", rating: 4.5, duration: 50, slots: ["09:20", "10:40", "13:40", "15:20"] },
-    { id: "online-lab", name: "온라인 검진상담 Lab", region: "온라인 상담", dept: "가정의학과", address: "비대면 상담", phone: "1588-0000", packages: ["종합검진", "빈혈", "당뇨"], price: "30,000원~", rating: 4.4, duration: 25, slots: ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"] },
-    { id: "seoul-heart", name: "서울 하트리스크 클리닉", region: "서울", dept: "심장내과", address: "서울 송파구 올림픽로 300", phone: "02-000-5500", packages: ["이상지질혈증", "종합검진"], price: "150,000원~", rating: 4.9, duration: 70, slots: ["09:10", "10:50", "14:10", "15:50"] }
+  const bookingHospitals = [
+    {
+      id: "busan-med", name: "LabInsight 예약 데모 센터", region: "온라인 데모", area: "실제 병원 전송 없음", dept: "샘플 건강상담",
+      address: "기능 확인용 가상 센터", phone: "연락처 없음", packages: ["종합검진", "간 기능", "당뇨"],
+      rating: 0, reviewCount: 0, duration: 50, badges: ["기능 확인용"], slots: ["09:00", "10:30", "13:30", "15:00"],
+      plans: [
+        { category: "종합검진", name: "베이직 종합검진", price: 90000, originalPrice: 120000, includes: ["혈액 40종", "흉부 X-ray", "심전도"] },
+        { category: "간 기능", name: "간 기능 집중검진", price: 65000, originalPrice: 80000, includes: ["간 기능 8종", "B·C형 간염", "상담"] },
+        { category: "당뇨", name: "당대사 체크", price: 55000, originalPrice: 70000, includes: ["공복혈당", "HbA1c", "소변검사"] }
+      ]
+    },
+    {
+      id: "centum-gi", name: "센텀 소화기클리닉", region: "부산", area: "센텀시티역 7분", dept: "소화기내과",
+      address: "부산 해운대구 센텀중앙로 48", phone: "051-000-2200", packages: ["간 기능", "종합검진"],
+      rating: 4.8, reviewCount: 512, duration: 60, badges: ["전문의 결과 설명", "초음파 포함"], slots: ["09:30", "11:00", "14:00", "16:00"],
+      plans: [
+        { category: "간 기능", name: "간·복부 정밀 패키지", price: 120000, originalPrice: 160000, includes: ["복부초음파", "간 기능 10종", "간염 검사"] },
+        { category: "종합검진", name: "소화기 안심 종합검진", price: 190000, originalPrice: 240000, includes: ["위 검사 상담", "복부초음파", "혈액 45종"] }
+      ]
+    },
+    {
+      id: "seoul-endo", name: "서울 라이프내분비센터", region: "서울", area: "강남역 3분", dept: "내분비내과",
+      address: "서울 강남구 테헤란로 152", phone: "02-000-3300", packages: ["당뇨", "이상지질혈증"],
+      rating: 4.6, reviewCount: 741, duration: 45, badges: ["강남권 인기", "평일 야간"], slots: ["09:00", "10:00", "14:30", "16:30"],
+      plans: [
+        { category: "당뇨", name: "당뇨 위험 정밀검진", price: 110000, originalPrice: 145000, includes: ["HbA1c", "인슐린", "미세알부민뇨"] },
+        { category: "이상지질혈증", name: "대사·지질 체크", price: 85000, originalPrice: 110000, includes: ["지질 4종", "공복혈당", "의료진 상담"] }
+      ]
+    },
+    {
+      id: "daegu-kidney", name: "대구 신장건강의원", region: "대구", area: "반월당역 4분", dept: "신장내과",
+      address: "대구 중구 달구벌대로 2095", phone: "053-000-4400", packages: ["신장 기능", "종합검진"],
+      rating: 4.5, reviewCount: 186, duration: 50, badges: ["신장 전문 상담", "빠른 결과"], slots: ["09:20", "10:40", "13:40", "15:20"],
+      plans: [
+        { category: "신장 기능", name: "신장 기능 정밀검진", price: 100000, originalPrice: 135000, includes: ["eGFR", "미세알부민뇨", "신장초음파 상담"] },
+        { category: "종합검진", name: "대사·신장 종합검진", price: 175000, originalPrice: 220000, includes: ["혈액 42종", "소변검사", "심전도"] }
+      ]
+    },
+    {
+      id: "online-lab", name: "온라인 검진상담 Lab", region: "온라인 상담", area: "전국 비대면", dept: "가정의학과",
+      address: "비대면 결과 상담", phone: "1588-0000", packages: ["종합검진", "빈혈", "당뇨"],
+      rating: 4.4, reviewCount: 92, duration: 25, badges: ["방문 전 상담", "결과지 리뷰"], slots: ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"],
+      plans: [
+        { category: "종합검진", name: "결과지 종합 상담", price: 30000, originalPrice: 40000, includes: ["결과지 검토", "질문 정리", "추가 검진 안내"] },
+        { category: "빈혈", name: "혈액·빈혈 결과 상담", price: 35000, originalPrice: 45000, includes: ["CBC 결과 검토", "식생활 안내", "추적검사 안내"] },
+        { category: "당뇨", name: "당대사 결과 상담", price: 35000, originalPrice: 45000, includes: ["혈당 추이 검토", "생활관리", "추적검사 안내"] }
+      ]
+    },
+    {
+      id: "seoul-heart", name: "서울 하트리스크 클리닉", region: "서울", area: "잠실역 6분", dept: "심장내과",
+      address: "서울 송파구 올림픽로 300", phone: "02-000-5500", packages: ["이상지질혈증", "종합검진"],
+      rating: 4.9, reviewCount: 624, duration: 70, badges: ["평점 상위", "심혈관 집중"], slots: ["09:10", "10:50", "14:10", "15:50"],
+      plans: [
+        { category: "이상지질혈증", name: "심혈관·지질 정밀검진", price: 150000, originalPrice: 195000, includes: ["지질 4종", "심전도", "경동맥초음파 상담"] },
+        { category: "종합검진", name: "하트 안심 종합검진", price: 210000, originalPrice: 270000, includes: ["심전도", "혈액 45종", "심혈관 위험 상담"] }
+      ]
+    }
   ];
 
+  const hospitals = Array.isArray(window.LABINSIGHT_HOSPITALS) ? window.LABINSIGHT_HOSPITALS : [];
   let selectedHospital = null;
   let apiAvailable = false;
   let deferredInstallPrompt = null;
+  const comparedHospitalIds = new Set();
+  const expandedHospitalIds = new Set();
 
   document.addEventListener("DOMContentLoaded", init);
 
@@ -60,6 +114,8 @@
     bindHospitals();
     bindBookingModal();
     bindAppShell();
+    restoreSavedReport();
+    applyMarketplaceQuery();
     detectBookingApi();
     renderHospitals();
     updateBookingSummary();
@@ -239,10 +295,8 @@
   function bindForm() {
     const form = byId("healthForm");
     const showSampleReport = () => {
-      fillForm(sampleData);
-      updateBmiPreview();
-      renderReport(collectFormData());
-      byId("report")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      saveReport(sampleData);
+      window.location.href = "./report.html";
     };
     byId("heroSampleBtn")?.addEventListener("click", showSampleReport);
     byId("emptySampleBtn")?.addEventListener("click", showSampleReport);
@@ -252,14 +306,39 @@
     });
     byId("clearBtn")?.addEventListener("click", () => {
       form?.reset();
+      localStorage.removeItem(reportStorageKey);
       updateBmiPreview();
     });
     form?.addEventListener("submit", (event) => {
       event.preventDefault();
       const data = collectFormData();
-      renderReport(data);
-      byId("report")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      saveReport(data);
+      window.location.href = "./report.html";
     });
+  }
+
+  function saveReport(data) {
+    const reportData = { ...data };
+    reportData.bmi = calculateBmi(reportData.height, reportData.weight);
+    localStorage.setItem(reportStorageKey, JSON.stringify(reportData));
+  }
+
+  function readSavedReport() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(reportStorageKey) || "null");
+      return parsed && typeof parsed === "object" ? parsed : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function restoreSavedReport() {
+    const saved = readSavedReport();
+    if (byId("healthForm") && saved) {
+      fillForm(saved);
+      updateBmiPreview();
+    }
+    if (byId("report") && saved) renderReport(saved);
   }
 
   function bindBmiPreview() {
@@ -335,6 +414,8 @@
     const gradeClass = score <= 30 ? "normal" : score <= 60 ? "caution" : "danger";
     const guides = buildGuides(data);
     const checkups = buildRecommendedCheckups(data, score);
+    const primaryCheckup = checkups[0] || { package: "종합검진", deptFilter: "all" };
+    const compareUrl = buildHospitalUrl(primaryCheckup.package, primaryCheckup.deptFilter);
     const report = byId("report");
     if (!report) return;
     report.innerHTML = `
@@ -358,6 +439,17 @@
           </div>
           <div class="checkup-grid">${checkups.map(renderCheckupCard).join("")}</div>
         </section>
+        <div class="report-next-actions">
+          <div>
+            <p class="eyebrow">NEXT STEP</p>
+            <h3>권고 검진을 제공하는 병원과 가격을 비교해 보세요.</h3>
+            <p>추천 조건을 적용한 병원 목록에서 패키지 구성, 예상 가격과 예약 가능 시간을 확인합니다.</p>
+          </div>
+          <div>
+            <a class="button primary large" href="${compareUrl}">STEP 3 병원·가격 비교하기</a>
+            <a class="button ghost" href="./checkup.html">입력값 수정하기</a>
+          </div>
+        </div>
         <div class="report-grid">
           <div class="report-card"><h3>주요 이상 항목</h3>${renderList(abnormal.map((r) => `${r.item.name}: ${r.value} ${r.item.unit} (${r.judge.label})`), "이상 항목이 없습니다.")}</div>
           <div class="report-card"><h3>기본 건강지표</h3>${renderBasicMetrics(data)}</div>
@@ -401,7 +493,7 @@
         <h4>${checkup.title}</h4>
         <p>${checkup.reason}</p>
         <div class="tag-list">${checkup.tests.map((test) => `<span class="tag">${test}</span>`).join("")}</div>
-        <button class="button secondary" type="button" data-recommend-package="${checkup.package}" data-recommend-dept="${checkup.deptFilter}">관련 병원 보기</button>
+        <button class="button secondary" type="button" data-recommend-package="${checkup.package}" data-recommend-dept="${checkup.deptFilter}">이 검진의 병원·가격 보기</button>
       </article>
     `;
   }
@@ -606,10 +698,49 @@
   function applyHospitalFilter(packageName, deptName) {
     const packageFilter = byId("packageFilter");
     const deptFilter = byId("deptFilter");
+    if (!packageFilter || !byId("hospitalList")) {
+      window.location.href = buildHospitalUrl(packageName, deptName);
+      return;
+    }
     if (packageFilter) packageFilter.value = packageName;
     if (deptFilter) deptFilter.value = deptName;
+    syncPackageShortcuts();
     renderHospitals();
-    byId("hospitals")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    byId("marketplace")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function buildHospitalUrl(packageName, deptName) {
+    const params = new URLSearchParams();
+    if (packageName && packageName !== "all") params.set("package", packageName);
+    if (deptName && deptName !== "all") params.set("dept", deptName);
+    return `./hospitals.html${params.toString() ? `?${params}` : ""}`;
+  }
+
+  function applyMarketplaceQuery() {
+    if (!byId("hospitalList")) return;
+    const params = new URLSearchParams(window.location.search);
+    const packageName = params.get("package") || "all";
+    const deptName = params.get("dept") || "all";
+    const regionName = params.get("region") || "all";
+    setSelectValue("packageFilter", packageName);
+    setSelectValue("deptFilter", deptName);
+    setSelectValue("regionFilter", regionName);
+    syncPackageShortcuts();
+    const context = byId("recommendationContext");
+    if (context && (packageName !== "all" || deptName !== "all")) {
+      context.hidden = false;
+      context.innerHTML = `
+        <div><span class="context-icon" aria-hidden="true">✓</span><div><strong>리포트 추천 조건이 적용되었습니다.</strong><p>${escapeHtml(packageName === "all" ? "전체 검진" : packageName)} · ${escapeHtml(deptName === "all" ? "전체 진료과" : deptName)} 중심으로 먼저 보여드립니다.</p></div></div>
+        <a href="./report.html">리포트로 돌아가기</a>
+      `;
+    }
+  }
+
+  function setSelectValue(id, value) {
+    const select = byId(id);
+    if (!select) return;
+    const exists = Array.from(select.options).some((option) => option.value === value);
+    if (exists) select.value = value;
   }
 
   function isHigh(value, limit) { return value !== null && value > limit; }
@@ -623,46 +754,214 @@
   }
 
   function bindHospitals() {
-    ["regionFilter", "deptFilter", "packageFilter"].forEach((id) => byId(id)?.addEventListener("change", renderHospitals));
+    ["regionFilter", "deptFilter", "packageFilter", "priceFilter", "sortFilter"].forEach((id) => {
+      byId(id)?.addEventListener("change", () => {
+        syncPackageShortcuts();
+        renderHospitals();
+      });
+    });
+    byId("keywordFilter")?.addEventListener("input", renderHospitals);
+    document.querySelectorAll("[data-package-shortcut]").forEach((button) => {
+      button.addEventListener("click", () => {
+        setSelectValue("packageFilter", button.dataset.packageShortcut || "all");
+        syncPackageShortcuts();
+        renderHospitals();
+      });
+    });
+    byId("resetFiltersBtn")?.addEventListener("click", () => {
+      ["regionFilter", "deptFilter", "packageFilter", "priceFilter"].forEach((id) => setSelectValue(id, "all"));
+      setSelectValue("sortFilter", "recommended");
+      if (byId("keywordFilter")) byId("keywordFilter").value = "";
+      const context = byId("recommendationContext");
+      if (context) context.hidden = true;
+      window.history.replaceState({}, "", "./hospitals.html");
+      syncPackageShortcuts();
+      renderHospitals();
+    });
+    byId("clearCompareBtn")?.addEventListener("click", () => {
+      comparedHospitalIds.clear();
+      renderHospitals();
+      renderComparePanel();
+    });
+    byId("tryBookingBtn")?.addEventListener("click", () => openBookingModal("busan-med", "종합검진"));
     byId("viewBookingsBtn")?.addEventListener("click", renderBookings);
     byId("exportBookingsBtn")?.addEventListener("click", exportBookingsCsv);
   }
 
-  async function renderHospitals() {
+  function syncPackageShortcuts() {
+    const current = byId("packageFilter")?.value || "all";
+    document.querySelectorAll("[data-package-shortcut]").forEach((button) => {
+      const active = button.dataset.packageShortcut === current;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+  }
+
+  function renderHospitals() {
     const list = byId("hospitalList");
     if (!list) return;
     const region = byId("regionFilter")?.value || "all";
     const dept = byId("deptFilter")?.value || "all";
     const pack = byId("packageFilter")?.value || "all";
-    const bookings = await readBookings();
-    const filtered = hospitals.filter((hospital) =>
-      (region === "all" || hospital.region === region) &&
-      (dept === "all" || hospital.dept === dept) &&
-      (pack === "all" || hospital.packages.includes(pack))
-    );
-    list.innerHTML = filtered.length ? filtered.map((hospital) => {
-      const availableCount = countAvailableSlots(hospital, bookings);
-      return `
-      <article class="hospital-card">
-        <div class="hospital-card-head"><span class="sample-label">샘플</span><h3>${hospital.name}</h3></div>
-        <p class="hospital-meta">${hospital.region} · ${hospital.dept} <span>★ ${hospital.rating}</span></p>
-        <p class="muted">${hospital.address} · ${hospital.phone}</p>
-        <div class="tag-list">${hospital.packages.map((item) => `<span class="tag">${item}</span>`).join("")}</div>
-        <dl class="hospital-facts">
-          <div><dt>예상 가격</dt><dd>${hospital.price}</dd></div>
-          <div><dt>소요 시간</dt><dd>약 ${hospital.duration}분</dd></div>
-          <div><dt>14일 내 잔여</dt><dd>${availableCount}개</dd></div>
-        </dl>
-        <p class="slot-label">예약 가능 시간</p>
-        <div class="slot-preview">${hospital.slots.map((slot) => `<span>${slot}</span>`).join("")}</div>
-        <button class="button primary" type="button" data-book="${hospital.id}">예약 흐름 체험</button>
+    const maxPrice = byId("priceFilter")?.value === "all" ? Infinity : Number(byId("priceFilter")?.value);
+    const sort = byId("sortFilter")?.value || "recommended";
+    const keyword = String(byId("keywordFilter")?.value || "").trim().toLowerCase();
+    const withPlans = hospitals.map((hospital) => {
+      const hospitalKeywords = `${hospital.name} ${hospital.region} ${hospital.area} ${hospital.dept} ${hospital.address}`.toLowerCase();
+      const hospitalMatchesKeyword = !keyword || hospitalKeywords.includes(keyword);
+      const plans = hospital.plans.filter((plan) => {
+        const price = Number(plan.price);
+        const planKeywords = `${plan.name} ${plan.category} ${(plan.tags || []).join(" ")} ${(plan.includes || []).join(" ")}`.toLowerCase();
+        return planMatchesPackage(plan, pack) &&
+          Number.isFinite(price) &&
+          price <= maxPrice &&
+          (hospitalMatchesKeyword || planKeywords.includes(keyword));
+      });
+      return { hospital, plans };
+    });
+    const filtered = withPlans.filter(({ hospital, plans }) => {
+      return plans.length &&
+        (region === "all" || hospital.region === region) &&
+        (dept === "all" || hospital.dept === dept || hospital.departments?.includes(dept));
+    });
+    filtered.sort((left, right) => {
+      if (sort === "price") return minPlanPrice(left.plans) - minPlanPrice(right.plans);
+      if (sort === "packages") return right.plans.length - left.plans.length || minPlanPrice(left.plans) - minPlanPrice(right.plans);
+      if (sort === "name") return left.hospital.name.localeCompare(right.hospital.name, "ko");
+      const queryBoost = pack === "all" ? 0 : Number(right.plans.some((plan) => plan.category === pack)) - Number(left.plans.some((plan) => plan.category === pack));
+      return queryBoost || right.plans.length - left.plans.length || minPlanPrice(left.plans) - minPlanPrice(right.plans);
+    });
+    const resultCount = byId("resultCount");
+    if (resultCount) resultCount.textContent = `병원 ${filtered.length}곳 · 패키지 ${filtered.reduce((sum, item) => sum + item.plans.length, 0)}개`;
+    list.innerHTML = filtered.length
+      ? filtered.map(({ hospital, plans }) => renderHospitalCard(hospital, plans)).join("")
+      : `<div class="no-results"><span aria-hidden="true">⌕</span><h3>조건에 맞는 공개 패키지가 없습니다.</h3><p>지역이나 가격 조건을 넓혀 다시 찾아보세요.</p><button class="button secondary" type="button" data-reset-empty>조건 초기화</button></div>`;
+    list.querySelectorAll("[data-compare]").forEach((input) => {
+      input.addEventListener("change", () => toggleHospitalCompare(input.dataset.compare || "", input.checked, input));
+    });
+    list.querySelectorAll("[data-expand-hospital]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const hospitalId = button.dataset.expandHospital || "";
+        if (expandedHospitalIds.has(hospitalId)) expandedHospitalIds.delete(hospitalId);
+        else expandedHospitalIds.add(hospitalId);
+        renderHospitals();
+      });
+    });
+    list.querySelector("[data-reset-empty]")?.addEventListener("click", () => {
+      byId("resetFiltersBtn")?.click();
+    });
+    renderComparePanel();
+  }
+
+  function renderHospitalCard(hospital, plans) {
+    const minimumPrice = minPlanPrice(plans);
+    const compareChecked = comparedHospitalIds.has(hospital.id);
+    const expanded = expandedHospitalIds.has(hospital.id);
+    const visiblePlans = expanded ? plans : plans.slice(0, 5);
+    const hiddenCount = plans.length - visiblePlans.length;
+    const sourceUrl = escapeHtml(hospital.sourceUrl);
+    return `
+      <article class="hospital-card marketplace-card">
+        <div class="hospital-identity">
+          <div class="hospital-symbol" aria-hidden="true">${escapeHtml(hospital.name.slice(0, 1))}</div>
+          <div>
+            <div class="hospital-card-head"><span class="official-label">공식 출처 확인</span><h3>${escapeHtml(hospital.name)}</h3></div>
+            <p class="hospital-location">${escapeHtml(hospital.region)} · ${escapeHtml(hospital.area)} · ${escapeHtml(hospital.dept)}</p>
+            <p class="hospital-source-status"><strong>${escapeHtml(hospital.priceBasis)}</strong><span>확인 ${escapeHtml(hospital.verifiedAt)}</span></p>
+          </div>
+          <label class="compare-check"><input type="checkbox" data-compare="${hospital.id}" ${compareChecked ? "checked" : ""}><span>비교함</span></label>
+        </div>
+        <div class="hospital-badges">${hospital.badges.map((badge) => `<span>${escapeHtml(badge)}</span>`).join("")}</div>
+        <div class="hospital-overview">
+          <div><span>공개 최저가</span><strong>${formatPlanPrice(plans.find((plan) => plan.price === minimumPrice))}</strong></div>
+          <div><span>현재 검색 결과</span><strong>${plans.length}개 패키지</strong></div>
+          <div><span>예약·문의</span><strong>${escapeHtml(hospital.phone)}</strong></div>
+        </div>
+        ${hospital.note ? `<p class="hospital-data-note">${escapeHtml(hospital.note)}</p>` : ""}
+        <div class="package-list">
+          ${visiblePlans.map((plan) => `
+            <div class="package-row">
+              <div class="package-copy">
+                <span class="package-category">${escapeHtml(plan.category)} · ${escapeHtml(plan.type || "검진 패키지")}</span>
+                <strong>${escapeHtml(plan.name)}</strong>
+                <p>${plan.includes.map(escapeHtml).join(" · ")}</p>
+              </div>
+              <div class="package-price">
+                <strong>${formatPlanPrice(plan)}</strong>
+                <small>${escapeHtml(hospital.priceBasis)}</small>
+              </div>
+              <a class="button primary" href="${sourceUrl}" target="_blank" rel="noopener noreferrer">공식 정보 확인</a>
+            </div>
+          `).join("")}
+        </div>
+        ${plans.length > 5 ? `<button class="package-expand" type="button" data-expand-hospital="${hospital.id}" aria-expanded="${expanded}">${expanded ? "패키지 접기" : `나머지 ${hiddenCount}개 패키지 전체 보기`}</button>` : ""}
+        <div class="hospital-card-foot">
+          <span>${escapeHtml(hospital.address)}</span>
+          <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer">${escapeHtml(hospital.sourceLabel)} ↗</a>
+        </div>
       </article>
     `;
-    }).join("") : `<p class="muted">조건에 맞는 병원이 없습니다.</p>`;
-    list.querySelectorAll("[data-book]").forEach((button) => {
-      button.addEventListener("click", () => openBookingModal(button.dataset.book || ""));
+  }
+
+  function minPlanPrice(plans) {
+    const prices = plans.map((plan) => Number(plan.price)).filter(Number.isFinite);
+    return prices.length ? Math.min(...prices) : Infinity;
+  }
+
+  function formatWon(value) {
+    return `${Number(value || 0).toLocaleString("ko-KR")}원`;
+  }
+
+  function formatPlanPrice(plan) {
+    if (!plan || !Number.isFinite(Number(plan.price))) return "공식 문의";
+    return `${plan.pricePrefix || ""}${formatWon(plan.price)}`;
+  }
+
+  function planMatchesPackage(plan, packageName) {
+    if (packageName === "all") return true;
+    return plan.category === packageName || plan.tags?.includes(packageName);
+  }
+
+  function toggleHospitalCompare(hospitalId, checked, input) {
+    if (!hospitalId) return;
+    if (checked && comparedHospitalIds.size >= 3 && !comparedHospitalIds.has(hospitalId)) {
+      input.checked = false;
+      alert("병원 비교는 최대 3곳까지 선택할 수 있습니다.");
+      return;
+    }
+    if (checked) comparedHospitalIds.add(hospitalId);
+    else comparedHospitalIds.delete(hospitalId);
+    renderComparePanel();
+  }
+
+  function renderComparePanel() {
+    const panel = byId("comparePanel");
+    const items = byId("compareItems");
+    if (!panel || !items) return;
+    const selected = hospitals.filter((hospital) => comparedHospitalIds.has(hospital.id));
+    panel.hidden = !selected.length;
+    if (!selected.length) {
+      items.innerHTML = "";
+      return;
+    }
+    const pack = byId("packageFilter")?.value || "all";
+    const selectedPlans = selected.map((hospital) => {
+      const matching = pack === "all" ? hospital.plans : hospital.plans.filter((plan) => planMatchesPackage(plan, pack));
+      return { hospital, plan: [...matching].sort((a, b) => a.price - b.price)[0] || hospital.plans[0] };
     });
-    updateBookingSummary(bookings);
+    items.innerHTML = `
+      <table class="compare-table">
+        <thead><tr><th>비교 항목</th>${selectedPlans.map(({ hospital }) => `<th>${escapeHtml(hospital.name)}</th>`).join("")}</tr></thead>
+        <tbody>
+          <tr><th>선택 패키지</th>${selectedPlans.map(({ plan }) => `<td><strong>${escapeHtml(plan.name)}</strong><small>${escapeHtml(plan.category)}</small></td>`).join("")}</tr>
+          <tr><th>공개 가격</th>${selectedPlans.map(({ plan }) => `<td class="compare-price">${formatPlanPrice(plan)}</td>`).join("")}</tr>
+          <tr><th>포함 검사</th>${selectedPlans.map(({ plan }) => `<td>${plan.includes.map(escapeHtml).join("<br>")}</td>`).join("")}</tr>
+          <tr><th>가격 기준</th>${selectedPlans.map(({ hospital }) => `<td>${escapeHtml(hospital.priceBasis)}<small>확인 ${escapeHtml(hospital.verifiedAt)}</small></td>`).join("")}</tr>
+          <tr><th>문의</th>${selectedPlans.map(({ hospital }) => `<td>${escapeHtml(hospital.phone)}</td>`).join("")}</tr>
+          <tr><th>공식 출처</th>${selectedPlans.map(({ hospital }) => `<td><a class="button primary" href="${escapeHtml(hospital.sourceUrl)}" target="_blank" rel="noopener noreferrer">공식 페이지</a></td>`).join("")}</tr>
+        </tbody>
+      </table>
+    `;
   }
 
   function bindBookingModal() {
@@ -674,17 +973,17 @@
     byId("bookDate")?.addEventListener("change", updateTimeOptions);
   }
 
-  async function openBookingModal(hospitalId) {
-    selectedHospital = hospitals.find((hospital) => hospital.id === hospitalId) || null;
+  async function openBookingModal(hospitalId, packageName = "") {
+    selectedHospital = bookingHospitals.find((hospital) => hospital.id === hospitalId) || null;
     if (!selectedHospital) return;
     const modal = byId("bookingModal");
     const selected = byId("selectedHospital");
     const status = byId("bookingStatus");
     const dateInput = byId("bookDate");
     const packageSelect = byId("bookPackage");
-    if (selected) selected.textContent = `선택 병원: ${selectedHospital.name} · ${selectedHospital.dept} · ${selectedHospital.phone}`;
+    if (selected) selected.textContent = `선택 병원: ${selectedHospital.name} · ${selectedHospital.dept} · ${selectedHospital.area}`;
     if (packageSelect) {
-      packageSelect.innerHTML = `<option value="">선택</option>${selectedHospital.packages.map((item) => `<option>${item}</option>`).join("")}`;
+      packageSelect.innerHTML = `<option value="">선택</option>${selectedHospital.plans.map((plan) => `<option value="${escapeHtml(plan.category)}" ${plan.category === packageName ? "selected" : ""}>${escapeHtml(plan.name)} · ${formatWon(plan.price)}</option>`).join("")}`;
     }
     if (dateInput) {
       dateInput.min = formatDate(addDays(new Date(), 1));
@@ -999,7 +1298,7 @@
   }
 
   function findHospitalIdByName(name) {
-    return hospitals.find((hospital) => hospital.name === name)?.id || "";
+    return bookingHospitals.find((hospital) => hospital.name === name)?.id || "";
   }
 
   function makeBookingId() {
