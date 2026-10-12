@@ -21,7 +21,7 @@ function loadApp(inputs = {}) {
   assert.match(source, suffix, "app.js must keep its IIFE wrapper");
   const instrumented = source.replace(
     suffix,
-    "globalThis.__helpers = { safeNumber, calculateBmi, collectFormData, judgeItem, renderReport, readSavedReport, labItems };})();"
+    "globalThis.__helpers = { safeNumber, calculateBmi, collectFormData, hasReportableValues, judgeItem, renderReport, readSavedReport, labItems };})();"
   );
   vm.runInNewContext(instrumented, context, { filename: "app.js" });
   return { helpers: context.__helpers, report, fields };
@@ -88,4 +88,15 @@ test("missing lab results cannot be declared healthy", () => {
   assert.match(report.innerHTML, /검사 수치 미입력/);
   assert.match(report.innerHTML, /판정할 수 없습니다/);
   assert.match(report.innerHTML, /<strong>—<\/strong>/);
+});
+
+test("report submission requires at least one interpretable measurement", () => {
+  const { helpers } = loadApp();
+  const empty = { bmi: null, bpSys: null, bpDia: null };
+  assert.equal(helpers.hasReportableValues(empty), false);
+  assert.equal(helpers.hasReportableValues({ ...empty, age: 27 }), false);
+  assert.equal(helpers.hasReportableValues({ ...empty, ast: 24 }), true);
+  assert.equal(helpers.hasReportableValues({ ...empty, bpSys: 120 }), false);
+  assert.equal(helpers.hasReportableValues({ ...empty, bpSys: 120, bpDia: 80 }), true);
+  assert.equal(helpers.hasReportableValues({ ...empty, bmi: 23.5 }), true);
 });
