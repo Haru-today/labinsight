@@ -7,6 +7,7 @@
 
   // These markers need age/sex/physiological context or longitudinal review.
   // Never apply one universal adult range to them in the absence of the report's own reference interval.
+  const evidenceBasedAdultExamples = new Set(["glucose", "hba1c"]);
   const contextSensitive = new Set(["ggtp", "hdl", "creatinine", "egfr", "uricAcid", "hemoglobin"]);
 
   function validNumber(value) {
@@ -55,8 +56,10 @@
       };
     }
     const age = validNumber(profile.age);
-    if (age === null || age < 18 || contextSensitive.has(item.id)) {
-      const reason = age === null ? "연령 미입력" : age < 18 ? "소아·청소년 검사 기준 확인 필요" : "성별·연령·검사조건에 따른 차이";
+    if (age === null || age < 18 || contextSensitive.has(item.id) || !evidenceBasedAdultExamples.has(item.id)) {
+      const reason = age === null ? "연령 미입력" : age < 18 ? "소아·청소년 검사 기준 확인 필요" :
+        contextSensitive.has(item.id) ? "성별·연령·검사조건에 따른 차이" :
+        "서비스 공통 수치를 개인의 참고범위로 사용할 근거 없음";
       return {
         level: "unverified", label: "검사기관 참고치 필요",
         source: reason, rangeText: "검사결과지에서 확인", confirmed: false,
@@ -64,15 +67,16 @@
       };
     }
     const normal = item.normal;
-    // Example-only comparison; not an individual's diagnostic reference interval.
+    // Only CDC-supported ADULT glycemic screening examples are shown here.
+    // HbA1c may be inaccurate with anemia, transfusion or pregnancy; fasting must be confirmed for glucose.
     const within = value >= normal[0] && value <= normal[1];
     const isDiabetes = item.id === "glucose" || item.id === "hba1c";
     return {
       level: within ? "example-normal" : "example-review",
       label: within ? "일반 기준 내(참고)" : "일반 기준 확인 필요",
-      source: isDiabetes ? "CDC 당대사 선별 기준 참고(진단 아님)" : "서비스 일반 예시 기준(개인별 참고치 아님)",
+      source: "CDC 성인 당대사 선별 구간 참고(공복 여부·검사조건 확인, 확진 아님)",
       rangeText: normal[0] + "–" + normal[1] + " " + item.unit,
-      confirmed: false, sourceUrl: isDiabetes ? CDC : MEDLINE
+      confirmed: false, sourceUrl: CDC
     };
   }
 

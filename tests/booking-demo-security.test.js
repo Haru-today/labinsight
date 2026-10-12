@@ -81,3 +81,17 @@ test("booking UI has no identifying form fields and no network booking fetches",
   assert.doesNotMatch(app, /apiRequest\(/);
   assert.doesNotMatch(app, /fetch\(\x60\$\{apiBaseUrl\}/);
 });
+
+test("fictional booking centers do not impersonate real clinic addresses or public review scores", () => {
+  const js = fs.readFileSync(path.join(__dirname, "..", "app.js"), "utf8");
+  const start = js.indexOf("  const bookingHospitals = [");
+  const end = js.indexOf("  const hospitals =", start);
+  assert.ok(start >= 0 && end > start);
+  const demoData = js.slice(start, end);
+  assert.match(demoData, /가상 데모 센터/);
+  assert.match(demoData, /실제 위치 없음/);
+  assert.match(demoData, /실제 병원 예약 아님/);
+  assert.doesNotMatch(demoData, /센텀시티역|테헤란로|올림픽로|달구벌대로/);
+  assert.doesNotMatch(demoData, /rating: [1-9]/);
+  assert.doesNotMatch(demoData, /reviewCount: [1-9]/);
+});

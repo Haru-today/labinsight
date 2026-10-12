@@ -71,9 +71,9 @@ test("pediatric and missing age results never assume adult reference range", () 
 test("reference comparison does not imply health status", () => {
   const { refs, labItems } = load();
   const normal = refs.assess(labItems[3], 22, null, { age: 37 });
-  assert.equal(normal.level, "example-normal");
+  assert.equal(normal.level, "unverified");
   assert.equal(normal.confirmed, false);
-  assert.match(normal.source, /서비스 일반 예시/);
+  assert.match(normal.source, /공통 수치를 개인의 참고범위로 사용할 근거 없음/);
 });
 test("CDC link accompanies an adult example glycemic screening interval", () => {
   const { refs, labItems } = load();
@@ -90,4 +90,35 @@ test("all blank lab reference pairs are ignored", () => {
 test("test values that are missing are explicitly unassessed", () => {
   const { refs, labItems } = load();
   assert.equal(refs.assess(labItems[3], null, { min:0, max:40 }, { age:40 }).level, "missing");
+});
+
+test("AST, ALT and lipid examples cannot be presented as personal reference intervals", () => {
+  const { refs } = load();
+  for (const id of ["ast", "alt", "totalChol", "triglyceride", "ldl", "wbc", "platelet"]) {
+    const result = refs.assess({ id, name: id, unit: "U/L", normal: [0, 40] }, 20, null, { age: 40 });
+    assert.equal(result.level, "unverified", id);
+    assert.equal(result.confirmed, false, id);
+  }
+});
+
+test("CDC glycemic examples remain informational, never confirmed lab intervals", () => {
+  const { refs } = load();
+  for (const entry of [
+    { id: "glucose", value: 110, normal: [70,99], unit: "mg/dL" },
+    { id: "hba1c", value: 5.9, normal: [0,5.6], unit: "%" }
+  ]) {
+    const result = refs.assess({ name: entry.id, ...entry }, entry.value, null, { age: 40 });
+    assert.equal(result.level, "example-review");
+    assert.equal(result.confirmed, false);
+    assert.match(result.source, /CDC/);
+    assert.match(result.source, /확진 아님/);
+  }
+});
+
+test("an original laboratory reference interval always overrides the generic example", () => {
+  const { refs } = load();
+  const result = refs.assess({ id: "alt", name: "ALT", unit: "U/L", normal: [0, 40] },
+    45, { min: 12, max: 55 }, { age: 35 });
+  assert.equal(result.level, "normal");
+  assert.equal(result.confirmed, true);
 });

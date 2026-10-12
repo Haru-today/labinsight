@@ -3,7 +3,7 @@
 // Cache only known, public app-shell files. Never runtime-cache arbitrary requests,
 // query strings or cross-origin resources (including third-party OCR assets).
 const CACHE_PREFIX = "labinsight-app-";
-const CACHE_NAME = "labinsight-app-v20261013-policy-links";
+const CACHE_NAME = "labinsight-app-v20261013-clinical-review";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -12,9 +12,9 @@ const APP_SHELL = [
   "./hospitals.html",
   "./styles.css?v=privacy-notice-20261013",
   "./hospital-data.js?v=real-packages-20260729a",
-  "./app.js?v=security-cache-20261012",
+  "./app.js?v=clinical-review-20261013",
   "./ocr-review.js?v=ocr-review-20261012",
-  "./reference-ranges.js?v=reference-context-20261012",
+  "./reference-ranges.js?v=clinical-review-20261013",
   "./runtime-config.js",
   "./manifest.webmanifest",
   "./icons/icon.svg",
