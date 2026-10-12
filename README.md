@@ -38,8 +38,6 @@ GitHub Pages에서는 별도 빌드 없이 정적 화면을 실행합니다. 로
 │   ├── icon-192.png
 │   └── icon-512.png
 ├── downloads/
-│   ├── LabInsight-mac.zip
-│   ├── LabInsight-windows.zip
 │   ├── mac/
 │   │   ├── LabInsight.command
 │   │   └── README.txt
@@ -102,20 +100,13 @@ LABINSIGHT_API_URL="https://api.example.com" pnpm mobile:sync:ios
 
 실기기 배포 및 스토어 출시는 Google Play Console과 Apple Developer 계정, 앱 서명 인증서, 개인정보처리방침이 추가로 필요합니다.
 
-## Mac / Windows 다운로드
+## Mac / Windows 다운로드 (임시 중단)
 
-홈페이지의 `앱 다운하기` 영역에서 OS별 패키지를 받을 수 있습니다.
+- 구형 Mac·Windows용 ZIP은 2026-10-12 개인정보 보호 개편보다 이전 코드가 포함되었을 수 있어 공개 다운로드에서 제외했습니다.
+- Git 이력에는 변경 전 코드가 남아 있으나 안전한 최신 설치 파일로 재빌드되기 전에는 이전 패키지를 설치하거나 배포하지 않는 것을 권장합니다.
+- 데스크톱 설치본과 기존 사용자의 개인 데이터 파일에 대해서는 추가 보안 검증, 서명·공증, 마이그레이션 또는 삭제 절차가 필요합니다.
+- 최신 웹 버전은 https://haru-today.github.io/labinsight/ 에서 이용할 수 있습니다.
 
-- Mac: `downloads/LabInsight-mac.zip`
-- Windows: `downloads/LabInsight-windows.zip`
-
-각 압축 파일에는 `LabInsight/` 앱 본체와 OS별 실행 파일이 들어 있습니다. Node.js가 설치된 환경에서는 `server.js`가 실행되어 예약 API와 JSON 저장소를 사용하고, Node.js가 없는 환경에서는 `index.html`을 열어 브라우저 저장 모드로 실행합니다.
-
-macOS에서 `Apple은 LabInsight.command에 악성 코드가 없음을 확인할 수 없습니다` 경고가 뜨면 개발용 패키지가 아직 Apple 공증을 받지 않았기 때문입니다. 압축 해제한 폴더에서 아래 명령을 실행한 뒤 다시 여세요.
-
-```bash
-xattr -dr com.apple.quarantine "$HOME/Downloads/LabInsight-mac"
-```
 
 ## OCR 검사결과지 인식 — 검토 후 입력 (2026-10-12)
 
