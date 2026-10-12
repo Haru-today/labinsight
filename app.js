@@ -222,13 +222,23 @@
     byId("applyOcrBtn")?.addEventListener("click", applyReviewedOcr);
     byId("clearOcrBtn")?.addEventListener("click", clearOcr);
     byId("ocrText")?.addEventListener("input", () => {
-      ocrCandidates = [];
-      const review = byId("ocrReview");
-      if (review) { review.hidden = true; review.textContent = ""; }
-      const apply = byId("applyOcrBtn");
-      if (apply) apply.disabled = true;
-      setStatus("ocrStatus", "텍스트가 수정되었습니다. ‘후보 다시 분석’을 눌러 검토 목록을 갱신하세요.");
+      invalidateOcrReview();
+      setStatus("ocrStatus", "텍스트가 수정되었습니다. ‘검사 후보 분석’을 눌러 검토 목록을 갱신하세요.");
     });
+    byId("ocrFile")?.addEventListener("change", () => {
+      invalidateOcrReview();
+      const text = byId("ocrText");
+      if (text) text.value = "";
+      setStatus("ocrStatus", "새 이미지를 선택했습니다. 글자 인식을 실행해 주세요.");
+    });
+  }
+
+  function invalidateOcrReview() {
+    ocrCandidates = [];
+    const review = byId("ocrReview");
+    if (review) { review.hidden = true; review.textContent = ""; }
+    const apply = byId("applyOcrBtn");
+    if (apply) apply.disabled = true;
   }
 
   async function runOcr() {
@@ -250,6 +260,7 @@
       return;
     }
     try {
+      invalidateOcrReview();
       runBtn.disabled = true;
       setStatus("ocrStatus", "이 기기의 브라우저에서 글자를 인식 중입니다. 결과는 자동 입력되지 않습니다.");
       const result = await window.Tesseract.recognize(file, "kor+eng", {
