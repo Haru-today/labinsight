@@ -130,3 +130,23 @@ test("all three responsive LabInsight pages are accessible from narrow screens",
   }
   assert.equal(errors.length, 0, errors.join("; "));
 });
+
+test("sample booking dialog traps keyboard focus, closes with Escape and restores opener", async (t) => {
+  const { page, errors } = await openPage(t, "/hospitals.html", { mobile: true });
+  const opener = page.locator("#tryBookingBtn");
+  await opener.click();
+  const modal = page.locator("#bookingModal");
+  assert.equal(await modal.isVisible(), true);
+  assert.equal(await modal.locator('[role="dialog"]').getAttribute("aria-describedby"), "bookingDemoPrivacy");
+  await page.locator("#closeModalBtn").focus();
+  await page.keyboard.press("Shift+Tab");
+  assert.equal(await page.evaluate(() => document.activeElement.matches('#bookingForm button[type="submit"]')), true);
+  await page.locator('#bookingForm button[type="submit"]').focus();
+  await page.keyboard.press("Tab");
+  assert.equal(await page.evaluate(() => document.activeElement.id), "closeModalBtn");
+  await page.keyboard.press("Escape");
+  assert.equal(await modal.isVisible(), false);
+  assert.equal(await page.evaluate(() => document.activeElement.id), "tryBookingBtn");
+  assert.equal(await page.evaluate(() => document.body.classList.contains("booking-modal-open")), false);
+  assert.equal(errors.length, 0, errors.join("; "));
+});

@@ -100,6 +100,7 @@
 
   const hospitals = Array.isArray(window.LABINSIGHT_HOSPITALS) ? window.LABINSIGHT_HOSPITALS : [];
   let selectedHospital = null;
+  let bookingModalRestoreFocus = null;
   let apiAvailable = false;
   let deferredInstallPrompt = null;
   const comparedHospitalIds = new Set();
@@ -1225,6 +1226,31 @@
     byId("bookingModal")?.addEventListener("click", (event) => {
       if (event.target.id === "bookingModal") closeBookingModal();
     });
+    byId("bookingModal")?.addEventListener("keydown", (event) => {
+      const modal = byId("bookingModal");
+      if (!modal || modal.hidden) return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeBookingModal();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusable = [...modal.querySelectorAll("button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href]")]
+        .filter((node) => node.getClientRects().length > 0);
+      if (!focusable.length) {
+        event.preventDefault();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && (document.activeElement === first || !modal.contains(document.activeElement))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !modal.contains(document.activeElement))) {
+        event.preventDefault();
+        first.focus();
+      }
+    });
     byId("bookingForm")?.addEventListener("submit", saveBooking);
     byId("bookDate")?.addEventListener("change", updateTimeOptions);
     byId("clearDemoBookingsBtn")?.addEventListener("click", async () => {
@@ -1257,8 +1283,10 @@
     if (status) status.textContent = "";
     await updateTimeOptions();
     if (modal) {
+      bookingModalRestoreFocus = document.activeElement;
       modal.hidden = false;
       modal.classList.add("is-open");
+      document.body.classList.add("booking-modal-open");
     }
     byId("bookPackage")?.focus();
   }
@@ -1268,7 +1296,11 @@
     if (modal) {
       modal.classList.remove("is-open");
       modal.hidden = true;
+      document.body.classList.remove("booking-modal-open");
     }
+    const previous = bookingModalRestoreFocus;
+    bookingModalRestoreFocus = null;
+    if (previous?.isConnected && typeof previous.focus === "function") previous.focus();
   }
 
   async function saveBooking(event) {
