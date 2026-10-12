@@ -886,3 +886,16 @@ small { color: var(--muted); font-weight: 650; }
   .compare-panel-head, .booking-management-head { align-items: stretch; flex-direction: column; }
   .booking-management-actions, .booking-management-actions .button { width: 100%; }
 }
+
+/* Results review and print enhancements */
+.report-utility-actions{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 14px}
+@media print{
+  body{background:#fff!important;color:#111!important}
+  header,.utility-bar,.site-header,.app-tabbar,.footer,.report-utility-actions,.report-next-actions,.recommendation-panel,.app-status{display:none!important}
+  .report-section,.report-wrap,.report-card,.report-table-card{box-shadow:none!important;border-color:#ddd!important;max-width:none!important}
+  .report-grid{display:block!important}.report-card{break-inside:avoid;margin-bottom:12px}
+  .desc-row[hidden]{display:none!important}
+  .report-table-card{break-inside:auto}
+  a[href]:after{content:none!important}
+  @page{size:A4;margin:14mm}
+}
