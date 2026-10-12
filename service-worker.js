@@ -12,7 +12,7 @@ const APP_SHELL = [
   "./hospitals.html",
   "./styles.css?v=privacy-demo-20261012",
   "./hospital-data.js?v=real-packages-20260729a",
-  "./app.js?v=privacy-demo-20261012",
+  "./app.js?v=security-cache-20261012",
   "./ocr-review.js?v=ocr-review-20261012",
   "./reference-ranges.js?v=reference-context-20261012",
   "./runtime-config.js",
