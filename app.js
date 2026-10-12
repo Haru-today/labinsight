@@ -663,13 +663,13 @@
           <div class="report-summary-stat"><strong>${abnormal.length}</strong><span>검사지 참고치 밖 항목</span></div>
           <div class="report-summary-stat"><strong>${needsReference}</strong><span>검사지 참고치 확인 필요</span></div>
         </section>
-        <section class="recommendation-panel no-print" aria-label="추천 건강검진">
+        <section class="recommendation-panel no-print" aria-label="검사결과 관련 일반 정보">
           <div class="panel-heading">
             <div>
-              <p class="eyebrow">결과 기반 추천 검진</p>
-              <h3>결과 기반 추천 건강검진</h3>
+              <p class="eyebrow">LAB DATA · REVIEW TOPICS</p>
+              <h3>검사결과 참고 주제</h3>
             </div>
-            <p>기존의 일반 예시 기준으로 관련 검진을 안내합니다. 개인별 검사기관 참고치 판정과 일치하지 않을 수 있으며 검진 필요성을 확정하지 않습니다.</p>
+            <p>사용자가 입력한 검사기관 참고치의 범위 밖 항목과 CDC 성인 당대사 선별 구간을 참고해 관련 검진 주제를 안내합니다. 확진이나 개인별 검사 처방이 아닙니다.</p>
           </div>
           <div class="checkup-grid">${checkups.map(renderCheckupCard).join("")}</div>
         </section>
@@ -742,7 +742,7 @@
         <h4>${checkup.title}</h4>
         <p>${checkup.reason}</p>
         <div class="tag-list">${checkup.tests.map((test) => `<span class="tag">${test}</span>`).join("")}</div>
-        <button class="button secondary" type="button" data-recommend-package="${checkup.package}" data-recommend-dept="${checkup.deptFilter}">이 검진의 병원·가격 보기</button>
+        <button class="button secondary" type="button" data-recommend-package="${checkup.package}" data-recommend-dept="${checkup.deptFilter}">관련 병원 공개정보 보기</button>
       </article>
     `;
   }
