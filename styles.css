@@ -910,3 +910,25 @@ small { color: var(--muted); font-weight: 650; }
 .ocr-apply-actions .button:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:820px){.ocr-candidate{grid-template-columns:1fr 1fr}.ocr-candidate-meta{grid-column:1/-1}.ocr-apply-actions{align-items:stretch;flex-direction:column}}
 @media(max-width:510px){.ocr-candidate{grid-template-columns:1fr}.ocr-candidate-meta{grid-column:auto}.ocr-workspace{padding:16px}.ocr-actions .button,.ocr-apply-actions .button{width:100%}}
+
+/* User-confirmed laboratory ranges and evidence disclosure */
+.reference-settings{margin:19px 0 24px;border:1px solid #b6ccd5;border-radius:12px;background:#fff;overflow:hidden}
+.reference-settings>summary{padding:17px 20px;background:#eff6fa;color:var(--heading);cursor:pointer;font-weight:850}
+.reference-settings>summary span,.reference-settings>summary small{display:block}
+.reference-settings>summary small{margin-top:3px;font-weight:500}
+.reference-settings-inner{padding:22px}
+.reference-settings-inner>.muted{font-size:.88rem;line-height:1.65;margin:0 0 10px}
+.reference-fields{margin-top:15px;display:grid;gap:0;border-top:1px solid var(--line)}
+.ref-field-row{display:grid;grid-template-columns:minmax(110px,1fr) minmax(110px,.75fr) minmax(120px,1fr) minmax(120px,1fr);align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--line)}
+.ref-field-row>strong{color:var(--heading);font-size:.9rem}
+.ref-field-unit{font-size:.81rem;color:var(--muted)}
+.ref-field-row label{font-size:.75rem;color:var(--muted);font-weight:700}
+.ref-field-row input{display:block;width:100%;min-height:40px;padding:8px;margin-top:4px;color:var(--ink)}
+.reference-range{font-size:.86rem;word-break:normal}
+.reference-source{display:block;font-size:.72rem;color:var(--muted);font-weight:500;margin-top:3px;line-height:1.35}
+.reference-more{margin-left:10px}
+.reference-more a,.report-evidence a{color:var(--primary);text-decoration:underline;text-underline-offset:2px}
+.reference-note{display:block;margin-top:7px}
+.report-evidence{background:#f7fbfd}
+.result-table{min-width:870px}
+@media(max-width:650px){.ref-field-row{grid-template-columns:1fr 1fr;gap:7px 12px}.ref-field-row>strong,.ref-field-row>.ref-field-unit{grid-column:auto}.reference-settings-inner{padding:15px}}

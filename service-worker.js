@@ -1,14 +1,15 @@
-const CACHE_NAME = "labinsight-app-v20261012-ocr-review";
+const CACHE_NAME = "labinsight-app-v20261012-reference-context";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./checkup.html",
   "./report.html",
   "./hospitals.html",
-  "./styles.css?v=ocr-review-20261012",
+  "./styles.css?v=reference-context-20261012",
   "./hospital-data.js?v=real-packages-20260729a",
-  "./app.js?v=ocr-review-20261012",
+  "./app.js?v=reference-context-20261012",
   "./ocr-review.js?v=ocr-review-20261012",
+  "./reference-ranges.js?v=reference-context-20261012",
   "./runtime-config.js",
   "./manifest.webmanifest",
   "./icons/icon.svg",

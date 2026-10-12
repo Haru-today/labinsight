@@ -16,12 +16,13 @@ function loadApp(inputs = {}) {
     addEventListener() {}
   };
   const context = { window: { LABINSIGHT_CONFIG: {} }, document, URLSearchParams, console };
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, "..", "reference-ranges.js"), "utf8"), context);
   const source = fs.readFileSync(path.join(__dirname, "..", "app.js"), "utf8");
   const suffix = /\}\)\(\);\s*$/;
   assert.match(source, suffix, "app.js must keep its IIFE wrapper");
   const instrumented = source.replace(
     suffix,
-    "globalThis.__helpers = { safeNumber, calculateBmi, collectFormData, hasReportableValues, judgeItem, renderReport, readSavedReport, labItems };})();"
+    "globalThis.__helpers = { safeNumber, calculateBmi, collectFormData, hasReportableValues, judgeItem, renderReport, readSavedReport, buildRecommendedCheckups, labItems };})();"
   );
   vm.runInNewContext(instrumented, context, { filename: "app.js" });
   return { helpers: context.__helpers, report, fields };
@@ -70,9 +71,9 @@ test("a sparse laboratory report does not claim an overall normal result", () =>
   const { helpers, report } = loadApp();
   helpers.renderReport({ ast: 20, bpSys: null, bpDia: null, bmi: null, reportSchemaVersion: 2 });
   assert.match(report.innerHTML, /부분 입력 · 해석 제한/);
-  assert.match(report.innerHTML, /입력한 1개 검사 항목은 설정된 참고 범위 안에 있으나/);
+  assert.match(report.innerHTML, /입력한 1개 검사 항목 중 0개만 검사결과지의 참고치와 비교했습니다/);
   assert.match(report.innerHTML, /<strong>—<\/strong>/);
-  assert.match(report.innerHTML, /미입력은 정상 판정을 의미하지 않습니다/);
+  assert.match(report.innerHTML, /검사값 또는 검사기관 참고치가 부족해 전체 정상 여부나 위험 점수를 산출하지 않습니다/);
   assert.doesNotMatch(report.innerHTML, /<span class="badge normal">입력 범위 양호<\/span>/);
 });
 
@@ -99,4 +100,33 @@ test("report submission requires at least one interpretable measurement", () => 
   assert.equal(helpers.hasReportableValues({ ...empty, bpSys: 120 }), false);
   assert.equal(helpers.hasReportableValues({ ...empty, bpSys: 120, bpDia: 80 }), true);
   assert.equal(helpers.hasReportableValues({ ...empty, bmi: 23.5 }), true);
+});
+
+test("report presents the supplied laboratory range and flags values outside it", () => {
+  const { helpers, report } = loadApp();
+  helpers.renderReport({
+    age: 35, gender: "male", ast: 45, referenceRanges: { ast: { min: 0, max: 40 } },
+    reportSchemaVersion: 3, bpSys: null, bpDia: null, bmi: null
+  });
+  assert.match(report.innerHTML, /검사지 참고치 밖으로 비교된 항목: AST/);
+  assert.match(report.innerHTML, /0–40 U\/L/);
+  assert.match(report.innerHTML, /사용자가 입력한 검사결과지 참고치/);
+  assert.doesNotMatch(report.innerHTML, /주의 항목 지수/);
+});
+
+test("a report with no original lab intervals does not claim all measurements are clinically normal", () => {
+  const { helpers, report } = loadApp();
+  const data = Object.fromEntries(helpers.labItems.map((item) => [item.id, item.normal[0] + 1]));
+  helpers.renderReport({ ...data, age: 38, gender: "female", bpSys: null, bpDia: null, bmi: null, reportSchemaVersion: 3 });
+  assert.match(report.innerHTML, /참고치 추가 확인 필요/);
+  assert.match(report.innerHTML, /<strong>—<\/strong>/);
+  assert.doesNotMatch(report.innerHTML, /입력 범위 양호/);
+});
+
+test("an isolated eGFR of 82 does not trigger a kidney disease recommendation", () => {
+  const { buildRecommendedCheckups } = loadApp().helpers;
+  const onlyEgfr82 = buildRecommendedCheckups({ egfr: 82, creatinine: null, bmi: null, bpSys: null, bpDia: null });
+  assert.equal(onlyEgfr82.some((card) => card.package === "신장 기능"), false);
+  const onlyEgfr55 = buildRecommendedCheckups({ egfr: 55, creatinine: null, bmi: null, bpSys: null, bpDia: null });
+  assert.equal(onlyEgfr55.some((card) => card.package === "신장 기능"), true);
 });

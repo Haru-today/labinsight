@@ -42,6 +42,7 @@
     "files": [
       "app.js",
       "ocr-review.js",
+      "reference-ranges.js",
       "hospital-data.js",
       "index.html",
       "checkup.html",

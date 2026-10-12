@@ -109,6 +109,7 @@
   function init() {
     bindNav();
     bindOcr();
+    buildReferenceRangeInputs();
     bindForm();
     bindBmiPreview();
     bindHospitals();
@@ -365,6 +366,36 @@
     setStatus("ocrStatus", "OCR 파일과 추출 텍스트를 화면에서 지웠습니다. 이미 입력 폼에 반영한 수치는 별도로 초기화해야 합니다.");
   }
 
+  function buildReferenceRangeInputs() {
+    const container = byId("referenceRangeFields");
+    if (!container) return;
+    container.innerHTML = labItems.map((item) => {
+      const id = item.id;
+      return '<div class="ref-field-row"><strong>' + escapeHtml(item.name) + '</strong>' +
+        '<span class="ref-field-unit">' + escapeHtml(item.unit) + '</span>' +
+        '<label for="' + id + 'RefMin">하한<input id="' + id + 'RefMin" type="number" min="0" step="any" placeholder="미입력"></label>' +
+        '<label for="' + id + 'RefMax">상한<input id="' + id + 'RefMax" type="number" min="0" step="any" placeholder="미입력"></label></div>';
+    }).join("");
+  }
+
+  function collectReferenceRangeDraft() {
+    const ranges = {};
+    labItems.forEach((item) => {
+      ranges[item.id] = { min: byId(item.id + "RefMin")?.value, max: byId(item.id + "RefMax")?.value };
+    });
+    return ranges;
+  }
+
+  function restoreReferenceRangeFields(referenceRanges = {}) {
+    labItems.forEach((item) => {
+      const interval = window.LABINSIGHT_REFERENCES?.normalizeInterval(referenceRanges[item.id]);
+      const min = byId(item.id + "RefMin");
+      const max = byId(item.id + "RefMax");
+      if (min) min.value = interval ? String(interval.min) : "";
+      if (max) max.value = interval ? String(interval.max) : "";
+    });
+  }
+
   function bindForm() {
     const form = byId("healthForm");
     const showSampleReport = () => {
@@ -385,6 +416,17 @@
     form?.addEventListener("submit", (event) => {
       event.preventDefault();
       const data = collectFormData();
+      const parsedRanges = window.LABINSIGHT_REFERENCES?.parseIntervals(collectReferenceRangeDraft(), labItems);
+      if (!parsedRanges) {
+        setStatus("formStatus", "참고범위 기능을 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.");
+        return;
+      }
+      if (parsedRanges.errors.length) {
+        setStatus("formStatus", parsedRanges.errors[0]);
+        byId("referenceSettings")?.setAttribute("open", "");
+        return;
+      }
+      data.referenceRanges = parsedRanges.saved;
       if (!hasReportableValues(data)) {
         setStatus("formStatus", "검사값, 혈압(수축기·이완기), 키·몸무게 중 한 가지 이상을 입력한 뒤 리포트를 생성하세요.");
         return;
@@ -404,7 +446,7 @@
   function saveReport(data) {
     const reportData = { ...data };
     reportData.bmi = calculateBmi(reportData.height, reportData.weight);
-    reportData.reportSchemaVersion = 2;
+    reportData.reportSchemaVersion = 3;
     localStorage.setItem(reportStorageKey, JSON.stringify(reportData));
   }
 
@@ -415,6 +457,7 @@
       const numericFields = ["age", "height", "weight", "bpSys", "bpDia", ...labItems.map((item) => item.id)];
       numericFields.forEach((field) => { parsed[field] = safeNumber(parsed[field]); });
       parsed.bmi = calculateBmi(parsed.height, parsed.weight);
+      parsed.referenceRanges = window.LABINSIGHT_REFERENCES?.parseIntervals(parsed.referenceRanges || {}, labItems).saved || {};
       return parsed;
     } catch (error) {
       return null;
@@ -451,14 +494,17 @@
 
   function fillForm(data) {
     Object.entries(data).forEach(([id, value]) => {
+      if (id === "referenceRanges") return;
       const input = byId(id);
-      if (input) input.value = value;
+      if (input && value !== null && value !== undefined) input.value = value;
+      else if (input && id !== "gender") input.value = "";
     });
+    restoreReferenceRangeFields(data.referenceRanges || {});
   }
 
   function collectFormData() {
     const data = {
-      gender: byId("gender")?.value || "female",
+      gender: byId("gender")?.value || "unknown",
       age: safeNumber(byId("age")?.value),
       height: safeNumber(byId("height")?.value),
       weight: safeNumber(byId("weight")?.value),
@@ -498,26 +544,32 @@
   }
 
   function renderReport(data) {
+    const evaluation = window.LABINSIGHT_REFERENCES;
     const results = labItems.map((item) => {
       const value = safeNumber(data[item.id]);
-      return { item, value, judge: judgeItem(item, value) };
+      const judge = evaluation?.assess(item, value, data.referenceRanges?.[item.id], data)
+        || judgeItem(item, value);
+      return { item, value, judge };
     });
     const enteredCount = results.filter((result) => result.value !== null).length;
+    const confirmedCount = results.filter((result) => result.judge.confirmed).length;
     const incomplete = enteredCount !== labItems.length;
-    const abnormal = results.filter((result) => result.judge.level === "caution" || result.judge.level === "danger");
-    const rawScore = results.reduce((sum, result) => sum + result.judge.points, 0);
-    const score = Math.min(100, Math.round(rawScore * 100 / 120));
-    const grade = enteredCount === 0 ? "검사 수치 미입력" : incomplete ? "부분 입력 · 해석 제한" : score <= 30 ? "입력 범위 양호" : score <= 60 ? "추가 확인" : "상담 권장";
-    const gradeClass = incomplete ? "caution" : score <= 30 ? "normal" : score <= 60 ? "caution" : "danger";
+    const unconfirmed = confirmedCount !== enteredCount;
+    const abnormal = results.filter((result) => result.judge.confirmed && result.judge.level === "caution");
+    const grade = enteredCount === 0 ? "검사 수치 미입력" :
+      incomplete ? "부분 입력 · 해석 제한" :
+      unconfirmed ? "참고치 추가 확인 필요" :
+      abnormal.length ? "검사결과지 참고치 밖 항목 있음" : "입력한 참고치 범위 내";
+    const gradeClass = incomplete || unconfirmed || abnormal.length ? "caution" : "normal";
     const summaryText = enteredCount === 0
       ? "입력된 혈액검사 수치가 없어 검사결과를 판정할 수 없습니다."
       : abnormal.length
-        ? `확인이 필요한 입력 항목은 ${abnormal.map((r) => r.item.name).join(", ")}입니다.`
-        : incomplete
-          ? `입력한 ${enteredCount}개 검사 항목은 설정된 참고 범위 안에 있으나, 미입력 항목은 평가되지 않았습니다.`
-          : "입력된 검사 항목이 설정된 참고 범위 안에 있습니다.";
+        ? `검사지 참고치 밖으로 비교된 항목: ${abnormal.map((r) => r.item.name).join(", ")}. 이는 질병 진단이나 중증도 판정을 의미하지 않습니다.`
+        : unconfirmed
+          ? `입력한 ${enteredCount}개 검사 항목 중 ${confirmedCount}개만 검사결과지의 참고치와 비교했습니다. 다른 항목은 개별 판정이 확인되지 않았습니다.`
+          : "입력한 항목이 사용자가 기재한 검사기관 참고치 범위 안에 있습니다. 질병이 없음을 의미하지 않습니다.";
     const guides = buildGuides(data);
-    const checkups = buildRecommendedCheckups(data, score);
+    const checkups = buildRecommendedCheckups(data);
     const primaryCheckup = checkups[0] || { package: "종합검진", deptFilter: "all" };
     const compareUrl = buildHospitalUrl(primaryCheckup.package, primaryCheckup.deptFilter);
     const report = byId("report");
@@ -525,13 +577,13 @@
     report.innerHTML = `
       <div class="report-wrap">
         <div class="report-top">
-          <div class="score-box"><div><strong>${incomplete ? "—" : score}</strong><p>주의 항목 지수 · ${enteredCount}/${labItems.length}개 입력</p><span class="badge ${gradeClass}">${grade}</span></div></div>
+          <div class="score-box"><div><strong>${incomplete || unconfirmed ? "—" : abnormal.length}</strong><p>검사지 참고치 밖 · ${confirmedCount}/${enteredCount}개 비교</p><span class="badge ${gradeClass}">${grade}</span></div></div>
           <div>
             <p class="eyebrow">검진 리포트</p>
             <h2>현재 상태 요약</h2>
             <p>${summaryText}</p>
-            ${incomplete ? '<p class="notice">일부 검사항목이 비어 있어 주의 항목 지수를 표시하지 않습니다. 미입력은 정상 판정을 의미하지 않습니다.</p>' : ""}
-            ${data.reportSchemaVersion !== 2 ? '<p class="notice">이전 버전에서 저장한 결과는 빈칸이 0으로 기록되었을 수 있습니다. 원본 결과지와 대조하여 다시 입력하세요.</p>' : ""}
+            ${incomplete || unconfirmed ? '<p class="notice">검사값 또는 검사기관 참고치가 부족해 전체 정상 여부나 위험 점수를 산출하지 않습니다.</p>' : ""}
+            ${(!data.reportSchemaVersion || data.reportSchemaVersion < 2) ? '<p class="notice">이전 버전에서 저장한 결과는 빈칸이 0으로 기록되었을 수 있습니다. 원본 결과지와 대조하여 다시 입력하세요.</p>' : ""}
             <p class="notice">이 리포트는 참고용이며 진단이나 치료를 대신하지 않습니다.</p>
           </div>
         </div>
@@ -541,14 +593,14 @@
               <p class="eyebrow">결과 기반 추천 검진</p>
               <h3>결과 기반 추천 건강검진</h3>
             </div>
-            <p>입력된 이상 항목을 바탕으로 다음에 확인하면 좋은 검진 패키지를 제안합니다.</p>
+            <p>기존의 일반 예시 기준으로 관련 검진을 안내합니다. 개인별 검사기관 참고치 판정과 일치하지 않을 수 있으며 검진 필요성을 확정하지 않습니다.</p>
           </div>
           <div class="checkup-grid">${checkups.map(renderCheckupCard).join("")}</div>
         </section>
         <div class="report-next-actions">
           <div>
             <p class="eyebrow">NEXT STEP</p>
-            <h3>권고 검진을 제공하는 병원과 가격을 비교해 보세요.</h3>
+            <h3>관련 검진 정보를 확인하고 의료진과 상담하세요.</h3>
             <p>추천 조건을 적용한 병원 목록에서 패키지 구성, 예상 가격과 예약 가능 시간을 확인합니다.</p>
           </div>
           <div>
@@ -557,7 +609,7 @@
           </div>
         </div>
         <div class="report-grid">
-          <div class="report-card"><h3>주요 이상 항목</h3>${renderList(abnormal.map((r) => `${r.item.name}: ${r.value} ${r.item.unit} (${r.judge.label})`), "이상 항목이 없습니다.")}</div>
+          <div class="report-card"><h3>검사지 참고치 비교</h3>${renderList(abnormal.map((r) => `${r.item.name}: ${r.value} ${r.item.unit} (${r.judge.label})`), "직접 입력한 검사기관 참고치 밖으로 확인된 항목은 없습니다. 참고치를 입력하지 않은 항목은 평가되지 않았습니다.")}</div>
           <div class="report-card"><h3>기본 건강지표</h3>${renderBasicMetrics(data)}</div>
           <div class="report-card"><h3>권장 식습관</h3>${renderList(guides.food)}</div>
           <div class="report-card"><h3>운동 가이드</h3>${renderList(guides.exercise)}</div>
@@ -569,10 +621,16 @@
           <h3>검사항목별 참고 범위 확인표</h3>
           <div class="table-scroll" role="region" aria-label="검사항목별 참고 범위 확인표" tabindex="0">
             <table class="result-table">
-              <thead><tr><th>항목</th><th>입력값</th><th>상태</th><th>설명</th></tr></thead>
+              <thead><tr><th>항목</th><th>입력값</th><th>적용 기준</th><th>확인 상태</th><th>설명</th></tr></thead>
               <tbody>${results.map(renderResultRow).join("")}</tbody>
             </table>
           </div>
+        </div>
+        <div class="report-card report-evidence">
+          <h3>참고범위 해석 근거와 한계</h3>
+          <p>검사기관의 검사결과지에 표시된 본인 참고치와 단위를 먼저 확인하세요. 성별·나이·검사방법·임신 여부 및 병력에 따라 해석이 달라질 수 있습니다. 참고범위 안이라고 질병이 없음을 보장하지 않습니다.</p>
+          <p><a href="https://medlineplus.gov/lab-tests/how-to-understand-your-lab-results/" target="_blank" rel="noopener noreferrer">MedlinePlus · 검사결과와 참고범위 이해 ↗</a> · <a href="https://www.cdc.gov/diabetes/diabetes-testing/" target="_blank" rel="noopener noreferrer">CDC · 당화혈색소·공복혈당 선별 기준 ↗</a> · <a href="https://www.niddk.nih.gov/health-information/professionals/clinical-tools-patient-management/kidney-disease/identify-manage-patients/evaluate-ckd" target="_blank" rel="noopener noreferrer">NIDDK · eGFR와 만성콩팥병 평가 ↗</a></p>
+          <p class="muted">eGFR 60–89 하나만으로 만성콩팥병으로 판단할 수 없습니다. HbA1c와 공복혈당의 수치 구간 또한 진료·확인 검사와 함께 해석해야 합니다. '일반 예시 범위'는 검사기관이 확정한 본인 참고치가 아닙니다.</p>
         </div>
       </div>
     `;
@@ -606,16 +664,22 @@
 
   function renderResultRow(result) {
     const key = result.item.id;
-    const badgeClass = result.judge.level === "danger" ? "danger" : result.judge.level === "caution" ? "caution" : result.judge.level === "missing" ? "missing" : "normal";
-    const value = result.value === null ? "-" : `${result.value} ${result.item.unit}`;
+    const level = result.judge.level;
+    const badgeClass = level === "normal" ? "normal" :
+      level === "missing" || level === "unverified" ? "missing" : "caution";
+    const value = result.value === null ? "—" : `${result.value} ${result.item.unit}`;
+    const shownRange = escapeHtml(result.judge.rangeText || "—");
+    const source = escapeHtml(result.judge.source || "개별 참고치 확인");
+    const linked = result.judge.sourceUrl ? '<a href="' + escapeHtml(result.judge.sourceUrl) + '" target="_blank" rel="noopener noreferrer">판정 방식 참고 ↗</a>' : "";
     return `
       <tr>
         <td>${result.item.name}</td>
         <td>${value}</td>
-        <td><span class="badge ${badgeClass}">${result.judge.label}</span></td>
-        <td><button type="button" data-desc-toggle="${key}">설명 보기</button></td>
+        <td><strong class="reference-range">${shownRange}</strong><small class="reference-source">${source}</small></td>
+        <td><span class="badge ${badgeClass}">${escapeHtml(result.judge.label)}</span></td>
+        <td><button type="button" data-desc-toggle="${key}">근거 보기</button></td>
       </tr>
-      <tr class="desc-row" data-desc-row="${key}" hidden><td colspan="4">${result.item.desc}</td></tr>
+      <tr class="desc-row" data-desc-row="${key}" hidden><td colspan="5">${escapeHtml(result.item.desc)} <span class="reference-more">${linked}</span> <span class="reference-note">이 항목 하나만으로 질환을 진단할 수 없습니다.</span></td></tr>
     `;
   }
 
@@ -663,9 +727,9 @@
       guides.questions.push("심혈관 위험도 평가와 약물치료 필요성을 상담하세요.");
       guides.tests.push("지질 재검, 혈압, 심전도, 경동맥초음파");
     }
-    if (isHigh(data.creatinine, 1.2) || isLow(data.egfr, 90)) {
+    if (isHigh(data.creatinine, 1.2) || isLow(data.egfr, 60)) {
       guides.food.push("단백질 보충제나 과도한 염분 섭취는 의료진과 상의하세요.");
-      guides.questions.push("신장 기능 추적 검사와 소변 검사가 필요한지 질문하세요.");
+      guides.questions.push("eGFR 및 크레아티닌 수치와 소변 알부민 검사를 함께 확인하고 재검 시점을 상담하세요.");
       guides.tests.push("소변검사, 미세알부민뇨, 신장 기능 재검");
     }
     if (isHigh(data.uricAcid, 7.0)) {
@@ -689,10 +753,10 @@
     return guides;
   }
 
-  function buildRecommendedCheckups(data, score) {
+  function buildRecommendedCheckups(data) {
     const recommendations = [];
     const add = (item) => recommendations.push(item);
-    const priority = score > 60 ? ["빠른 상담", "danger"] : score > 30 ? ["추적 권장", "caution"] : ["정기 확인", "normal"];
+    const priority = ["결과지 확인", "caution"];
 
     if (isHigh(data.ast, 40) || isHigh(data.alt, 40) || isHigh(data.ggtp, 60)) {
       add({
@@ -733,7 +797,7 @@
       });
     }
 
-    if (isHigh(data.creatinine, 1.2) || isLow(data.egfr, 90)) {
+    if (isHigh(data.creatinine, 1.2) || isLow(data.egfr, 60)) {
       add({
         title: "신장 기능 추적 검진",
         dept: "신장내과",
@@ -741,7 +805,7 @@
         package: "신장 기능",
         priority: priority[0],
         priorityClass: priority[1],
-        reason: "크레아티닌 상승 또는 eGFR 저하는 반복 검사와 소변 검사를 함께 확인하는 편이 안전합니다.",
+        reason: "eGFR가 60 미만이거나 크레아티닌이 일반 예시 기준보다 높으면 의료진과 재검 및 소변 검사를 상의하세요. 단일 수치만으로 만성콩팥병을 확정할 수 없습니다.",
         tests: ["eGFR 재검", "소변검사", "미세알부민뇨"]
       });
     }
