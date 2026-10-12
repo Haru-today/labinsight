@@ -51,7 +51,7 @@
       ]
     },
     {
-      id: "centum-gi", name: "센텀 소화기클리닉", region: "부산", area: "센텀시티역 7분", dept: "소화기내과",
+      id: "centum-gi", name: "샘플 예약 센터 2", region: "부산", area: "센텀시티역 7분", dept: "소화기내과",
       address: "부산 해운대구 센텀중앙로 48", phone: "051-000-2200", packages: ["간 기능", "종합검진"],
       rating: 4.8, reviewCount: 512, duration: 60, badges: ["전문의 결과 설명", "초음파 포함"], slots: ["09:30", "11:00", "14:00", "16:00"],
       plans: [
@@ -60,7 +60,7 @@
       ]
     },
     {
-      id: "seoul-endo", name: "서울 라이프내분비센터", region: "서울", area: "강남역 3분", dept: "내분비내과",
+      id: "seoul-endo", name: "샘플 예약 센터 3", region: "서울", area: "강남역 3분", dept: "내분비내과",
       address: "서울 강남구 테헤란로 152", phone: "02-000-3300", packages: ["당뇨", "이상지질혈증"],
       rating: 4.6, reviewCount: 741, duration: 45, badges: ["강남권 인기", "평일 야간"], slots: ["09:00", "10:00", "14:30", "16:30"],
       plans: [
@@ -69,7 +69,7 @@
       ]
     },
     {
-      id: "daegu-kidney", name: "대구 신장건강의원", region: "대구", area: "반월당역 4분", dept: "신장내과",
+      id: "daegu-kidney", name: "샘플 예약 센터 4", region: "대구", area: "반월당역 4분", dept: "신장내과",
       address: "대구 중구 달구벌대로 2095", phone: "053-000-4400", packages: ["신장 기능", "종합검진"],
       rating: 4.5, reviewCount: 186, duration: 50, badges: ["신장 전문 상담", "빠른 결과"], slots: ["09:20", "10:40", "13:40", "15:20"],
       plans: [
@@ -78,7 +78,7 @@
       ]
     },
     {
-      id: "online-lab", name: "온라인 검진상담 Lab", region: "온라인 상담", area: "전국 비대면", dept: "가정의학과",
+      id: "online-lab", name: "샘플 예약 센터 5", region: "온라인 상담", area: "전국 비대면", dept: "가정의학과",
       address: "비대면 결과 상담", phone: "1588-0000", packages: ["종합검진", "빈혈", "당뇨"],
       rating: 4.4, reviewCount: 92, duration: 25, badges: ["방문 전 상담", "결과지 리뷰"], slots: ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"],
       plans: [
@@ -88,7 +88,7 @@
       ]
     },
     {
-      id: "seoul-heart", name: "서울 하트리스크 클리닉", region: "서울", area: "잠실역 6분", dept: "심장내과",
+      id: "seoul-heart", name: "샘플 예약 센터 6", region: "서울", area: "잠실역 6분", dept: "심장내과",
       address: "서울 송파구 올림픽로 300", phone: "02-000-5500", packages: ["이상지질혈증", "종합검진"],
       rating: 4.9, reviewCount: 624, duration: 70, badges: ["평점 상위", "심혈관 집중"], slots: ["09:10", "10:50", "14:10", "15:50"],
       plans: [
