@@ -996,3 +996,9 @@ small { color: var(--muted); font-weight: 650; }
 .footer-policy-links a,.privacy-inline-note a{color:var(--primary,#1769e0);text-decoration:underline;text-underline-offset:3px}
 .privacy-inline-note{font-size:.85rem;line-height:1.7;padding:12px 15px;border-left:3px solid #5b9ca5;background:#f1f8fa;border-radius:4px;color:var(--heading,#203c4a);margin:0 0 18px}
 @media print{.footer-policy-links,.privacy-inline-note{display:none!important}}
+
+/* Accessible modal: prevent background scrolling, preserve visible keyboard focus. */
+body.booking-modal-open{overflow:hidden}
+#bookingModal .modal:focus-within{outline-offset:0}
+#bookingModal .modal-close:focus-visible{outline:3px solid var(--primary);outline-offset:3px}
+@media(prefers-reduced-motion:reduce){#bookingModal,#bookingModal .modal{animation:none!important;transition:none!important}}
