@@ -15,8 +15,8 @@ function getParser() {
 test("parses explicit AST, glucose and HbA1c values without confusing Hb", () => {
   const parsed = getParser().parseCandidates("AST: 26 U/L\n공복혈당 96 mg/dL\nHbA1c 5.9 %");
   assert.equal(parsed.length, 3);
-  assert.deepEqual(parsed.map((x) => x.id), ["ast", "glucose", "hba1c"]);
-  assert.deepEqual(parsed.map((x) => x.status), ["unit-matched", "unit-matched", "unit-matched"]);
+  assert.deepEqual(Array.from(parsed, (x) => x.id), ["ast", "glucose", "hba1c"]);
+  assert.deepEqual(Array.from(parsed, (x) => x.status), ["unit-matched", "unit-matched", "unit-matched"]);
   assert.equal(parsed.find((x) => x.id === "hba1c").value, 5.9);
 });
 
