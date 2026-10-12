@@ -727,9 +727,9 @@
       guides.questions.push("심혈관 위험도 평가와 약물치료 필요성을 상담하세요.");
       guides.tests.push("지질 재검, 혈압, 심전도, 경동맥초음파");
     }
-    if (isHigh(data.creatinine, 1.2) || isLow(data.egfr, 90)) {
+    if (isHigh(data.creatinine, 1.2) || isLow(data.egfr, 60)) {
       guides.food.push("단백질 보충제나 과도한 염분 섭취는 의료진과 상의하세요.");
-      guides.questions.push("신장 기능 추적 검사와 소변 검사가 필요한지 질문하세요.");
+      guides.questions.push("eGFR 및 크레아티닌 수치와 소변 알부민 검사를 함께 확인하고 재검 시점을 상담하세요.");
       guides.tests.push("소변검사, 미세알부민뇨, 신장 기능 재검");
     }
     if (isHigh(data.uricAcid, 7.0)) {
@@ -753,7 +753,7 @@
     return guides;
   }
 
-  function buildRecommendedCheckups(data, score) {
+  function buildRecommendedCheckups(data) {
     const recommendations = [];
     const add = (item) => recommendations.push(item);
     const priority = ["결과지 확인", "caution"];
@@ -797,7 +797,7 @@
       });
     }
 
-    if (isHigh(data.creatinine, 1.2) || isLow(data.egfr, 90)) {
+    if (isHigh(data.creatinine, 1.2) || isLow(data.egfr, 60)) {
       add({
         title: "신장 기능 추적 검진",
         dept: "신장내과",
@@ -805,7 +805,7 @@
         package: "신장 기능",
         priority: priority[0],
         priorityClass: priority[1],
-        reason: "크레아티닌 상승 또는 eGFR 저하는 반복 검사와 소변 검사를 함께 확인하는 편이 안전합니다.",
+        reason: "eGFR가 60 미만이거나 크레아티닌이 일반 예시 기준보다 높으면 의료진과 재검 및 소변 검사를 상의하세요. 단일 수치만으로 만성콩팥병을 확정할 수 없습니다.",
         tests: ["eGFR 재검", "소변검사", "미세알부민뇨"]
       });
     }
