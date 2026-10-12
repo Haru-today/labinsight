@@ -208,88 +208,161 @@
     });
   }
 
+  let ocrCandidates = [];
+
   function bindOcr() {
-    const runBtn = byId("runOcrBtn");
-    const applyBtn = byId("applyOcrBtn");
     const ocrOption = byId("ocr");
     document.querySelectorAll('a[href="#ocr"]').forEach((link) => {
-      link.addEventListener("click", () => {
-        if (ocrOption) ocrOption.open = true;
-      });
+      link.addEventListener("click", () => { if (ocrOption) ocrOption.open = true; });
     });
     if (window.location.hash === "#ocr" && ocrOption) ocrOption.open = true;
-    if (runBtn) runBtn.addEventListener("click", runOcr);
-    if (applyBtn) applyBtn.addEventListener("click", () => {
-      const text = byId("ocrText")?.value || "";
-      const count = applyValuesFromText(text);
-      setStatus("ocrStatus", count ? `${count}개 항목을 입력 폼에 반영했습니다.` : "인식 가능한 수치를 찾지 못했습니다. 수동 입력을 이용하세요.");
+
+    byId("runOcrBtn")?.addEventListener("click", runOcr);
+    byId("reviewOcrBtn")?.addEventListener("click", reviewOcrText);
+    byId("applyOcrBtn")?.addEventListener("click", applyReviewedOcr);
+    byId("clearOcrBtn")?.addEventListener("click", clearOcr);
+    byId("ocrText")?.addEventListener("input", () => {
+      invalidateOcrReview();
+      setStatus("ocrStatus", "텍스트가 수정되었습니다. ‘검사 후보 분석’을 눌러 검토 목록을 갱신하세요.");
     });
+    byId("ocrFile")?.addEventListener("change", () => {
+      invalidateOcrReview();
+      const text = byId("ocrText");
+      if (text) text.value = "";
+      setStatus("ocrStatus", "새 이미지를 선택했습니다. 글자 인식을 실행해 주세요.");
+    });
+  }
+
+  function invalidateOcrReview() {
+    ocrCandidates = [];
+    const review = byId("ocrReview");
+    if (review) { review.hidden = true; review.textContent = ""; }
+    const apply = byId("applyOcrBtn");
+    if (apply) apply.disabled = true;
   }
 
   async function runOcr() {
     const fileInput = byId("ocrFile");
     const textArea = byId("ocrText");
     const runBtn = byId("runOcrBtn");
-    if (!fileInput || !textArea) return;
-    const file = fileInput.files && fileInput.files[0];
+    if (!fileInput || !textArea || !runBtn) return;
+    const file = fileInput.files?.[0];
     if (!file) {
       setStatus("ocrStatus", "먼저 이미지 파일을 선택해주세요.");
       return;
     }
+    if (file.size > 8 * 1024 * 1024 || !/^image\/(png|jpeg|webp|bmp)$/i.test(file.type)) {
+      setStatus("ocrStatus", "8MB 이하의 JPG, PNG, WEBP 또는 BMP 이미지로 다시 선택해주세요.");
+      return;
+    }
     if (!window.Tesseract || typeof window.Tesseract.recognize !== "function") {
-      setStatus("ocrStatus", "OCR 라이브러리를 불러오지 못했습니다. 네트워크를 확인하거나 수동 입력을 이용하세요.");
+      setStatus("ocrStatus", "OCR 구성요소를 불러오지 못했습니다. 직접 입력하거나 추출된 텍스트를 붙여넣어 분석할 수 있습니다.");
       return;
     }
     try {
+      invalidateOcrReview();
       runBtn.disabled = true;
-      setStatus("ocrStatus", "OCR을 실행 중입니다. 이미지 품질에 따라 시간이 걸릴 수 있습니다.");
+      setStatus("ocrStatus", "이 기기의 브라우저에서 글자를 인식 중입니다. 결과는 자동 입력되지 않습니다.");
       const result = await window.Tesseract.recognize(file, "kor+eng", {
         logger: (message) => {
-          if (message.status) setStatus("ocrStatus", `OCR 진행: ${message.status} ${Math.round((message.progress || 0) * 100)}%`);
+          if (message.status) setStatus("ocrStatus", "OCR 진행: " + message.status + " " + Math.round((message.progress || 0) * 100) + "%");
         }
       });
-      const text = result?.data?.text || "";
-      textArea.value = text;
-      const count = applyValuesFromText(text);
-      setStatus("ocrStatus", `OCR 완료. ${count}개 항목을 자동 반영했습니다. 필요한 값은 직접 수정하세요.`);
-    } catch (error) {
-      console.error(error);
-      setStatus("ocrStatus", "OCR 처리 중 오류가 발생했습니다. 수동 입력은 계속 사용할 수 있습니다.");
+      textArea.value = String(result?.data?.text || "").slice(0, 40000);
+      reviewOcrText();
+    } catch (_) {
+      setStatus("ocrStatus", "OCR 인식에 실패했습니다. 수동 입력 또는 텍스트 붙여넣기를 이용하세요.");
     } finally {
       runBtn.disabled = false;
     }
   }
 
-  function applyValuesFromText(text) {
-    if (!text || typeof text !== "string") return 0;
-    const aliases = {
-      ast: ["AST", "GOT"], alt: ["ALT", "GPT"], ggtp: ["γ-GTP", "감마지티피", "GGT", "r-GTP"],
-      glucose: ["공복혈당", "FBS", "Glucose"], hba1c: ["HbA1c", "당화혈색소"],
-      totalChol: ["총콜레스테롤", "Total Cholesterol", "T-CHO"], triglyceride: ["중성지방", "Triglyceride", "TG"],
-      hdl: ["HDL", "HDL 콜레스테롤"], ldl: ["LDL", "LDL 콜레스테롤"],
-      creatinine: ["크레아티닌", "Creatinine"], egfr: ["eGFR", "EGFR"], uricAcid: ["요산", "Uric Acid"],
-      hemoglobin: ["혈색소", "Hemoglobin", "Hb"], wbc: ["백혈구", "WBC"], platelet: ["혈소판", "Platelet", "PLT"]
-    };
-    let count = 0;
-    Object.entries(aliases).forEach(([id, names]) => {
-      const value = findFirstNumberAfter(text, names);
-      const input = byId(id);
-      if (input && Number.isFinite(value)) {
-        input.value = value;
-        count += 1;
-      }
-    });
-    return count;
+  function reviewOcrText() {
+    const text = byId("ocrText")?.value || "";
+    const review = byId("ocrReview");
+    const apply = byId("applyOcrBtn");
+    if (!review || !apply) return;
+    if (!window.LABINSIGHT_OCR?.parseCandidates) {
+      setStatus("ocrStatus", "OCR 분석 파일을 불러오지 못했습니다. 페이지를 새로고침하세요.");
+      return;
+    }
+    ocrCandidates = window.LABINSIGHT_OCR.parseCandidates(text);
+    review.hidden = false;
+    apply.disabled = ocrCandidates.length === 0;
+    if (!ocrCandidates.length) {
+      review.innerHTML = '<p class="muted">안전하게 분리된 검사 항목이 없습니다. 검사값을 직접 입력하세요. 서로 다른 검사항목이 같은 줄에 있으면 추출이 제외될 수 있습니다.</p>';
+      setStatus("ocrStatus", "인식된 검사 후보가 없습니다. 원본과 대조하여 수동 입력해주세요.");
+      return;
+    }
+    review.innerHTML = '<h3>원본과 대조할 검사 항목 ' + ocrCandidates.length + '개</h3>' +
+      '<p class="muted">기본 선택은 모두 해제되어 있습니다. <strong>검사항목·수치·단위를 직접 확인한 행만 체크</strong>하세요. 중복·단위 불일치는 적용할 수 없습니다.</p>' +
+      '<div class="ocr-candidate-list">' + ocrCandidates.map((candidate, index) => {
+        const blocked = candidate.status === "duplicate" || candidate.status === "unit-mismatch";
+        const unitLabel = candidate.unit || "인식되지 않음";
+        const warning = candidate.status === "duplicate" ? "동일 항목 중복 인식 · 수동 입력 필요" :
+          candidate.status === "unit-mismatch" ? "단위 불일치 · 수동 변환·확인 필요" :
+          candidate.status === "unit-unknown" ? "단위 미인식 · 원본 단위 필수 확인" : "단위 형식 일치 · 수치와 위치 재확인";
+        return '<div class="ocr-candidate' + (blocked ? ' blocked' : '') + '">' +
+          '<label class="ocr-select"><input type="checkbox" data-ocr-select="' + index + '"' + (blocked ? ' disabled' : '') +
+          '><strong>' + escapeHtml(candidate.label) + '</strong></label>' +
+          '<label class="ocr-candidate-value">검사값 <input type="number" min="0" step="any" data-ocr-value="' + index +
+          '" value="' + candidate.value + '"' + (blocked ? ' disabled' : '') + '></label>' +
+          '<div class="ocr-candidate-meta"><span>인식 단위: ' + escapeHtml(unitLabel) +
+          '</span><span>서비스 단위: ' + escapeHtml(candidate.expectedUnit) + '</span>' +
+          '<small class="' + (blocked ? 'ocr-warning' : '') + '">' + warning + '</small>' +
+          '<small>인식된 원문 (' + candidate.line + '행): ' + escapeHtml(candidate.source) + '</small></div></div>';
+      }).join("") + '</div>';
+    const blockedCount = ocrCandidates.filter((c) => c.status === "duplicate" || c.status === "unit-mismatch").length;
+    setStatus("ocrStatus", "검사 후보 " + ocrCandidates.length + "개를 찾았습니다. " +
+      (blockedCount ? blockedCount + "개는 중복·단위 불일치로 적용 불가합니다. " : "") +
+      "확인한 행만 선택한 후 아래 버튼을 눌러주세요.");
   }
 
-  function findFirstNumberAfter(text, names) {
-    for (const name of names) {
-      const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const regex = new RegExp(`${escaped}[^0-9]{0,18}([0-9]+(?:[.,][0-9]+)?)`, "i");
-      const match = text.match(regex);
-      if (match) return Number(match[1].replace(",", "."));
+  function applyReviewedOcr() {
+    const review = byId("ocrReview");
+    if (!review || !ocrCandidates.length) return;
+    const selected = review.querySelectorAll("[data-ocr-select]:checked");
+    if (!selected.length) {
+      setStatus("ocrStatus", "원본 검사결과지와 대조한 항목을 먼저 선택해주세요.");
+      return;
     }
-    return NaN;
+    let applied = 0;
+    let skipped = 0;
+    for (const checkbox of selected) {
+      const index = Number(checkbox.dataset.ocrSelect);
+      const candidate = ocrCandidates[index];
+      if (!candidate || candidate.status === "duplicate" || candidate.status === "unit-mismatch") {
+        skipped += 1;
+        continue;
+      }
+      const edited = review.querySelector('[data-ocr-value="' + index + '"]');
+      const value = safeNumber(edited?.value);
+      const target = byId(candidate.id);
+      if (value === null || !target) { skipped += 1; continue; }
+      if (String(target.value).trim() && safeNumber(target.value) !== value) {
+        // Preserve existing manually entered data, never overwrite silently.
+        skipped += 1;
+        continue;
+      }
+      target.value = String(value);
+      applied += 1;
+    }
+    setStatus("ocrStatus", applied + "개 항목을 적용했습니다. " +
+      (skipped ? skipped + "개는 잘못된 수치 또는 기존 입력값 보호로 제외했습니다. " : "") +
+      "리포트를 생성하기 전에 원본 결과지와 모든 검사값을 다시 대조하세요.");
+  }
+
+  function clearOcr() {
+    const file = byId("ocrFile");
+    const text = byId("ocrText");
+    const review = byId("ocrReview");
+    const apply = byId("applyOcrBtn");
+    if (file) file.value = "";
+    if (text) text.value = "";
+    if (review) { review.hidden = true; review.textContent = ""; }
+    if (apply) apply.disabled = true;
+    ocrCandidates = [];
+    setStatus("ocrStatus", "OCR 파일과 추출 텍스트를 화면에서 지웠습니다. 이미 입력 폼에 반영한 수치는 별도로 초기화해야 합니다.");
   }
 
   function bindForm() {

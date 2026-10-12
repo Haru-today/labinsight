@@ -11,6 +11,7 @@ const files = [
   "styles.css",
   "hospital-data.js",
   "app.js",
+  "ocr-review.js",
   "manifest.webmanifest",
   "service-worker.js"
 ];

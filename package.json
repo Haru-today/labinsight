@@ -41,6 +41,7 @@
     },
     "files": [
       "app.js",
+      "ocr-review.js",
       "hospital-data.js",
       "index.html",
       "checkup.html",
