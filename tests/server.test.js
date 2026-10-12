@@ -74,3 +74,25 @@ test("mutating static resources is not allowed", async () => {
   const r = await fetch(baseUrl + "/index.html", { method: "POST", body: "hi" });
   assert.equal(r.status, 405);
 });
+
+
+test("static demo rejects unnecessary browser privileges and sniffing", async () => {
+  const response = await fetch(baseUrl + "/checkup.html");
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("permissions-policy"),
+    "camera=(), microphone=(), geolocation=(), payment=()");
+  assert.equal(response.headers.get("cross-origin-resource-policy"), "same-origin");
+  assert.match(response.headers.get("content-security-policy"), /frame-ancestors 'none'/);
+  assert.equal(response.headers.get("x-frame-options"), "DENY");
+  assert.equal(response.headers.get("x-content-type-options"), "nosniff");
+  assert.equal(response.headers.get("referrer-policy"), "no-referrer");
+});
+
+test("static GitHub Pages HTML applies a no-referrer policy without custom headers", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  for (const filename of ["index.html", "checkup.html", "report.html", "hospitals.html"]) {
+    const html = fs.readFileSync(path.join(__dirname, "..", filename), "utf8");
+    assert.match(html, /<meta name="referrer" content="no-referrer">/);
+  }
+});
