@@ -399,8 +399,8 @@
   function bindForm() {
     const form = byId("healthForm");
     const showSampleReport = () => {
-      saveReport(sampleData);
-      window.location.href = "./report.html";
+      if (saveReport(sampleData)) window.location.href = "./report.html";
+      else window.alert("브라우저의 임시 저장을 사용할 수 없습니다. 사이트 데이터 권한을 확인해주세요.");
     };
     byId("heroSampleBtn")?.addEventListener("click", showSampleReport);
     byId("emptySampleBtn")?.addEventListener("click", showSampleReport);
@@ -410,7 +410,8 @@
     });
     byId("clearBtn")?.addEventListener("click", () => {
       form?.reset();
-      localStorage.removeItem(reportStorageKey);
+      restoreReferenceRangeFields();
+      deleteSavedReport();
       updateBmiPreview();
     });
     form?.addEventListener("submit", (event) => {
@@ -432,7 +433,10 @@
         return;
       }
       setStatus("formStatus", "");
-      saveReport(data);
+      if (!saveReport(data)) {
+        setStatus("formStatus", "브라우저 임시 저장을 사용할 수 없습니다. 브라우저 설정을 확인한 후 다시 시도해주세요.");
+        return;
+      }
       window.location.href = "./report.html";
     });
   }
@@ -443,23 +447,46 @@
       || Number.isFinite(data.bmi);
   }
 
+  // Test and screening results are kept for tab navigation, not in long-lived localStorage.
+  // sessionStorage can still survive browser session restoration; users must delete results on shared devices.
   function saveReport(data) {
     const reportData = { ...data };
     reportData.bmi = calculateBmi(reportData.height, reportData.weight);
-    reportData.reportSchemaVersion = 3;
-    localStorage.setItem(reportStorageKey, JSON.stringify(reportData));
+    reportData.reportSchemaVersion = 4;
+    try {
+      sessionStorage.setItem(reportStorageKey, JSON.stringify(reportData));
+      localStorage.removeItem(reportStorageKey); // Erase any previous persistent copy.
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function deleteSavedReport() {
+    let succeeded = true;
+    for (const storage of [sessionStorage, localStorage]) {
+      try { storage.removeItem(reportStorageKey); } catch (_) { succeeded = false; }
+    }
+    return succeeded;
   }
 
   function readSavedReport() {
     try {
-      const parsed = JSON.parse(localStorage.getItem(reportStorageKey) || "null");
+      // One-time migration of earlier reports out of persistent localStorage.
+      const current = sessionStorage.getItem(reportStorageKey);
+      const legacy = localStorage.getItem(reportStorageKey);
+      if (legacy !== null) {
+        if (current === null) sessionStorage.setItem(reportStorageKey, legacy);
+        localStorage.removeItem(reportStorageKey);
+      }
+      const parsed = JSON.parse(sessionStorage.getItem(reportStorageKey) || "null");
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
       const numericFields = ["age", "height", "weight", "bpSys", "bpDia", ...labItems.map((item) => item.id)];
       numericFields.forEach((field) => { parsed[field] = safeNumber(parsed[field]); });
       parsed.bmi = calculateBmi(parsed.height, parsed.weight);
       parsed.referenceRanges = window.LABINSIGHT_REFERENCES?.parseIntervals(parsed.referenceRanges || {}, labItems).saved || {};
       return parsed;
-    } catch (error) {
+    } catch (_) {
       return null;
     }
   }
