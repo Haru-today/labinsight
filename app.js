@@ -312,9 +312,7 @@
     form?.addEventListener("submit", (event) => {
       event.preventDefault();
       const data = collectFormData();
-      const hasLabs = labItems.some((item) => data[item.id] !== null);
-      const hasBloodPressure = data.bpSys !== null && data.bpDia !== null;
-      if (!hasLabs && !hasBloodPressure && data.bmi === null) {
+      if (!hasReportableValues(data)) {
         setStatus("formStatus", "검사값, 혈압(수축기·이완기), 키·몸무게 중 한 가지 이상을 입력한 뒤 리포트를 생성하세요.");
         return;
       }
@@ -322,6 +320,12 @@
       saveReport(data);
       window.location.href = "./report.html";
     });
+  }
+
+  function hasReportableValues(data) {
+    return labItems.some((item) => safeNumber(data[item.id]) !== null)
+      || (safeNumber(data.bpSys) !== null && safeNumber(data.bpDia) !== null)
+      || Number.isFinite(data.bmi);
   }
 
   function saveReport(data) {
