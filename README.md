@@ -5,9 +5,22 @@ LabInsight는 Personal Health Atlas의 건강검진 연결 서비스입니다. �
 - Personal Health Atlas 통합 포털: <https://haru-today.github.io/caffeine-atlas/>
 - Caffeine Atlas 검사: <https://haru-today.github.io/caffeine-atlas/caffeine-sensitivity-app/analyzer.html>
 
+## 2026-10-12 보안 개편 — 예약 기능은 개인정보 없는 체험만 제공
+
+**중요:** LabInsight 예약 흐름은 실제 병원 예약 기능이 아니라 **브라우저 탭 내부의 기능 데모**입니다.
+
+- 성명·연락처·생년월일·상담 목적 입력란을 제거했습니다. 검사 패키지, 샘플 센터, 날짜·시간 및 데모 상태만 저장합니다.
+- 데모 정보는 해당 탭의 `sessionStorage`에만 저장됩니다. 탭/브라우저 세션 복원 환경에서는 남아 있을 수 있어 **샘플 내역 삭제** 버튼을 추가했습니다.
+- 기존 `localStorage`에 있던 `labinsight-bookings` 항목은 페이지 시작 시 삭제하며, 개인정보를 새 데모 저장소로 이전하지 않습니다.
+- 미인증 개인 예약 목록 노출 위험이 있던 서버의 `GET/POST/PATCH /api/bookings` 기능을 폐지하고 **HTTP 410 Gone**으로 응답합니다. 실시간 예약 가능 시간과 병원 접수는 지원하지 않습니다.
+- Node/Electron HTTP 서버는 공개 HTML·JS·CSS·앱 에셋을 허용 목록으로 제공하고 `data/`, `server.js`, 환경변수 파일 및 테스트 파일을 외부에서 읽지 못하도록 제한합니다.
+- 공개 GitHub 저장소에서 빈 `data/bookings.json`을 제거하고 로컬 `data/` 디렉터리를 `.gitignore` 처리했습니다.
+- **주의:** 이전에 로컬 서버·데스크톱 앱에 저장된 `bookings.json`의 실제 예약 개인정보는 코드 업데이트만으로 삭제되지 않습니다. 로컬 서버의 `LABINSIGHT_DATA_DIR` 및 Electron 운영체제별 사용자 데이터 폴더에서 남아 있는 예약 파일을 직접 확인하고 안전하게 삭제해야 합니다. 실제 개인정보가 있었는지는 이 저장소 검사만으로 확인할 수 없습니다.
+- 오래된 설치 앱이나 이미 배포된 다운로드 패키지는 이전 코드가 남아 있을 수 있습니다. 새로운 네이티브 설치 패키지 제작·교체, 브라우저별 저장 정보 및 모바일 보안 검증은 별도 배포 절차가 필요합니다.
+
 ## 배포 구조
 
-GitHub Pages에서는 별도 빌드 없이 정적 화면을 실행할 수 있고, 로컬에서는 Node 서버로 예약 API까지 실행할 수 있습니다.
+GitHub Pages에서는 별도 빌드 없이 정적 화면을 실행합니다. 로컬 Node 서버는 정적 에셋 제공에만 사용하며 개인 예약 API는 폐지했습니다.
 
 ```text
 /
@@ -34,13 +47,11 @@ GitHub Pages에서는 별도 빌드 없이 정적 화면을 실행할 수 있고
 │       ├── LabInsight.bat
 │       └── README.txt
 ├── server.js
-├── README.md
-└── data/
-    └── bookings.json
+└── README.md
 ```
 
 CSS와 JavaScript는 하위 경로 배포에서도 깨지지 않도록 `./styles.css`, `./app.js` 상대경로로 연결되어 있습니다.
-정적으로 열면 예약 데이터는 브라우저 `localStorage`에 저장됩니다. `node server.js`로 실행하면 `/api/bookings` API와 `data/bookings.json` 파일 저장소를 사용합니다.
+데모 예약 기록은 현재 브라우저 탭의 `sessionStorage`에서만 관리하며 실제 병원으로 전송되지 않습니다. `node server.js` 실행 시 예약 관련 API는 HTTP 410으로 차단됩니다.
 
 ## 앱 형태 실행
 
@@ -53,7 +64,7 @@ LabInsight는 PWA 구조를 포함합니다. 지원 브라우저에서는 홈 �
 
 ## 네이티브 데스크톱 앱
 
-Electron 기반 데스크톱 앱은 별도의 Node.js 설치 없이 자체 예약 서버를 실행합니다. 예약 데이터는 운영체제의 LabInsight 사용자 데이터 폴더에 보관되며 앱 업데이트 후에도 유지됩니다.
+Electron 기반 데스크톱 앱은 별도의 Node.js 설치 없이 로컬 정적 웹서버를 실행합니다. 예약 데모는 현재 탭의 임시 저장소만 사용합니다. 이전 버전의 사용자 데이터 폴더에 있던 예약 개인정보는 자동으로 삭제되지 않으므로 별도 점검이 필요합니다.
 
 ```bash
 pnpm install
@@ -70,14 +81,14 @@ Windows 설치 파일은 Windows 환경에서 `pnpm run dist -- --win`으로 생
 
 Capacitor 기반 네이티브 프로젝트가 `ios/`, `android/`에 포함되어 있습니다. 모바일 앱은 다운로드·PWA 설치 영역을 숨기고 iPhone 노치와 Android 시스템 영역을 고려한 안전영역 레이아웃을 사용합니다.
 
-예약 서버 없이 동기화하면 예약은 기기 내부에 저장됩니다.
+예약 흐름은 서버와 동기화되지 않는 로컬 데모입니다. 실사용자 예약을 받거나 저장하지 마세요.
 
 ```bash
 pnpm mobile:sync:android
 pnpm mobile:sync:ios
 ```
 
-여러 기기에서 같은 예약 데이터를 사용하려면 HTTPS로 배포한 예약 서버 주소를 지정합니다.
+다음 설정은 이전 버전의 API URL 옵션 예시로, 현재 폐지된 예약 API를 활성화하지 않습니다. 개인정보 처리 시스템의 정식 구축 전까지 예약 서버 연결을 시도하지 마세요.
 
 ```bash
 LABINSIGHT_API_URL="https://api.example.com" pnpm mobile:sync:android
