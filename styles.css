@@ -986,3 +986,7 @@ small { color: var(--muted); font-weight: 650; }
   .report-evidence p{font-size:8.5pt}
   a{color:#222!important;text-decoration:none!important}
 }
+
+/* Appointment screen is a no-PII simulator, not a real booking product. */
+.booking-demo-privacy{grid-column:1/-1;background:#f1f7f9;border:1px solid #b8d5db;padding:14px 16px;border-radius:10px;font-size:.9rem;line-height:1.65;color:var(--heading);margin:0}
+.booking-management-actions{flex-wrap:wrap}
