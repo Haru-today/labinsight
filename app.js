@@ -1110,6 +1110,13 @@
     renderComparePanel();
   }
 
+  function sourceNeedsRecheck(verifiedAt, now = Date.now()) {
+    const parsed = typeof verifiedAt === "string" && /^\\d{4}-\\d{2}-\\d{2}$/.test(verifiedAt)
+      ? Date.parse(verifiedAt + "T00:00:00Z") : NaN;
+    const ageDays = (now - parsed) / (24 * 60 * 60 * 1000);
+    return !Number.isFinite(ageDays) || ageDays < 0 || ageDays > 45;
+  }
+
   function renderHospitalCard(hospital, plans) {
     const minimumPrice = minPlanPrice(plans);
     const compareChecked = comparedHospitalIds.has(hospital.id);
@@ -1117,21 +1124,22 @@
     const visiblePlans = expanded ? plans : plans.slice(0, 5);
     const hiddenCount = plans.length - visiblePlans.length;
     const sourceUrl = escapeHtml(hospital.sourceUrl);
+    const needsRecheck = sourceNeedsRecheck(hospital.verifiedAt);
     return `
       <article class="hospital-card marketplace-card">
         <div class="hospital-identity">
           <div class="hospital-symbol" aria-hidden="true">${escapeHtml(hospital.name.slice(0, 1))}</div>
           <div>
-            <div class="hospital-card-head"><span class="official-label">공식 출처 확인</span><h3>${escapeHtml(hospital.name)}</h3></div>
+            <div class="hospital-card-head"><span class="official-label${needsRecheck ? " source-review-needed" : ""}">${needsRecheck ? "가격·구성 재확인 필요" : "공식 출처 자료"}</span><h3>${escapeHtml(hospital.name)}</h3></div>
             <p class="hospital-location">${escapeHtml(hospital.region)} · ${escapeHtml(hospital.area)} · ${escapeHtml(hospital.dept)}</p>
-            <p class="hospital-source-status"><strong>${escapeHtml(hospital.priceBasis)}</strong><span>확인 ${escapeHtml(hospital.verifiedAt)}</span></p>
+            <p class="hospital-source-status"><strong>${escapeHtml(hospital.priceBasis)}</strong><span>자료 확인 ${escapeHtml(hospital.verifiedAt)}${needsRecheck ? " · 현재 최신성 미확인" : ""}</span></p>
           </div>
           <label class="compare-check"><input type="checkbox" data-compare="${hospital.id}" ${compareChecked ? "checked" : ""}><span>비교함</span></label>
         </div>
         <div class="hospital-badges">${hospital.badges.map((badge) => `<span>${escapeHtml(badge)}</span>`).join("")}</div>
         <div class="hospital-overview">
-          <div><span>공개 최저가</span><strong>${formatPlanPrice(plans.find((plan) => plan.price === minimumPrice))}</strong></div>
-          <div><span>현재 검색 결과</span><strong>${plans.length}개 패키지</strong></div>
+          <div><span>확인 당시 최저 표시가</span><strong>${formatPlanPrice(plans.find((plan) => plan.price === minimumPrice))}</strong></div>
+          <div><span>조건에 맞는 자료</span><strong>${plans.length}개 패키지</strong></div>
           <div><span>예약·문의</span><strong>${escapeHtml(hospital.phone)}</strong></div>
         </div>
         ${hospital.note ? `<p class="hospital-data-note">${escapeHtml(hospital.note)}</p>` : ""}
@@ -1145,7 +1153,7 @@
               </div>
               <div class="package-price">
                 <strong>${formatPlanPrice(plan)}</strong>
-                <small>${escapeHtml(hospital.priceBasis)}</small>
+                <small>${needsRecheck ? "확인 당시 가격 · 갱신 필요" : escapeHtml(hospital.priceBasis)}</small>
               </div>
               <a class="button primary" href="${sourceUrl}" target="_blank" rel="noopener noreferrer">공식 정보 확인</a>
             </div>
