@@ -1,8 +1,8 @@
 # LabInsight
 
-LabInsight는 Personal Health Atlas의 건강검진 연결 서비스입니다. 건강검진 결과 입력, 결과 해석 리포트, 병원·검진 패키지 비교와 샘플 예약을 각각의 독립 페이지로 제공하며 단계별로 이어서 사용할 수 있습니다.
+LabInsight는 LABDAM(Personal Health Atlas) 통합 포털에서 연결되는 건강검진 결과 서비스입니다. 건강검진 결과 입력, 결과 해석 리포트, 병원·검진 패키지 비교와 샘플 예약을 각각의 독립 페이지로 제공하며 단계별로 이어서 사용할 수 있습니다.
 
-- Personal Health Atlas 통합 포털: <https://haru-today.github.io/caffeine-atlas/>
+- LABDAM 통합 포털 (Personal Health Atlas): <https://haru-today.github.io/>
 - Caffeine Atlas 검사: <https://haru-today.github.io/caffeine-atlas/caffeine-sensitivity-app/analyzer.html>
 
 ## 6단계 보안 강화 — 서비스워커·OCR·브라우저 정책 (2026-10-12)
@@ -215,3 +215,4 @@ curl http://localhost:8000/api/bookings
 - 병원·패키지·가격은 각 기관 공식 홈페이지의 공개정보를 2026-07-29에 확인해 정리했습니다. 구성과 가격은 변경될 수 있으므로 신청 전 공식 페이지에서 다시 확인해야 합니다.
 - 예약 저장 기능은 LabInsight 흐름 확인용 샘플이며 실제 병원으로 전송되지 않습니다. 실제 예약 연동, SMS 발송, 결제, EMR/CRM 연동은 별도 외부 API 계약과 보안 검토가 필요합니다.
 - 본 서비스의 의료 정보는 참고용이며 진단, 치료, 처방을 대신하지 않습니다.
+\n## LABDAM 사이트 구조 (2026-10-13)\n\n- LABDAM = Personal Health Atlas 통합 포털: <https://haru-today.github.io/>\n- LabInsight 서비스: <https://haru-today.github.io/labinsight/>\n- Caffeine Atlas 서비스: <https://haru-today.github.io/caffeine-atlas/>\n- Caffeine Atlas 내부 검사·리포트는 Caffeine Atlas 사이트의 하위 경로로 유지합니다. 별도의 네 번째 포털은 없습니다.\n
