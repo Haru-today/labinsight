@@ -104,13 +104,13 @@
     <nav class="app-tabbar" aria-label="앱 빠른 이동"><a href="./index.html"><span>홈</span></a><a href="./checkup.html"><span>입력</span></a><a href="./report.html"><span>리포트</span></a><a class="is-current" href="./hospitals.html"><span>비교·예약</span></a></nav>
 
     <div class="modal-backdrop" id="bookingModal" hidden>
-      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="bookingTitle">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="bookingTitle" aria-describedby="bookingDemoPrivacy">
         <button class="modal-close" id="closeModalBtn" type="button" aria-label="닫기">×</button>
         <p class="eyebrow">샘플 검진 예약 · 실예약 아님</p>
         <h2 id="bookingTitle">예약 흐름 체험</h2>
         <p class="muted modal-description" id="selectedHospital">선택 병원</p>
         <form id="bookingForm" class="booking-form">
-          <p class="booking-demo-privacy">이 화면은 기능 체험용이며 성명·휴대전화번호·생년월일·건강정보를 입력하지 않습니다. 실제 예약을 만들지 않습니다.</p>
+          <p class="booking-demo-privacy" id="bookingDemoPrivacy">이 화면은 기능 체험용이며 성명·휴대전화번호·생년월일·건강정보를 입력하지 않습니다. 실제 예약을 만들지 않습니다.</p>
           <label>검진 패키지<select id="bookPackage" required><option value="">선택</option></select></label>
           <label>희망 날짜<input id="bookDate" required type="date"></label>
           <label>희망 시간<select id="bookTime" required><option value="">날짜를 먼저 선택</option></select></label>
