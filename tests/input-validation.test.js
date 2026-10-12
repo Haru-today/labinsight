@@ -16,6 +16,7 @@ function loadApp(inputs = {}) {
     addEventListener() {}
   };
   const context = { window: { LABINSIGHT_CONFIG: {} }, document, URLSearchParams, console };
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, "..", "reference-ranges.js"), "utf8"), context);
   const source = fs.readFileSync(path.join(__dirname, "..", "app.js"), "utf8");
   const suffix = /\}\)\(\);\s*$/;
   assert.match(source, suffix, "app.js must keep its IIFE wrapper");
@@ -70,9 +71,9 @@ test("a sparse laboratory report does not claim an overall normal result", () =>
   const { helpers, report } = loadApp();
   helpers.renderReport({ ast: 20, bpSys: null, bpDia: null, bmi: null, reportSchemaVersion: 2 });
   assert.match(report.innerHTML, /부분 입력 · 해석 제한/);
-  assert.match(report.innerHTML, /입력한 1개 검사 항목은 설정된 참고 범위 안에 있으나/);
+  assert.match(report.innerHTML, /입력한 1개 검사 항목 중 0개만 검사결과지의 참고치와 비교했습니다/);
   assert.match(report.innerHTML, /<strong>—<\/strong>/);
-  assert.match(report.innerHTML, /미입력은 정상 판정을 의미하지 않습니다/);
+  assert.match(report.innerHTML, /검사값 또는 검사기관 참고치가 부족해 전체 정상 여부나 위험 점수를 산출하지 않습니다/);
   assert.doesNotMatch(report.innerHTML, /<span class="badge normal">입력 범위 양호<\/span>/);
 });
 
