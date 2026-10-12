@@ -932,3 +932,57 @@ small { color: var(--muted); font-weight: 650; }
 .report-evidence{background:#f7fbfd}
 .result-table{min-width:870px}
 @media(max-width:650px){.ref-field-row{grid-template-columns:1fr 1fr;gap:7px 12px}.ref-field-row>strong,.ref-field-row>.ref-field-unit{grid-column:auto}.reference-settings-inner{padding:15px}}
+
+/* LabInsight report actions, limited-information summary and A4 print view */
+.print-only{display:none}
+.report-actions{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px 24px;align-items:center;padding:20px 23px;border:1px solid #ccdce4;border-radius:14px;background:#f4f8fa}
+.report-actions .eyebrow{margin:0 0 6px}
+.report-actions-desc{margin:0;color:var(--muted);font-size:.85rem;line-height:1.65;max-width:75ch}
+.report-actions-buttons{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px}
+.report-actions-buttons .button{white-space:nowrap}
+.report-actions-status{grid-column:1/-1;margin:0;color:#925636;font-size:.87rem}
+.report-actions-status:empty{display:none}
+.report-summary-stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.report-summary-stat{display:flex;flex-direction:column;gap:4px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:19px}
+.report-summary-stat strong{color:var(--heading);font-size:1.6rem;line-height:1.2;font-variant-numeric:tabular-nums}
+.report-summary-stat span{font-size:.78rem;color:var(--muted);line-height:1.45}
+@media(max-width:940px){.report-actions{grid-template-columns:1fr}.report-actions-buttons{justify-content:flex-start}.report-summary-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.report-actions-buttons{flex-direction:column}.report-actions-buttons .button{width:100%}.report-actions{padding:16px}.report-summary-stat{padding:15px}}
+@media print{
+  @page{size:A4;margin:15mm 13mm}
+  html,body{width:100%!important;margin:0!important;background:#fff!important;color:#111!important;print-color-adjust:economy!important;-webkit-print-color-adjust:economy!important}
+  .utility-bar,.site-header,.app-tabbar,.footer,.page-masthead,.workflow-steps,.no-print,.skip-link{display:none!important}
+  .print-only{display:block!important}
+  main,.section,.page-content-section,.report-section,.report-page-surface,.report-wrap{display:block!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;background:#fff!important;box-shadow:none!important;border:0!important}
+  .report-wrap>*{margin:0 0 12pt!important}
+  .report-print-heading{border-bottom:2px solid #233b45;padding-bottom:10pt;margin-bottom:12pt!important}
+  .report-print-heading strong{font-size:18pt}
+  .report-print-heading p{font-size:9pt;color:#555;margin:6pt 0 0}
+  .report-top,.report-card,.report-summary-stat{box-shadow:none!important;border:1px solid #d4d4d4!important;background:#fff!important;break-inside:avoid}
+  .report-top{display:grid;grid-template-columns:100pt 1fr;gap:12pt;padding:10pt!important}
+  .score-box{min-height:85pt;background:#fff!important;box-shadow:none!important}
+  .score-box strong{font-size:24pt}
+  .report-top h2{font-size:15pt}
+  .report-top p{font-size:9pt}
+  .report-summary-stat-grid{display:grid!important;grid-template-columns:repeat(4,1fr);gap:6pt;margin-bottom:12pt!important}
+  .report-summary-stat{padding:7pt;break-inside:avoid}
+  .report-summary-stat strong{font-size:18pt}
+  .report-summary-stat span{font-size:8pt}
+  .report-grid{display:block!important}
+  .report-grid .report-card{margin-bottom:9pt!important;padding:10pt!important}
+  .report-grid .report-card h3{font-size:11pt;margin-bottom:6pt}
+  .report-grid .report-card li{font-size:9pt;line-height:1.45}
+  .table-scroll{overflow:visible!important;border:0!important}
+  .result-table{min-width:0!important;width:100%!important;table-layout:fixed;font-size:8pt}
+  .result-table th,.result-table td{padding:6pt 4pt!important;overflow-wrap:anywhere}
+  .result-table th{background:#eee!important}
+  .result-table button{display:none!important}
+  .result-table tr{break-inside:avoid}
+  .result-table .desc-row[hidden]{display:table-row!important}
+  .result-table .desc-row td{font-size:7.5pt;background:#fff!important;color:#444}
+  .badge{background:#fff!important;color:#222!important;border:1px solid #aaa;padding:2pt 5pt}
+  .reference-source{font-size:7pt}
+  .report-table-card,.report-evidence{padding:10pt!important}
+  .report-evidence p{font-size:8.5pt}
+  a{color:#222!important;text-decoration:none!important}
+}
