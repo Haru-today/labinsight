@@ -1,13 +1,14 @@
-const CACHE_NAME = "labinsight-app-v20261012-input-validation";
+const CACHE_NAME = "labinsight-app-v20261012-ocr-review";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./checkup.html",
   "./report.html",
   "./hospitals.html",
-  "./styles.css?v=real-packages-20260729a",
+  "./styles.css?v=ocr-review-20261012",
   "./hospital-data.js?v=real-packages-20260729a",
-  "./app.js?v=input-validation-20261012",
+  "./app.js?v=ocr-review-20261012",
+  "./ocr-review.js?v=ocr-review-20261012",
   "./runtime-config.js",
   "./manifest.webmanifest",
   "./icons/icon.svg",
