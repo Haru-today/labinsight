@@ -41,9 +41,9 @@
 
   const bookingHospitals = [
     {
-      id: "busan-med", name: "LabInsight 예약 데모 센터", region: "온라인 데모", area: "실제 병원 전송 없음", dept: "샘플 건강상담",
-      address: "기능 확인용 가상 센터", phone: "연락처 없음", packages: ["종합검진", "간 기능", "당뇨"],
-      rating: 0, reviewCount: 0, duration: 50, badges: ["기능 확인용"], slots: ["09:00", "10:30", "13:30", "15:00"],
+      id: "busan-med", name: "가상 데모 센터 1", region: "가상 데모", area: "실제 위치 없음", dept: "샘플 건강상담",
+      address: "실제 지점 없음", phone: "연락처 없음", packages: ["종합검진", "간 기능", "당뇨"],
+      rating: 0, reviewCount: 0, duration: 50, badges: ["가상 데이터", "실제 병원 예약 아님"], slots: ["09:00", "10:30", "13:30", "15:00"],
       plans: [
         { category: "종합검진", name: "베이직 종합검진", price: 90000, originalPrice: 120000, includes: ["혈액 40종", "흉부 X-ray", "심전도"] },
         { category: "간 기능", name: "간 기능 집중검진", price: 65000, originalPrice: 80000, includes: ["간 기능 8종", "B·C형 간염", "상담"] },
@@ -51,36 +51,36 @@
       ]
     },
     {
-      id: "centum-gi", name: "샘플 예약 센터 2", region: "부산", area: "센텀시티역 7분", dept: "소화기내과",
-      address: "부산 해운대구 센텀중앙로 48", phone: "051-000-2200", packages: ["간 기능", "종합검진"],
-      rating: 4.8, reviewCount: 512, duration: 60, badges: ["전문의 결과 설명", "초음파 포함"], slots: ["09:30", "11:00", "14:00", "16:00"],
+      id: "centum-gi", name: "샘플 예약 센터 2", region: "가상 데모", area: "실제 위치 없음", dept: "소화기내과",
+      address: "실제 지점 없음", phone: "연락처 없음", packages: ["간 기능", "종합검진"],
+      rating: 0, reviewCount: 0, duration: 60, badges: ["가상 데이터", "실제 병원 예약 아님"], slots: ["09:30", "11:00", "14:00", "16:00"],
       plans: [
         { category: "간 기능", name: "간·복부 정밀 패키지", price: 120000, originalPrice: 160000, includes: ["복부초음파", "간 기능 10종", "간염 검사"] },
         { category: "종합검진", name: "소화기 안심 종합검진", price: 190000, originalPrice: 240000, includes: ["위 검사 상담", "복부초음파", "혈액 45종"] }
       ]
     },
     {
-      id: "seoul-endo", name: "샘플 예약 센터 3", region: "서울", area: "강남역 3분", dept: "내분비내과",
-      address: "서울 강남구 테헤란로 152", phone: "02-000-3300", packages: ["당뇨", "이상지질혈증"],
-      rating: 4.6, reviewCount: 741, duration: 45, badges: ["강남권 인기", "평일 야간"], slots: ["09:00", "10:00", "14:30", "16:30"],
+      id: "seoul-endo", name: "샘플 예약 센터 3", region: "가상 데모", area: "실제 위치 없음", dept: "내분비내과",
+      address: "실제 지점 없음", phone: "연락처 없음", packages: ["당뇨", "이상지질혈증"],
+      rating: 0, reviewCount: 0, duration: 45, badges: ["가상 데이터", "실제 병원 예약 아님"], slots: ["09:00", "10:00", "14:30", "16:30"],
       plans: [
         { category: "당뇨", name: "당뇨 위험 정밀검진", price: 110000, originalPrice: 145000, includes: ["HbA1c", "인슐린", "미세알부민뇨"] },
         { category: "이상지질혈증", name: "대사·지질 체크", price: 85000, originalPrice: 110000, includes: ["지질 4종", "공복혈당", "의료진 상담"] }
       ]
     },
     {
-      id: "daegu-kidney", name: "샘플 예약 센터 4", region: "대구", area: "반월당역 4분", dept: "신장내과",
-      address: "대구 중구 달구벌대로 2095", phone: "053-000-4400", packages: ["신장 기능", "종합검진"],
-      rating: 4.5, reviewCount: 186, duration: 50, badges: ["신장 전문 상담", "빠른 결과"], slots: ["09:20", "10:40", "13:40", "15:20"],
+      id: "daegu-kidney", name: "샘플 예약 센터 4", region: "가상 데모", area: "실제 위치 없음", dept: "신장내과",
+      address: "실제 지점 없음", phone: "연락처 없음", packages: ["신장 기능", "종합검진"],
+      rating: 0, reviewCount: 0, duration: 50, badges: ["가상 데이터", "실제 병원 예약 아님"], slots: ["09:20", "10:40", "13:40", "15:20"],
       plans: [
         { category: "신장 기능", name: "신장 기능 정밀검진", price: 100000, originalPrice: 135000, includes: ["eGFR", "미세알부민뇨", "신장초음파 상담"] },
         { category: "종합검진", name: "대사·신장 종합검진", price: 175000, originalPrice: 220000, includes: ["혈액 42종", "소변검사", "심전도"] }
       ]
     },
     {
-      id: "online-lab", name: "샘플 예약 센터 5", region: "온라인 상담", area: "전국 비대면", dept: "가정의학과",
-      address: "비대면 결과 상담", phone: "1588-0000", packages: ["종합검진", "빈혈", "당뇨"],
-      rating: 4.4, reviewCount: 92, duration: 25, badges: ["방문 전 상담", "결과지 리뷰"], slots: ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"],
+      id: "online-lab", name: "샘플 예약 센터 5", region: "가상 데모", area: "실제 위치 없음", dept: "가정의학과",
+      address: "실제 지점 없음", phone: "연락처 없음", packages: ["종합검진", "빈혈", "당뇨"],
+      rating: 0, reviewCount: 0, duration: 25, badges: ["가상 데이터", "실제 병원 예약 아님"], slots: ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"],
       plans: [
         { category: "종합검진", name: "결과지 종합 상담", price: 30000, originalPrice: 40000, includes: ["결과지 검토", "질문 정리", "추가 검진 안내"] },
         { category: "빈혈", name: "혈액·빈혈 결과 상담", price: 35000, originalPrice: 45000, includes: ["CBC 결과 검토", "식생활 안내", "추적검사 안내"] },
@@ -88,9 +88,9 @@
       ]
     },
     {
-      id: "seoul-heart", name: "샘플 예약 센터 6", region: "서울", area: "잠실역 6분", dept: "심장내과",
-      address: "서울 송파구 올림픽로 300", phone: "02-000-5500", packages: ["이상지질혈증", "종합검진"],
-      rating: 4.9, reviewCount: 624, duration: 70, badges: ["평점 상위", "심혈관 집중"], slots: ["09:10", "10:50", "14:10", "15:50"],
+      id: "seoul-heart", name: "샘플 예약 센터 6", region: "가상 데모", area: "실제 위치 없음", dept: "심장내과",
+      address: "실제 지점 없음", phone: "연락처 없음", packages: ["이상지질혈증", "종합검진"],
+      rating: 0, reviewCount: 0, duration: 70, badges: ["가상 데이터", "실제 병원 예약 아님"], slots: ["09:10", "10:50", "14:10", "15:50"],
       plans: [
         { category: "이상지질혈증", name: "심혈관·지질 정밀검진", price: 150000, originalPrice: 195000, includes: ["지질 4종", "심전도", "경동맥초음파 상담"] },
         { category: "종합검진", name: "하트 안심 종합검진", price: 210000, originalPrice: 270000, includes: ["심전도", "혈액 45종", "심혈관 위험 상담"] }
