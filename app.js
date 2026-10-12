@@ -211,6 +211,33 @@
   }
 
   let ocrCandidates = [];
+  let ocrScriptPromise = null;
+  const OCR_LIBRARY_URL = "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";
+
+  function ensureOcrEngine() {
+    if (typeof window.Tesseract?.recognize === "function") return Promise.resolve();
+    if (ocrScriptPromise) return ocrScriptPromise;
+
+    // Do not execute third-party OCR code just by visiting the health-input page.
+    // Load the pinned library only after the user selects a file and presses OCR.
+    ocrScriptPromise = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = OCR_LIBRARY_URL;
+      script.async = true;
+      script.crossOrigin = "anonymous";
+      script.referrerPolicy = "no-referrer";
+      script.onload = () => {
+        if (typeof window.Tesseract?.recognize === "function") resolve();
+        else reject(new Error("OCR 라이브러리가 올바르게 초기화되지 않았습니다."));
+      };
+      script.onerror = () => reject(new Error("OCR 라이브러리 다운로드에 실패했습니다."));
+      document.head.appendChild(script);
+    }).catch((error) => {
+      ocrScriptPromise = null;
+      throw error;
+    });
+    return ocrScriptPromise;
+  }
 
   function bindOcr() {
     const ocrOption = byId("ocr");
@@ -257,13 +284,11 @@
       setStatus("ocrStatus", "8MB 이하의 JPG, PNG, WEBP 또는 BMP 이미지로 다시 선택해주세요.");
       return;
     }
-    if (!window.Tesseract || typeof window.Tesseract.recognize !== "function") {
-      setStatus("ocrStatus", "OCR 구성요소를 불러오지 못했습니다. 직접 입력하거나 추출된 텍스트를 붙여넣어 분석할 수 있습니다.");
-      return;
-    }
     try {
       invalidateOcrReview();
       runBtn.disabled = true;
+      setStatus("ocrStatus", "사용자 요청에 따라 OCR 라이브러리를 불러오는 중입니다. 외부 CDN에서 실행 코드와 언어모델 파일을 받을 수 있습니다.");
+      await ensureOcrEngine();
       setStatus("ocrStatus", "이 기기의 브라우저에서 글자를 인식 중입니다. 결과는 자동 입력되지 않습니다.");
       const result = await window.Tesseract.recognize(file, "kor+eng", {
         logger: (message) => {

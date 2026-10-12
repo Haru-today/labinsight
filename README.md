@@ -5,6 +5,16 @@ LabInsight는 Personal Health Atlas의 건강검진 연결 서비스입니다. �
 - Personal Health Atlas 통합 포털: <https://haru-today.github.io/caffeine-atlas/>
 - Caffeine Atlas 검사: <https://haru-today.github.io/caffeine-atlas/caffeine-sensitivity-app/analyzer.html>
 
+## 6단계 보안 강화 — 서비스워커·OCR·브라우저 정책 (2026-10-12)
+
+- **서비스워커:** 공개 앱 셸 파일만 사전 캐시하고, 임의의 요청 URL·쿼리 문자열·서드파티 리소스·API 응답은 캐시하지 않습니다. 네트워크 탐색 응답도 런타임 캐시에 저장하지 않습니다. 오프라인에서는 사전 캐시된 공개 HTML만 제공합니다.
+- **캐시 분리:** 업데이트 시 `labinsight-app-` 접두사 캐시만 정리하며 같은 GitHub Pages 출처의 LABDAM 또는 Caffeine Atlas 캐시는 건드리지 않습니다.
+- **OCR:** 건강정보 입력 페이지에 들어왔다는 이유만으로 CDN의 OCR 코드를 실행하지 않습니다. 이미지 선택 후 **이미지 글자 인식**을 누른 경우에만 정확한 버전 `tesseract.js@5.1.1`을 로드합니다. 외부 스크립트 요청의 리퍼러를 차단하며 실패 시 수동 입력을 이용할 수 있습니다.
+- **로컬 Node/Electron 서버:** 클릭재킹 방지, 콘텐츠 스니핑 차단, 불필요한 카메라·마이크·위치 권한 제한 등의 HTTP 응답 헤더를 적용합니다.
+- **GitHub Pages:** 서버 보안 헤더는 `server.js`가 실행되는 환경에만 적용됩니다. GitHub Pages 정적 HTML에는 `referrer` 메타 정책을 추가했습니다. 실제 호스팅 플랫폼의 응답 헤더를 임의로 제어했다고 주장하지 않습니다.
+- **남은 점검:** CDN에서 전달되는 OCR 라이브러리와 worker·언어 모델의 공급망 위험은 남습니다. 운영 출시 전 SRI 또는 파일 자체 호스팅, CSP와 의존성 감사, 실제 브라우저·모바일 보안 검증이 필요합니다.
+- **주의:** 서비스워커 캐시는 의료정보 입력 화면의 **정적 HTML**을 사전 저장하지만, 실제 검사 수치나 동적으로 생성된 리포트 내용은 캐시하지 않습니다. 결과값은 별도의 `sessionStorage`에 보관되며 사용자가 직접 삭제해야 합니다.
+
 ## 2026-10-12 보안 개편 — 예약 기능은 개인정보 없는 체험만 제공
 
 **중요:** LabInsight 예약 흐름은 실제 병원 예약 기능이 아니라 **브라우저 탭 내부의 기능 데모**입니다.
