@@ -221,8 +221,9 @@
     if (runBtn) runBtn.addEventListener("click", runOcr);
     if (applyBtn) applyBtn.addEventListener("click", () => {
       const text = byId("ocrText")?.value || "";
+      if (!window.confirm("원본 결과지와 OCR 텍스트의 검사 항목·수치·단위를 확인하셨습니까? 확인을 누르면 인식값이 입력 폼에 반영됩니다.")) return;
       const count = applyValuesFromText(text);
-      setStatus("ocrStatus", count ? `${count}개 항목을 입력 폼에 반영했습니다.` : "인식 가능한 수치를 찾지 못했습니다. 수동 입력을 이용하세요.");
+      setStatus("ocrStatus", count ? `${count}개 항목을 반영했습니다. 리포트 생성 전 원본 수치와 단위를 다시 검토해주세요.` : "인식 가능한 수치를 찾지 못했습니다. 수동 입력을 이용하세요.");
     });
   }
 
@@ -250,8 +251,7 @@
       });
       const text = result?.data?.text || "";
       textArea.value = text;
-      const count = applyValuesFromText(text);
-      setStatus("ocrStatus", `OCR 완료. ${count}개 항목을 자동 반영했습니다. 필요한 값은 직접 수정하세요.`);
+      setStatus("ocrStatus", "OCR 텍스트를 추출했습니다. 항목명과 숫자·단위를 원본 결과지와 대조한 뒤 ‘추출 수치를 입력 항목에 반영’을 눌러주세요.");
     } catch (error) {
       console.error(error);
       setStatus("ocrStatus", "OCR 처리 중 오류가 발생했습니다. 수동 입력은 계속 사용할 수 있습니다.");
@@ -382,7 +382,8 @@
   }
 
   function safeNumber(value) {
-    const number = Number(String(value ?? "").replace(",", "."));
+    if (value === null || value === undefined || String(value).trim() === "") return null;
+    const number = Number(String(value).trim().replace(",", "."));
     return Number.isFinite(number) ? number : null;
   }
 
@@ -420,6 +421,8 @@
     if (!report) return;
     report.innerHTML = `
       <div class="report-wrap">
+        <div class="report-utility-actions"><button class="button secondary" type="button" id="printHealthReportBtn">리포트 인쇄 / PDF 저장</button><button class="button ghost" type="button" id="deleteHealthReportBtn">저장된 검사 결과 삭제</button></div>
+        <p class="notice">개인정보 안내: 검사 결과는 이 브라우저에 저장될 수 있습니다. 공용 기기 사용 후에는 결과를 삭제하시고, PDF 저장 시 파일 보관에 주의하세요.</p>
         <div class="report-top">
           <div class="score-box"><div><strong>${score}</strong><p>주의 항목 지수</p><span class="badge ${gradeClass}">${grade}</span></div></div>
           <div>
@@ -470,6 +473,12 @@
         </div>
       </div>
     `;
+    byId("printHealthReportBtn")?.addEventListener("click", () => window.print());
+    byId("deleteHealthReportBtn")?.addEventListener("click", () => {
+      if (!window.confirm("이 브라우저에 저장된 건강검진 결과를 삭제하시겠습니까?")) return;
+      localStorage.removeItem(reportStorageKey);
+      window.location.reload();
+    });
     report.querySelectorAll("[data-desc-toggle]").forEach((button) => {
       button.addEventListener("click", () => {
         const row = report.querySelector(`[data-desc-row="${button.dataset.descToggle}"]`);
