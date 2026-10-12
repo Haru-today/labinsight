@@ -169,7 +169,7 @@
       installButtons.forEach((button) => {
         button.hidden = true;
       });
-      if (cache) cache.textContent = apiBaseUrl ? "예약 서버 연결 준비" : "기기 내 데이터 저장";
+      if (cache) cache.textContent = "개인정보 없는 샘플 모드";
     } else if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("./service-worker.js")
         .then(() => {
@@ -1349,7 +1349,7 @@
       date: booking.date || "",
       time: booking.time || "",
       demo: true,
-      status: booking.status || "requested",
+      status: Object.prototype.hasOwnProperty.call(statusLabels, booking.status) ? booking.status : "requested",
       createdAt: booking.createdAt || new Date().toISOString(),
       updatedAt: booking.updatedAt || booking.createdAt || new Date().toISOString()
     };
