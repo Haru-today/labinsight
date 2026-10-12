@@ -54,8 +54,7 @@
       "runtime-config.js",
       "server.js",
       "icons/**/*",
-      "electron/**/*",
-      "data/bookings.json"
+      "electron/**/*"
     ],
     "mac": {
       "category": "public.app-category.medical",
