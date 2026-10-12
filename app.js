@@ -312,21 +312,37 @@
     form?.addEventListener("submit", (event) => {
       event.preventDefault();
       const data = collectFormData();
+      if (!hasReportableValues(data)) {
+        setStatus("formStatus", "검사값, 혈압(수축기·이완기), 키·몸무게 중 한 가지 이상을 입력한 뒤 리포트를 생성하세요.");
+        return;
+      }
+      setStatus("formStatus", "");
       saveReport(data);
       window.location.href = "./report.html";
     });
   }
 
+  function hasReportableValues(data) {
+    return labItems.some((item) => safeNumber(data[item.id]) !== null)
+      || (safeNumber(data.bpSys) !== null && safeNumber(data.bpDia) !== null)
+      || Number.isFinite(data.bmi);
+  }
+
   function saveReport(data) {
     const reportData = { ...data };
     reportData.bmi = calculateBmi(reportData.height, reportData.weight);
+    reportData.reportSchemaVersion = 2;
     localStorage.setItem(reportStorageKey, JSON.stringify(reportData));
   }
 
   function readSavedReport() {
     try {
       const parsed = JSON.parse(localStorage.getItem(reportStorageKey) || "null");
-      return parsed && typeof parsed === "object" ? parsed : null;
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+      const numericFields = ["age", "height", "weight", "bpSys", "bpDia", ...labItems.map((item) => item.id)];
+      numericFields.forEach((field) => { parsed[field] = safeNumber(parsed[field]); });
+      parsed.bmi = calculateBmi(parsed.height, parsed.weight);
+      return parsed;
     } catch (error) {
       return null;
     }
@@ -382,8 +398,11 @@
   }
 
   function safeNumber(value) {
-    const number = Number(String(value ?? "").replace(",", "."));
-    return Number.isFinite(number) ? number : null;
+    if (value === null || value === undefined) return null;
+    const normalized = String(value).trim().replace(",", ".");
+    if (!normalized || !/^(?:\+?)(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(normalized)) return null;
+    const number = Number(normalized);
+    return Number.isFinite(number) && number >= 0 ? number : null;
   }
 
   function calculateBmi(height, weight) {
@@ -392,7 +411,7 @@
   }
 
   function judgeItem(item, value) {
-    if (value === null) return { level: "missing", label: "미입력", points: 0 };
+    if (!Number.isFinite(value) || value < 0) return { level: "missing", label: "미입력", points: 0 };
     const [nMin, nMax] = item.normal;
     const [cMin, cMax] = item.caution;
     const highDanger = value > cMax;
@@ -406,12 +425,24 @@
   }
 
   function renderReport(data) {
-    const results = labItems.map((item) => ({ item, value: data[item.id], judge: judgeItem(item, data[item.id]) }));
+    const results = labItems.map((item) => {
+      const value = safeNumber(data[item.id]);
+      return { item, value, judge: judgeItem(item, value) };
+    });
+    const enteredCount = results.filter((result) => result.value !== null).length;
+    const incomplete = enteredCount !== labItems.length;
     const abnormal = results.filter((result) => result.judge.level === "caution" || result.judge.level === "danger");
     const rawScore = results.reduce((sum, result) => sum + result.judge.points, 0);
     const score = Math.min(100, Math.round(rawScore * 100 / 120));
-    const grade = score <= 30 ? "입력 범위 양호" : score <= 60 ? "추가 확인" : "상담 권장";
-    const gradeClass = score <= 30 ? "normal" : score <= 60 ? "caution" : "danger";
+    const grade = enteredCount === 0 ? "검사 수치 미입력" : incomplete ? "부분 입력 · 해석 제한" : score <= 30 ? "입력 범위 양호" : score <= 60 ? "추가 확인" : "상담 권장";
+    const gradeClass = incomplete ? "caution" : score <= 30 ? "normal" : score <= 60 ? "caution" : "danger";
+    const summaryText = enteredCount === 0
+      ? "입력된 혈액검사 수치가 없어 검사결과를 판정할 수 없습니다."
+      : abnormal.length
+        ? `확인이 필요한 입력 항목은 ${abnormal.map((r) => r.item.name).join(", ")}입니다.`
+        : incomplete
+          ? `입력한 ${enteredCount}개 검사 항목은 설정된 참고 범위 안에 있으나, 미입력 항목은 평가되지 않았습니다.`
+          : "입력된 검사 항목이 설정된 참고 범위 안에 있습니다.";
     const guides = buildGuides(data);
     const checkups = buildRecommendedCheckups(data, score);
     const primaryCheckup = checkups[0] || { package: "종합검진", deptFilter: "all" };
@@ -421,11 +452,13 @@
     report.innerHTML = `
       <div class="report-wrap">
         <div class="report-top">
-          <div class="score-box"><div><strong>${score}</strong><p>주의 항목 지수</p><span class="badge ${gradeClass}">${grade}</span></div></div>
+          <div class="score-box"><div><strong>${incomplete ? "—" : score}</strong><p>주의 항목 지수 · ${enteredCount}/${labItems.length}개 입력</p><span class="badge ${gradeClass}">${grade}</span></div></div>
           <div>
             <p class="eyebrow">검진 리포트</p>
             <h2>현재 상태 요약</h2>
-            <p>${abnormal.length ? `참고 범위를 추가로 확인할 항목은 ${abnormal.map((r) => r.item.name).join(", ")}입니다.` : "입력된 주요 항목이 설정된 참고 범위 안에 있습니다."}</p>
+            <p>${summaryText}</p>
+            ${incomplete ? '<p class="notice">일부 검사항목이 비어 있어 주의 항목 지수를 표시하지 않습니다. 미입력은 정상 판정을 의미하지 않습니다.</p>' : ""}
+            ${data.reportSchemaVersion !== 2 ? '<p class="notice">이전 버전에서 저장한 결과는 빈칸이 0으로 기록되었을 수 있습니다. 원본 결과지와 대조하여 다시 입력하세요.</p>' : ""}
             <p class="notice">이 리포트는 참고용이며 진단이나 치료를 대신하지 않습니다.</p>
           </div>
         </div>
@@ -521,7 +554,7 @@
 
   function renderBasicMetrics(data) {
     const items = [];
-    if (data.bmi !== null) {
+    if (Number.isFinite(data.bmi)) {
       const bmiStatus = data.bmi < 18.5 ? "저체중" : data.bmi < 23 ? "정상" : data.bmi < 25 ? "과체중" : "비만 관리 필요";
       items.push(`BMI: ${data.bmi.toFixed(1)} (${bmiStatus})`);
     }
@@ -687,7 +720,9 @@
         package: "종합검진",
         priority: "정기 확인",
         priorityClass: "normal",
-        reason: "현재 입력값에서는 큰 이상 신호가 적어 정기 검진과 전년도 대비 변화 확인이 우선입니다.",
+        reason: labItems.every((item) => safeNumber(data[item.id]) !== null)
+          ? "입력된 모든 검사 항목에서 설정된 참고 범위와 비교할 때 특이한 신호가 없어 정기검진과 전년도 변화 확인을 권장합니다."
+          : "미입력 항목은 평가되지 않았습니다. 원본 건강검진 결과지를 확인하고 정기검진 여부를 의료진과 상의하세요.",
         tests: ["기본 혈액검사", "혈압", "생활습관 점검"]
       });
     }
@@ -743,8 +778,8 @@
     if (exists) select.value = value;
   }
 
-  function isHigh(value, limit) { return value !== null && value > limit; }
-  function isLow(value, limit) { return value !== null && value < limit; }
+  function isHigh(value, limit) { return Number.isFinite(value) && value >= 0 && value > limit; }
+  function isLow(value, limit) { return Number.isFinite(value) && value >= 0 && value < limit; }
 
   function judgeBloodPressure(sys, dia) {
     if (sys === null && dia === null) return "미입력";

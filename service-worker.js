@@ -1,4 +1,4 @@
-const CACHE_NAME = "labinsight-app-v20260729-real-packages-a";
+const CACHE_NAME = "labinsight-app-v20261012-input-validation";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -7,7 +7,7 @@ const APP_SHELL = [
   "./hospitals.html",
   "./styles.css?v=real-packages-20260729a",
   "./hospital-data.js?v=real-packages-20260729a",
-  "./app.js?v=real-packages-20260729a",
+  "./app.js?v=input-validation-20261012",
   "./runtime-config.js",
   "./manifest.webmanifest",
   "./icons/icon.svg",
