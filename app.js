@@ -399,8 +399,8 @@
   function bindForm() {
     const form = byId("healthForm");
     const showSampleReport = () => {
-      saveReport(sampleData);
-      window.location.href = "./report.html";
+      if (saveReport(sampleData)) window.location.href = "./report.html";
+      else window.alert("브라우저의 임시 저장을 사용할 수 없습니다. 사이트 데이터 권한을 확인해주세요.");
     };
     byId("heroSampleBtn")?.addEventListener("click", showSampleReport);
     byId("emptySampleBtn")?.addEventListener("click", showSampleReport);
@@ -410,7 +410,8 @@
     });
     byId("clearBtn")?.addEventListener("click", () => {
       form?.reset();
-      localStorage.removeItem(reportStorageKey);
+      restoreReferenceRangeFields();
+      deleteSavedReport();
       updateBmiPreview();
     });
     form?.addEventListener("submit", (event) => {
@@ -432,7 +433,10 @@
         return;
       }
       setStatus("formStatus", "");
-      saveReport(data);
+      if (!saveReport(data)) {
+        setStatus("formStatus", "브라우저 임시 저장을 사용할 수 없습니다. 브라우저 설정을 확인한 후 다시 시도해주세요.");
+        return;
+      }
       window.location.href = "./report.html";
     });
   }
@@ -443,23 +447,46 @@
       || Number.isFinite(data.bmi);
   }
 
+  // Test and screening results are kept for tab navigation, not in long-lived localStorage.
+  // sessionStorage can still survive browser session restoration; users must delete results on shared devices.
   function saveReport(data) {
     const reportData = { ...data };
     reportData.bmi = calculateBmi(reportData.height, reportData.weight);
-    reportData.reportSchemaVersion = 3;
-    localStorage.setItem(reportStorageKey, JSON.stringify(reportData));
+    reportData.reportSchemaVersion = 4;
+    try {
+      sessionStorage.setItem(reportStorageKey, JSON.stringify(reportData));
+      localStorage.removeItem(reportStorageKey); // Erase any previous persistent copy.
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function deleteSavedReport() {
+    let succeeded = true;
+    for (const storage of [sessionStorage, localStorage]) {
+      try { storage.removeItem(reportStorageKey); } catch (_) { succeeded = false; }
+    }
+    return succeeded;
   }
 
   function readSavedReport() {
     try {
-      const parsed = JSON.parse(localStorage.getItem(reportStorageKey) || "null");
+      // One-time migration of earlier reports out of persistent localStorage.
+      const current = sessionStorage.getItem(reportStorageKey);
+      const legacy = localStorage.getItem(reportStorageKey);
+      if (legacy !== null) {
+        if (current === null) sessionStorage.setItem(reportStorageKey, legacy);
+        localStorage.removeItem(reportStorageKey);
+      }
+      const parsed = JSON.parse(sessionStorage.getItem(reportStorageKey) || "null");
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
       const numericFields = ["age", "height", "weight", "bpSys", "bpDia", ...labItems.map((item) => item.id)];
       numericFields.forEach((field) => { parsed[field] = safeNumber(parsed[field]); });
       parsed.bmi = calculateBmi(parsed.height, parsed.weight);
       parsed.referenceRanges = window.LABINSIGHT_REFERENCES?.parseIntervals(parsed.referenceRanges || {}, labItems).saved || {};
       return parsed;
-    } catch (error) {
+    } catch (_) {
       return null;
     }
   }
@@ -556,6 +583,7 @@
     const incomplete = enteredCount !== labItems.length;
     const unconfirmed = confirmedCount !== enteredCount;
     const abnormal = results.filter((result) => result.judge.confirmed && result.judge.level === "caution");
+    const needsReference = results.filter((result) => result.value !== null && !result.judge.confirmed).length;
     const grade = enteredCount === 0 ? "검사 수치 미입력" :
       incomplete ? "부분 입력 · 해석 제한" :
       unconfirmed ? "참고치 추가 확인 필요" :
@@ -576,6 +604,21 @@
     if (!report) return;
     report.innerHTML = `
       <div class="report-wrap">
+        <div class="report-actions no-print">
+          <div>
+            <p class="eyebrow">PERSONAL REFERENCE REPORT</p>
+            <p class="report-actions-desc">검진 결과는 현재 브라우저 탭의 임시 저장소에 보관됩니다. 다른 사용자와 기기를 공유한다면 사용 후 삭제하세요. 브라우저의 세션 복원 기능 때문에 탭을 닫아도 데이터가 남을 수 있습니다.</p>
+          </div>
+          <div class="report-actions-buttons">
+            <button class="button secondary" id="printHealthReportBtn" type="button">인쇄 · PDF 저장</button>
+            <button class="button ghost" id="deleteHealthReportBtn" type="button">이 탭의 검사 결과 삭제</button>
+          </div>
+          <p class="report-actions-status" id="reportActionStatus" role="status" aria-live="polite"></p>
+        </div>
+        <div class="report-print-heading print-only">
+          <strong>LabInsight | 개인 참고용 건강검진 리포트</strong>
+          <p>검사기관의 공식 결과지 또는 의료진 진단서가 아닙니다. 개인별 참고범위와 검사일은 원본 결과지를 확인하세요.</p>
+        </div>
         <div class="report-top">
           <div class="score-box"><div><strong>${incomplete || unconfirmed ? "—" : abnormal.length}</strong><p>검사지 참고치 밖 · ${confirmedCount}/${enteredCount}개 비교</p><span class="badge ${gradeClass}">${grade}</span></div></div>
           <div>
@@ -587,7 +630,13 @@
             <p class="notice">이 리포트는 참고용이며 진단이나 치료를 대신하지 않습니다.</p>
           </div>
         </div>
-        <section class="recommendation-panel" aria-label="추천 건강검진">
+        <section class="report-summary-stat-grid" aria-label="검사 결과 입력 요약">
+          <div class="report-summary-stat"><strong>${enteredCount}</strong><span>입력한 검사 항목 / ${labItems.length}개</span></div>
+          <div class="report-summary-stat"><strong>${confirmedCount}</strong><span>검사지 참고치 비교 완료</span></div>
+          <div class="report-summary-stat"><strong>${abnormal.length}</strong><span>검사지 참고치 밖 항목</span></div>
+          <div class="report-summary-stat"><strong>${needsReference}</strong><span>검사지 참고치 확인 필요</span></div>
+        </section>
+        <section class="recommendation-panel no-print" aria-label="추천 건강검진">
           <div class="panel-heading">
             <div>
               <p class="eyebrow">결과 기반 추천 검진</p>
@@ -597,7 +646,7 @@
           </div>
           <div class="checkup-grid">${checkups.map(renderCheckupCard).join("")}</div>
         </section>
-        <div class="report-next-actions">
+        <div class="report-next-actions no-print">
           <div>
             <p class="eyebrow">NEXT STEP</p>
             <h3>관련 검진 정보를 확인하고 의료진과 상담하세요.</h3>
@@ -634,6 +683,15 @@
         </div>
       </div>
     `;
+    byId("printHealthReportBtn")?.addEventListener("click", () => window.print());
+    byId("deleteHealthReportBtn")?.addEventListener("click", () => {
+      if (!window.confirm("저장된 건강검진 결과와 검사기관 참고치를 이 기기의 LabInsight 저장소에서 삭제할까요? 이미 내려받은 PDF 파일은 별도로 삭제해야 합니다.")) return;
+      if (!deleteSavedReport()) {
+        setStatus("reportActionStatus", "일부 저장소에서 삭제하지 못했습니다. 브라우저의 사이트 데이터 삭제 기능을 확인하세요.");
+        return;
+      }
+      report.innerHTML = '<div class="empty-report"><h2>저장된 건강검진 결과를 삭제했습니다.</h2><p>이 브라우저의 LabInsight 리포트 저장 영역을 비웠습니다. 이미 인쇄하거나 다운로드한 파일은 별도로 삭제해야 합니다.</p><a class="button primary" href="./checkup.html">새 검사결과 입력하기</a></div>';
+    });
     report.querySelectorAll("[data-desc-toggle]").forEach((button) => {
       button.addEventListener("click", () => {
         const row = report.querySelector(`[data-desc-row="${button.dataset.descToggle}"]`);

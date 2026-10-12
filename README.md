@@ -134,10 +134,19 @@ OCR은 **글자 인식 보조 기능**이며 검사 수치를 자동 판정하�
 
 **해석 근거:** [MedlinePlus](https://medlineplus.gov/lab-tests/how-to-understand-your-lab-results/) · [CDC](https://www.cdc.gov/diabetes/diabetes-testing/) · [NIDDK](https://www.niddk.nih.gov/health-information/professionals/clinical-tools-patient-management/kidney-disease/identify-manage-patients/evaluate-ckd).
 
+## 리포트 인쇄 및 개인정보 정리 (2026-10-12)
+
+- 결과 리포트 상단의 **인쇄 · PDF 저장**을 누르면 브라우저 인쇄 대화상자가 열립니다. PDF로 저장할 때는 운영체제/브라우저의 **PDF로 저장** 기능을 선택합니다. 서버에서 PDF를 만들거나 보내지 않습니다.
+- 개인용 출력에는 항목별 검사지 참고범위·비교 상태·해석 근거가 포함되며, 병원 패키지 홍보와 사이트 이동 메뉴 등은 출력에서 제외됩니다. A4 기준 인쇄 스타일을 제공합니다.
+- 리포트는 기존의 오래 보관되는 `localStorage` 대신 **`sessionStorage`에 임시 저장**합니다. 동일 탭에서 검사값 입력 → 리포트 이동이 가능하며, 이전 버전에 저장된 결과는 읽을 때 한 번 `sessionStorage`로 옮기고 `localStorage` 원본을 삭제합니다.
+- **이 탭의 검사 결과 삭제** 버튼은 확인 후 현재 임시 리포트와 남아 있을 수 있는 구버전 저장 항목을 지웁니다. 검사결과 입력 화면의 **초기화**도 두 저장소의 검사결과를 삭제합니다.
+- `sessionStorage`라도 브라우저가 세션을 복원하거나 같은 기기를 공유하면 접근될 수 있습니다. 공유 기기에서는 사용을 피하고 명시적으로 삭제해주세요. PDF 저장 파일, 스크린샷, 인쇄물은 별도로 관리·삭제해야 합니다.
+- 검색엔진용 `noindex`는 결과 입력/리포트 페이지에만 적용되며, **접근 제어나 개인정보 보호 장치는 아닙니다.** 공개 GitHub 저장소에 검사결과나 환자 개인정보를 커밋하지 마세요.
+
 ## 주요 기능
 
 - 건강검진 수치 직접 입력
-- STEP 1·2·3 독립 페이지 이동 및 최신 입력 결과 브라우저 저장
+- STEP 1·2·3 독립 페이지 이동 및 검사 결과 탭별 임시 저장·삭제
 - 샘플 데이터 불러오기
 - 접이식 검사 카테고리와 BMI 자동 계산
 - 혈압, BMI 기반 생활관리 및 검진 추천 보강
