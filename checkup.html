@@ -11,7 +11,6 @@
     <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="./styles.css?v=privacy-demo-20261012">
     <script src="./runtime-config.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
     <script src="./ocr-review.js?v=ocr-review-20261012" defer></script>
     <script src="./reference-ranges.js?v=reference-context-20261012" defer></script>
     <script src="./app.js?v=privacy-demo-20261012" defer></script>
@@ -57,7 +56,7 @@
             <div class="ocr-workspace">
               <div class="ocr-privacy-guidance" role="note">
                 <strong>개인정보 및 정확도 안내</strong>
-                <p>성명·생년월일·환자번호 등 불필요한 부분은 업로드 전에 가려주세요. OCR은 브라우저의 Tesseract.js로 실행되며, 처리에 필요한 프로그램 파일은 외부 CDN에서 로드됩니다. 이미지는 LabInsight 예약 서버로 전송하지 않도록 구현되어 있지만, 브라우저 확장프로그램이나 기기 환경까지 보장하지는 않습니다.</p>
+                <p>성명·생년월일·환자번호 등 불필요한 부분은 업로드 전에 가려주세요. OCR은 브라우저의 Tesseract.js로 실행되며, 사용자가 ‘이미지 글자 인식’을 누를 때만 특정 버전의 Tesseract.js 프로그램과 필요한 언어 데이터를 외부 CDN에서 불러옵니다. OCR을 사용하지 않으면 OCR 프로그램 파일은 불러오지 않습니다. 이미지는 LabInsight 예약 서버로 전송하지 않도록 구현되어 있지만, 브라우저 확장프로그램이나 기기 환경까지 보장하지는 않습니다.</p>
                 <p>인식된 값은 자동으로 적용되지 않습니다. 검사명·숫자·단위를 원본과 비교하고 확인한 항목만 선택하세요. 특히 백혈구와 혈소판은 검사기관별 단위가 다를 수 있습니다.</p>
               </div>
               <div class="upload-box">
