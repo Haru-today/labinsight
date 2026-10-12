@@ -74,7 +74,7 @@ test("booking UI has no identifying form fields and no network booking fetches",
   const app = fs.readFileSync(path.join(__dirname, "..", "app.js"), "utf8");
   for(const key of ["bookName", "bookPhone", "bookBirthDate", "bookPurpose"]) {
     assert.doesNotMatch(html, new RegExp(key));
-    assert.doesNotMatch(app, new RegExp("byId\\(\\"" + key + "\\"\\)"));
+    assert.equal(app.includes('byId("' + key + '")'), false);
   }
   assert.match(html, /실제 예약을 만들지 않습니다/);
   assert.match(html, /clearDemoBookingsBtn/);
