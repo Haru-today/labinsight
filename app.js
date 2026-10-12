@@ -1111,7 +1111,7 @@
   }
 
   function sourceNeedsRecheck(verifiedAt, now = Date.now()) {
-    const parsed = typeof verifiedAt === "string" && /^\\d{4}-\\d{2}-\\d{2}$/.test(verifiedAt)
+    const parsed = typeof verifiedAt === "string" && /^\d{4}-\d{2}-\d{2}$/.test(verifiedAt)
       ? Date.parse(verifiedAt + "T00:00:00Z") : NaN;
     const ageDays = (now - parsed) / (24 * 60 * 60 * 1000);
     return !Number.isFinite(ageDays) || ageDays < 0 || ageDays > 45;
