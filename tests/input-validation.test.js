@@ -22,7 +22,7 @@ function loadApp(inputs = {}) {
   assert.match(source, suffix, "app.js must keep its IIFE wrapper");
   const instrumented = source.replace(
     suffix,
-    "globalThis.__helpers = { safeNumber, calculateBmi, collectFormData, hasReportableValues, judgeItem, renderReport, readSavedReport, labItems };})();"
+    "globalThis.__helpers = { safeNumber, calculateBmi, collectFormData, hasReportableValues, judgeItem, renderReport, readSavedReport, buildRecommendedCheckups, labItems };})();"
   );
   vm.runInNewContext(instrumented, context, { filename: "app.js" });
   return { helpers: context.__helpers, report, fields };
@@ -121,4 +121,12 @@ test("a report with no original lab intervals does not claim all measurements ar
   assert.match(report.innerHTML, /참고치 추가 확인 필요/);
   assert.match(report.innerHTML, /<strong>—<\/strong>/);
   assert.doesNotMatch(report.innerHTML, /입력 범위 양호/);
+});
+
+test("an isolated eGFR of 82 does not trigger a kidney disease recommendation", () => {
+  const { buildRecommendedCheckups } = loadApp().helpers;
+  const onlyEgfr82 = buildRecommendedCheckups({ egfr: 82, creatinine: null, bmi: null, bpSys: null, bpDia: null });
+  assert.equal(onlyEgfr82.some((card) => card.package === "신장 기능"), false);
+  const onlyEgfr55 = buildRecommendedCheckups({ egfr: 55, creatinine: null, bmi: null, bpSys: null, bpDia: null });
+  assert.equal(onlyEgfr55.some((card) => card.package === "신장 기능"), true);
 });
