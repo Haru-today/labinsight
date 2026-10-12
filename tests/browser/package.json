@@ -1,0 +1,9 @@
+{
+  "name": "labinsight-browser-tests",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Isolated Chromium end-to-end tests for LabInsight",
+  "devDependencies": {
+    "playwright": "1.56.1"
+  }
+}
