@@ -103,7 +103,7 @@ test("booking APIs, unknown assets and arbitrary query strings are never cached"
 test("known app assets are precached and served from their exact public URL", async () => {
   const h = harness();
   await h.lifeCycle("install");
-  const ok = await h.request(SCOPE + "styles.css?v=privacy-notice-20261013", "cors");
+  const ok = await h.request(SCOPE + "styles.css?v=dialog-a11y-20261013", "cors");
   assert.equal(ok.responded, true);
   assert.equal(ok.result.precached, true);
   const unknownVersion = await h.request(SCOPE + "styles.css?v=secret", "cors");
