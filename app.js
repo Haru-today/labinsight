@@ -109,6 +109,7 @@
   function init() {
     bindNav();
     bindOcr();
+    buildReferenceRangeInputs();
     bindForm();
     bindBmiPreview();
     bindHospitals();
@@ -365,6 +366,36 @@
     setStatus("ocrStatus", "OCR 파일과 추출 텍스트를 화면에서 지웠습니다. 이미 입력 폼에 반영한 수치는 별도로 초기화해야 합니다.");
   }
 
+  function buildReferenceRangeInputs() {
+    const container = byId("referenceRangeFields");
+    if (!container) return;
+    container.innerHTML = labItems.map((item) => {
+      const id = item.id;
+      return '<div class="ref-field-row"><strong>' + escapeHtml(item.name) + '</strong>' +
+        '<span class="ref-field-unit">' + escapeHtml(item.unit) + '</span>' +
+        '<label for="' + id + 'RefMin">하한<input id="' + id + 'RefMin" type="number" min="0" step="any" placeholder="미입력"></label>' +
+        '<label for="' + id + 'RefMax">상한<input id="' + id + 'RefMax" type="number" min="0" step="any" placeholder="미입력"></label></div>';
+    }).join("");
+  }
+
+  function collectReferenceRangeDraft() {
+    const ranges = {};
+    labItems.forEach((item) => {
+      ranges[item.id] = { min: byId(item.id + "RefMin")?.value, max: byId(item.id + "RefMax")?.value };
+    });
+    return ranges;
+  }
+
+  function restoreReferenceRangeFields(referenceRanges = {}) {
+    labItems.forEach((item) => {
+      const interval = window.LABINSIGHT_REFERENCES?.normalizeInterval(referenceRanges[item.id]);
+      const min = byId(item.id + "RefMin");
+      const max = byId(item.id + "RefMax");
+      if (min) min.value = interval ? String(interval.min) : "";
+      if (max) max.value = interval ? String(interval.max) : "";
+    });
+  }
+
   function bindForm() {
     const form = byId("healthForm");
     const showSampleReport = () => {
@@ -385,6 +416,17 @@
     form?.addEventListener("submit", (event) => {
       event.preventDefault();
       const data = collectFormData();
+      const parsedRanges = window.LABINSIGHT_REFERENCES?.parseIntervals(collectReferenceRangeDraft(), labItems);
+      if (!parsedRanges) {
+        setStatus("formStatus", "참고범위 기능을 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.");
+        return;
+      }
+      if (parsedRanges.errors.length) {
+        setStatus("formStatus", parsedRanges.errors[0]);
+        byId("referenceSettings")?.setAttribute("open", "");
+        return;
+      }
+      data.referenceRanges = parsedRanges.saved;
       if (!hasReportableValues(data)) {
         setStatus("formStatus", "검사값, 혈압(수축기·이완기), 키·몸무게 중 한 가지 이상을 입력한 뒤 리포트를 생성하세요.");
         return;
@@ -404,7 +446,7 @@
   function saveReport(data) {
     const reportData = { ...data };
     reportData.bmi = calculateBmi(reportData.height, reportData.weight);
-    reportData.reportSchemaVersion = 2;
+    reportData.reportSchemaVersion = 3;
     localStorage.setItem(reportStorageKey, JSON.stringify(reportData));
   }
 
@@ -415,6 +457,7 @@
       const numericFields = ["age", "height", "weight", "bpSys", "bpDia", ...labItems.map((item) => item.id)];
       numericFields.forEach((field) => { parsed[field] = safeNumber(parsed[field]); });
       parsed.bmi = calculateBmi(parsed.height, parsed.weight);
+      parsed.referenceRanges = window.LABINSIGHT_REFERENCES?.parseIntervals(parsed.referenceRanges || {}, labItems).saved || {};
       return parsed;
     } catch (error) {
       return null;
@@ -451,14 +494,17 @@
 
   function fillForm(data) {
     Object.entries(data).forEach(([id, value]) => {
+      if (id === "referenceRanges") return;
       const input = byId(id);
-      if (input) input.value = value;
+      if (input && value !== null && value !== undefined) input.value = value;
+      else if (input && id !== "gender") input.value = "";
     });
+    restoreReferenceRangeFields(data.referenceRanges || {});
   }
 
   function collectFormData() {
     const data = {
-      gender: byId("gender")?.value || "female",
+      gender: byId("gender")?.value || "unknown",
       age: safeNumber(byId("age")?.value),
       height: safeNumber(byId("height")?.value),
       weight: safeNumber(byId("weight")?.value),
