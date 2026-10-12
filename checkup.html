@@ -10,7 +10,7 @@
     <title>STEP 1 결과 입력 | LabInsight</title>
     <link rel="manifest" href="./manifest.webmanifest">
     <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="./styles.css?v=privacy-demo-20261012">
+    <link rel="stylesheet" href="./styles.css?v=privacy-notice-20261013">
     <script src="./runtime-config.js"></script>
     <script src="./ocr-review.js?v=ocr-review-20261012" defer></script>
     <script src="./reference-ranges.js?v=reference-context-20261012" defer></script>
@@ -48,6 +48,7 @@
           <p class="muted">검사기관마다 참고 범위가 다를 수 있습니다. 원본 결과지의 참고치와 의료진 설명을 우선하세요.</p>
         </div>
         <form id="healthForm" class="lab-form">
+          <p class="privacy-inline-note">검사값과 참고범위는 결과 리포트 생성을 위해 브라우저 탭의 임시 저장소에 보관될 수 있습니다. 사용 후 결과 삭제 기능을 이용하고 공용 기기를 피하세요. <a href="https://haru-today.github.io/privacy.html">자세한 개인정보 처리 안내</a></p>
           <div class="form-actions top-actions">
             <button class="button secondary" id="sampleBtn" type="button">샘플 데이터 불러오기</button>
             <button class="button ghost" id="clearBtn" type="button">입력 초기화</button>
@@ -134,7 +135,7 @@
       </section>
     </main>
 
-    <footer class="footer"><div class="footer-brand"><strong>LabInsight</strong><span>LABDAM 건강검진 연결 서비스</span></div><p>본 서비스의 의료 정보는 참고용이며 전문적인 진단이나 치료를 대신하지 않습니다.<br>검사기관 참고치와 의료진 설명을 우선하세요.</p><div class="footer-links"><a href="./index.html">서비스 홈</a><a href="./report.html">결과 리포트</a><a href="./hospitals.html">병원 비교</a><a href="https://haru-today.github.io/">LABDAM 통합 포털</a></div></footer>
+    <footer class="footer"><div class="footer-brand"><strong>LabInsight</strong><span>LABDAM 건강검진 연결 서비스</span></div><p>본 서비스의 의료 정보는 참고용이며 전문적인 진단이나 치료를 대신하지 않습니다.<br>검사기관 참고치와 의료진 설명을 우선하세요.</p><div class="footer-links"><a href="./index.html">서비스 홈</a><a href="./report.html">결과 리포트</a><a href="./hospitals.html">병원 비교</a><a href="https://haru-today.github.io/">LABDAM 통합 포털</a></div><div class="footer-policy-links" aria-label="이용 정책"><a href="https://haru-today.github.io/privacy.html">개인정보 처리 안내</a><span aria-hidden="true"> · </span><a href="https://haru-today.github.io/terms.html">서비스 이용 안내</a></div></footer>
     <nav class="app-tabbar" aria-label="앱 빠른 이동"><a href="./index.html"><span>홈</span></a><a class="is-current" href="./checkup.html"><span>입력</span></a><a href="./report.html"><span>리포트</span></a><a href="./hospitals.html"><span>비교·예약</span></a></nav>
   </body>
 </html>

@@ -216,3 +216,8 @@ curl http://localhost:8000/api/bookings
 - 예약 저장 기능은 LabInsight 흐름 확인용 샘플이며 실제 병원으로 전송되지 않습니다. 실제 예약 연동, SMS 발송, 결제, EMR/CRM 연동은 별도 외부 API 계약과 보안 검토가 필요합니다.
 - 본 서비스의 의료 정보는 참고용이며 진단, 치료, 처방을 대신하지 않습니다.
 \n## LABDAM 사이트 구조 (2026-10-13)\n\n- LABDAM = Personal Health Atlas 통합 포털: <https://haru-today.github.io/>\n- LabInsight 서비스: <https://haru-today.github.io/labinsight/>\n- Caffeine Atlas 서비스: <https://haru-today.github.io/caffeine-atlas/>\n- Caffeine Atlas 내부 검사·리포트는 Caffeine Atlas 사이트의 하위 경로로 유지합니다. 별도의 네 번째 포털은 없습니다.\n
+## 8단계 개인정보·이용 안내 연결 (2026-10-13)
+- LABDAM 공통 개인정보 처리 안내: <https://haru-today.github.io/privacy.html>
+- LABDAM 공통 서비스 이용 안내: <https://haru-today.github.io/terms.html>
+- LabInsight는 리포트·검사기관 참고범위를 브라우저 세션에 보관하고 사용자의 삭제 버튼을 제공합니다. 서버의 예약 API는 종료한 상태입니다.
+- 개인정보처리방침의 운영자 신원·보호책임자·비공개 권리 행사 창구와 타 서비스의 Google Sheets 보관 정책 등은 실제 운영자 확인 및 별도 법률 검토가 필요합니다.
