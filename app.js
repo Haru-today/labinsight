@@ -3,7 +3,8 @@
 
   const $ = (selector) => document.querySelector(selector);
   const byId = (id) => document.getElementById(id);
-  const storageKey = "labinsight-bookings";
+  const storageKey = "labinsight-demo-bookings-v2";
+  const oldBookingStorageKey = "labinsight-bookings";
   const reportStorageKey = "labinsight-latest-report";
   const apiBaseUrl = String(window.LABINSIGHT_CONFIG?.apiBaseUrl || "").trim().replace(/\/$/, "");
   const statusLabels = {
@@ -50,7 +51,7 @@
       ]
     },
     {
-      id: "centum-gi", name: "센텀 소화기클리닉", region: "부산", area: "센텀시티역 7분", dept: "소화기내과",
+      id: "centum-gi", name: "샘플 예약 센터 2", region: "부산", area: "센텀시티역 7분", dept: "소화기내과",
       address: "부산 해운대구 센텀중앙로 48", phone: "051-000-2200", packages: ["간 기능", "종합검진"],
       rating: 4.8, reviewCount: 512, duration: 60, badges: ["전문의 결과 설명", "초음파 포함"], slots: ["09:30", "11:00", "14:00", "16:00"],
       plans: [
@@ -59,7 +60,7 @@
       ]
     },
     {
-      id: "seoul-endo", name: "서울 라이프내분비센터", region: "서울", area: "강남역 3분", dept: "내분비내과",
+      id: "seoul-endo", name: "샘플 예약 센터 3", region: "서울", area: "강남역 3분", dept: "내분비내과",
       address: "서울 강남구 테헤란로 152", phone: "02-000-3300", packages: ["당뇨", "이상지질혈증"],
       rating: 4.6, reviewCount: 741, duration: 45, badges: ["강남권 인기", "평일 야간"], slots: ["09:00", "10:00", "14:30", "16:30"],
       plans: [
@@ -68,7 +69,7 @@
       ]
     },
     {
-      id: "daegu-kidney", name: "대구 신장건강의원", region: "대구", area: "반월당역 4분", dept: "신장내과",
+      id: "daegu-kidney", name: "샘플 예약 센터 4", region: "대구", area: "반월당역 4분", dept: "신장내과",
       address: "대구 중구 달구벌대로 2095", phone: "053-000-4400", packages: ["신장 기능", "종합검진"],
       rating: 4.5, reviewCount: 186, duration: 50, badges: ["신장 전문 상담", "빠른 결과"], slots: ["09:20", "10:40", "13:40", "15:20"],
       plans: [
@@ -77,7 +78,7 @@
       ]
     },
     {
-      id: "online-lab", name: "온라인 검진상담 Lab", region: "온라인 상담", area: "전국 비대면", dept: "가정의학과",
+      id: "online-lab", name: "샘플 예약 센터 5", region: "온라인 상담", area: "전국 비대면", dept: "가정의학과",
       address: "비대면 결과 상담", phone: "1588-0000", packages: ["종합검진", "빈혈", "당뇨"],
       rating: 4.4, reviewCount: 92, duration: 25, badges: ["방문 전 상담", "결과지 리뷰"], slots: ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"],
       plans: [
@@ -87,7 +88,7 @@
       ]
     },
     {
-      id: "seoul-heart", name: "서울 하트리스크 클리닉", region: "서울", area: "잠실역 6분", dept: "심장내과",
+      id: "seoul-heart", name: "샘플 예약 센터 6", region: "서울", area: "잠실역 6분", dept: "심장내과",
       address: "서울 송파구 올림픽로 300", phone: "02-000-5500", packages: ["이상지질혈증", "종합검진"],
       rating: 4.9, reviewCount: 624, duration: 70, badges: ["평점 상위", "심혈관 집중"], slots: ["09:10", "10:50", "14:10", "15:50"],
       plans: [
@@ -168,7 +169,7 @@
       installButtons.forEach((button) => {
         button.hidden = true;
       });
-      if (cache) cache.textContent = apiBaseUrl ? "예약 서버 연결 준비" : "기기 내 데이터 저장";
+      if (cache) cache.textContent = "개인정보 없는 샘플 모드";
     } else if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("./service-worker.js")
         .then(() => {
@@ -1201,6 +1202,14 @@
     });
     byId("bookingForm")?.addEventListener("submit", saveBooking);
     byId("bookDate")?.addEventListener("change", updateTimeOptions);
+    byId("clearDemoBookingsBtn")?.addEventListener("click", async () => {
+      if (!window.confirm("현재 탭의 샘플 예약 내역을 모두 지울까요? 실제 병원 예약에는 영향을 주지 않습니다.")) return;
+      try { sessionStorage.removeItem(storageKey); localStorage.removeItem(oldBookingStorageKey); }
+      catch (_) { window.alert("샘플 내역을 삭제하지 못했습니다. 브라우저 사이트 데이터를 직접 삭제하세요."); return; }
+      await renderBookings();
+      await updateTimeOptions();
+      await renderHospitals();
+    });
   }
 
   async function openBookingModal(hospitalId, packageName = "") {
@@ -1226,7 +1235,7 @@
       modal.hidden = false;
       modal.classList.add("is-open");
     }
-    byId("bookName")?.focus();
+    byId("bookPackage")?.focus();
   }
 
   function closeBookingModal() {
@@ -1241,87 +1250,46 @@
     event.preventDefault();
     const booking = {
       hospitalId: selectedHospital?.id || "",
-      hospital: selectedHospital?.name || "선택 병원",
+      hospital: selectedHospital?.name || "샘플 센터",
       department: selectedHospital?.dept || "",
-      name: byId("bookName")?.value.trim() || "",
-      phone: byId("bookPhone")?.value.trim() || "",
-      birthDate: byId("bookBirthDate")?.value || "",
       packageName: byId("bookPackage")?.value || "",
       date: byId("bookDate")?.value || "",
       time: byId("bookTime")?.value || "",
-      purpose: byId("bookPurpose")?.value.trim() || "",
-      consent: Boolean(byId("bookConsent")?.checked),
-      status: "requested"
+      status: "requested",
+      demo: true
     };
-    if (!booking.hospitalId || !booking.name || !booking.phone || !booking.birthDate || !booking.packageName || !booking.date || !booking.time) {
-      setStatus("bookingStatus", "이름, 연락처, 생년월일, 검진 항목, 희망 날짜와 시간을 모두 입력해주세요.");
+    if (!booking.hospitalId || !booking.packageName || !booking.date || !booking.time) {
+      setStatus("bookingStatus", "샘플 검진 종류, 날짜, 시간을 선택해주세요.");
       return;
     }
-    if (!booking.consent) {
-      setStatus("bookingStatus", "예약 접수를 위해 개인정보 수집·이용 동의가 필요합니다.");
+    if (!byId("bookConsent")?.checked) {
+      setStatus("bookingStatus", "실제 병원 예약이 아닌 샘플 체험임을 확인해주세요.");
       return;
     }
     try {
-      const saved = await createBooking(booking);
-      setStatus("bookingStatus", `예약 요청이 저장되었습니다. 실제 병원에는 전송되지 않습니다. 예약번호: ${saved.id}`);
+      const saved = await createLocalBooking(booking);
+      setStatus("bookingStatus", "이 탭에 샘플 예약을 저장했습니다. 실제 병원 예약은 진행되지 않습니다. 샘플 번호: " + saved.id);
       byId("bookingForm")?.reset();
       await renderBookings();
       await renderHospitals();
       await updateTimeOptions();
     } catch (error) {
-      console.error(error);
-      setStatus("bookingStatus", error.message || "예약 정보를 저장하지 못했습니다. 다시 시도해주세요.");
+      setStatus("bookingStatus", error.message || "샘플 저장에 실패했습니다.");
     }
   }
 
   async function detectBookingApi() {
-    const nativeMobile = Boolean(window.Capacitor?.isNativePlatform?.());
-    if (window.location.protocol === "file:" || (nativeMobile && !apiBaseUrl)) {
-      apiAvailable = false;
-      updateBookingModeNotice();
-      return;
-    }
-    try {
-      await apiRequest("/api/bookings");
-      apiAvailable = true;
-    } catch (error) {
-      apiAvailable = false;
-    }
+    // Demo-only. There is deliberately no remote reservation API.
+    apiAvailable = false;
+    try { localStorage.removeItem(oldBookingStorageKey); } catch (_) {}
+    try { sessionStorage.removeItem(oldBookingStorageKey); } catch (_) {}
     updateBookingModeNotice();
-    updateBookingSummary();
+    await updateBookingSummary();
     renderHospitals();
   }
 
-  async function apiRequest(path, options = {}) {
-    const response = await fetch(`${apiBaseUrl}${path}`, {
-      headers: { "Content-Type": "application/json", ...(options.headers || {}) },
-      ...options
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(payload.error || "요청 처리 중 오류가 발생했습니다.");
-    }
-    return payload;
-  }
-
-  async function createBooking(booking) {
-    if (apiAvailable) {
-      return apiRequest("/api/bookings", {
-        method: "POST",
-        body: JSON.stringify(booking)
-      });
-    }
-    return createLocalBooking(booking);
-  }
-
   async function updateBookingStatus(id, status) {
-    if (apiAvailable) {
-      await apiRequest(`/api/bookings/${encodeURIComponent(id)}`, {
-        method: "PATCH",
-        body: JSON.stringify({ status })
-      });
-      return;
-    }
+    if (!Object.prototype.hasOwnProperty.call(statusLabels, status)) return;
     const bookings = await readLocalBookings();
     const target = bookings.find((booking) => booking.id === id);
     if (target) {
@@ -1332,21 +1300,12 @@
   }
 
   async function readBookings() {
-    if (apiAvailable) {
-      try {
-        const payload = await apiRequest("/api/bookings");
-        return Array.isArray(payload.bookings) ? payload.bookings : [];
-      } catch (error) {
-        apiAvailable = false;
-        updateBookingModeNotice();
-      }
-    }
     return readLocalBookings();
   }
 
   async function readLocalBookings() {
     try {
-      const parsed = JSON.parse(localStorage.getItem(storageKey) || "[]");
+      const parsed = JSON.parse(sessionStorage.getItem(storageKey) || "[]");
       return Array.isArray(parsed) ? parsed.map(normalizeBooking) : [];
     } catch (error) {
       console.error(error);
@@ -1355,7 +1314,7 @@
   }
 
   function writeLocalBookings(bookings) {
-    localStorage.setItem(storageKey, JSON.stringify(bookings));
+    sessionStorage.setItem(storageKey, JSON.stringify(bookings));
   }
 
   async function createLocalBooking(booking) {
@@ -1386,15 +1345,11 @@
       hospitalId: booking.hospitalId || findHospitalIdByName(booking.hospital),
       hospital: booking.hospital || "선택 병원",
       department: booking.department || "",
-      name: booking.name || "",
-      phone: booking.phone || "",
-      birthDate: booking.birthDate || "",
       packageName: booking.packageName || booking.package || "",
       date: booking.date || "",
       time: booking.time || "",
-      purpose: booking.purpose || "",
-      consent: booking.consent !== false,
-      status: booking.status || "requested",
+      demo: true,
+      status: Object.prototype.hasOwnProperty.call(statusLabels, booking.status) ? booking.status : "requested",
       createdAt: booking.createdAt || new Date().toISOString(),
       updatedAt: booking.updatedAt || booking.createdAt || new Date().toISOString()
     };
@@ -1430,9 +1385,9 @@
           </div>
           <span class="booking-status ${status}">${statusLabels[status] || status}</span>
         </div>
-        <p>${escapeHtml(booking.name)} · ${escapeHtml(maskPhone(booking.phone))} · ${escapeHtml(booking.packageName || "검진 항목 미입력")}</p>
+        <p><strong>데모 전용 · 실제 예약 아님</strong> · ${escapeHtml(booking.packageName || "검진 항목 미입력")}</p>
         <p><strong>${escapeHtml(booking.date)} ${escapeHtml(booking.time)}</strong> · ${escapeHtml(booking.department || "진료과 미지정")}</p>
-        <p class="muted">${escapeHtml(booking.purpose || "상담 목적 미입력")}</p>
+        <p class="muted">개인정보를 사용하지 않는 샘플 예약 흐름입니다.</p>
         <label class="status-control">상태 변경
           <select data-status-id="${escapeHtml(booking.id)}">
             ${Object.entries(statusLabels).map(([value, label]) => `<option value="${value}" ${value === status ? "selected" : ""}>${label}</option>`).join("")}
@@ -1472,16 +1427,14 @@
       <article><strong>${active.length}</strong><span>활성 예약</span></article>
       <article><strong>${requested}</strong><span>접수 대기</span></article>
       <article><strong>${confirmed}</strong><span>확정 예약</span></article>
-      <article><strong>${apiAvailable ? "API" : "Local"}</strong><span>저장 모드</span></article>
+      <article><strong>DEMO</strong><span>저장 모드</span></article>
     `;
   }
 
   function updateBookingModeNotice() {
     const notice = byId("bookingModeNotice");
     if (!notice) return;
-    notice.textContent = apiAvailable
-      ? "Node 서버 API와 data/bookings.json에 예약을 저장합니다."
-      : "정적 실행 환경에서는 이 브라우저의 localStorage에만 예약을 저장하며 실제 병원에는 전송하지 않습니다.";
+    notice.textContent = "실제 병원 예약은 진행되지 않습니다. 이름·연락처·생년월일 없이 현재 탭의 임시 저장소에만 기록되며 예약 가능한 실제 시간과는 무관합니다.";
   }
 
   async function exportBookingsCsv() {
@@ -1490,19 +1443,15 @@
       alert("내보낼 예약 내역이 없습니다.");
       return;
     }
-    const headers = ["예약번호", "상태", "병원", "진료과", "검진항목", "이름", "연락처", "생년월일", "날짜", "시간", "상담목적", "접수일시"];
+    const headers = ["샘플번호", "데모 상태", "샘플 센터", "분류", "검진종류", "날짜", "시간", "생성일시"];
     const rows = bookings.map((booking) => [
       booking.id,
       statusLabels[booking.status] || booking.status,
       booking.hospital,
       booking.department,
       booking.packageName,
-      booking.name,
-      booking.phone,
-      booking.birthDate,
       booking.date,
       booking.time,
-      booking.purpose,
       booking.createdAt
     ]);
     const csv = [headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\n");
@@ -1510,7 +1459,7 @@
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `labinsight-bookings-${formatDate(new Date())}.csv`;
+    anchor.download = `labinsight-demo-only-${formatDate(new Date())}.csv`;
     anchor.click();
     URL.revokeObjectURL(url);
   }

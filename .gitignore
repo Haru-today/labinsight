@@ -10,3 +10,10 @@ android/app/build/
 android/build/
 *.log
 .DS_Store
+
+# Never commit local booking records or personal health files.
+data/
+.env
+.env.*
+*.sqlite
+*.sqlite3

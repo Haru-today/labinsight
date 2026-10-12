@@ -8,11 +8,11 @@
     <title>STEP 3 병원·검진 패키지 비교 | LabInsight</title>
     <link rel="manifest" href="./manifest.webmanifest">
     <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="./styles.css?v=report-print-20261012">
+    <link rel="stylesheet" href="./styles.css?v=privacy-demo-20261012">
     <script src="./runtime-config.js"></script>
     <script src="./hospital-data.js?v=real-packages-20260729a"></script>
     <script src="./reference-ranges.js?v=reference-context-20261012" defer></script>
-    <script src="./app.js?v=report-print-20261012" defer></script>
+    <script src="./app.js?v=privacy-demo-20261012" defer></script>
   </head>
   <body data-page="hospitals">
     <a class="skip-link" href="#mainContent">본문으로 바로가기</a>
@@ -89,10 +89,10 @@
         </section>
 
         <section class="booking-management">
-          <div class="booking-management-head"><div><p class="eyebrow">LABINSIGHT DEMO</p><h2>예약 흐름 체험</h2><p class="muted">이 영역은 기능 확인용 샘플입니다. 입력 내용은 실제 병원에 전송되지 않으며, 실제 예약은 위의 병원 공식 페이지에서 진행하세요.</p></div><div class="booking-management-actions"><button class="button primary" id="tryBookingBtn" type="button">샘플 예약 체험</button><button class="button secondary" id="viewBookingsBtn" type="button">저장 내역 보기</button></div></div>
+          <div class="booking-management-head"><div><p class="eyebrow">LABINSIGHT DEMO</p><h2>예약 흐름 체험</h2><p class="muted">이 영역은 개인정보를 수집하지 않는 예약 화면 데모입니다. 실제 병원 예약·접수 또는 실시간 예약 가능 시간 조회가 아니며, 실제 예약은 위 병원 공식 페이지에서 진행하세요.</p></div><div class="booking-management-actions"><button class="button primary" id="tryBookingBtn" type="button">샘플 예약 체험</button><button class="button secondary" id="viewBookingsBtn" type="button">샘플 내역 보기</button><button class="button ghost" id="clearDemoBookingsBtn" type="button">샘플 내역 삭제</button></div></div>
           <div class="booking-summary" id="bookingSummary" aria-live="polite"></div>
           <div class="booking-list" id="bookingList" hidden>
-            <div class="booking-list-head"><div><h3>예약 관리</h3><p class="notice" id="bookingModeNotice">예약 데이터를 불러오는 중입니다.</p></div><button class="button ghost" id="exportBookingsBtn" type="button">CSV 내보내기</button></div>
+            <div class="booking-list-head"><div><h3>샘플 예약 관리</h3><p class="notice" id="bookingModeNotice">예약 데이터를 불러오는 중입니다.</p></div><button class="button ghost" id="exportBookingsBtn" type="button">CSV 내보내기</button></div>
             <div id="bookingItems"></div>
           </div>
         </section>
@@ -105,19 +105,16 @@
     <div class="modal-backdrop" id="bookingModal" hidden>
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="bookingTitle">
         <button class="modal-close" id="closeModalBtn" type="button" aria-label="닫기">×</button>
-        <p class="eyebrow">샘플 검진 예약</p>
-        <h2 id="bookingTitle">예약 요청 입력</h2>
+        <p class="eyebrow">샘플 검진 예약 · 실예약 아님</p>
+        <h2 id="bookingTitle">예약 흐름 체험</h2>
         <p class="muted modal-description" id="selectedHospital">선택 병원</p>
         <form id="bookingForm" class="booking-form">
-          <label>이름<input id="bookName" required autocomplete="name"></label>
-          <label>연락처<input id="bookPhone" required inputmode="tel" placeholder="010-0000-0000"></label>
-          <label>생년월일<input id="bookBirthDate" required type="date"></label>
+          <p class="booking-demo-privacy">이 화면은 기능 체험용이며 성명·휴대전화번호·생년월일·건강정보를 입력하지 않습니다. 실제 예약을 만들지 않습니다.</p>
           <label>검진 패키지<select id="bookPackage" required><option value="">선택</option></select></label>
           <label>희망 날짜<input id="bookDate" required type="date"></label>
           <label>희망 시간<select id="bookTime" required><option value="">날짜를 먼저 선택</option></select></label>
-          <label class="wide-field">상담 목적<textarea id="bookPurpose" rows="4" placeholder="검진 결과 상담, 재검 문의 등"></textarea></label>
-          <label class="consent-row"><input id="bookConsent" type="checkbox" required> 입력 정보가 이 브라우저 또는 로컬 서버에 저장되며 실제 병원에는 전송되지 않음을 확인합니다.</label>
-          <button class="button primary full" type="submit">샘플 예약 요청 저장</button>
+          <label class="consent-row"><input id="bookConsent" type="checkbox" required> 이것은 실제 병원 예약이 아닌 데모이며 선택한 샘플 조건만 현재 브라우저 탭에 저장됨을 확인합니다.</label>
+          <button class="button primary full" type="submit">샘플 체험 내역 저장 (실제 예약 아님)</button>
         </form>
         <p class="status" id="bookingStatus"></p>
       </div>
