@@ -990,3 +990,9 @@ small { color: var(--muted); font-weight: 650; }
 /* Appointment screen is a no-PII simulator, not a real booking product. */
 .booking-demo-privacy{grid-column:1/-1;background:#f1f7f9;border:1px solid #b8d5db;padding:14px 16px;border-radius:10px;font-size:.9rem;line-height:1.65;color:var(--heading);margin:0}
 .booking-management-actions{flex-wrap:wrap}
+
+/* Cross-service policy navigation and clear local-storage disclosure. */
+.footer-policy-links{font-size:.8rem;line-height:1.6;margin-top:12px;color:var(--muted)}
+.footer-policy-links a,.privacy-inline-note a{color:var(--primary,#1769e0);text-decoration:underline;text-underline-offset:3px}
+.privacy-inline-note{font-size:.85rem;line-height:1.7;padding:12px 15px;border-left:3px solid #5b9ca5;background:#f1f8fa;border-radius:4px;color:var(--heading,#203c4a);margin:0 0 18px}
+@media print{.footer-policy-links,.privacy-inline-note{display:none!important}}
