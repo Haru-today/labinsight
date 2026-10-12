@@ -1202,6 +1202,14 @@
     });
     byId("bookingForm")?.addEventListener("submit", saveBooking);
     byId("bookDate")?.addEventListener("change", updateTimeOptions);
+    byId("clearDemoBookingsBtn")?.addEventListener("click", async () => {
+      if (!window.confirm("현재 탭의 샘플 예약 내역을 모두 지울까요? 실제 병원 예약에는 영향을 주지 않습니다.")) return;
+      try { sessionStorage.removeItem(storageKey); localStorage.removeItem(oldBookingStorageKey); }
+      catch (_) { window.alert("샘플 내역을 삭제하지 못했습니다. 브라우저 사이트 데이터를 직접 삭제하세요."); return; }
+      await renderBookings();
+      await updateTimeOptions();
+      await renderHospitals();
+    });
   }
 
   async function openBookingModal(hospitalId, packageName = "") {
@@ -1337,14 +1345,10 @@
       hospitalId: booking.hospitalId || findHospitalIdByName(booking.hospital),
       hospital: booking.hospital || "선택 병원",
       department: booking.department || "",
-      name: booking.name || "",
-      phone: booking.phone || "",
-      birthDate: booking.birthDate || "",
       packageName: booking.packageName || booking.package || "",
       date: booking.date || "",
       time: booking.time || "",
-      purpose: booking.purpose || "",
-      consent: booking.consent !== false,
+      demo: true,
       status: booking.status || "requested",
       createdAt: booking.createdAt || new Date().toISOString(),
       updatedAt: booking.updatedAt || booking.createdAt || new Date().toISOString()
@@ -1381,9 +1385,9 @@
           </div>
           <span class="booking-status ${status}">${statusLabels[status] || status}</span>
         </div>
-        <p>${escapeHtml(booking.name)} · ${escapeHtml(maskPhone(booking.phone))} · ${escapeHtml(booking.packageName || "검진 항목 미입력")}</p>
+        <p><strong>데모 전용 · 실제 예약 아님</strong> · ${escapeHtml(booking.packageName || "검진 항목 미입력")}</p>
         <p><strong>${escapeHtml(booking.date)} ${escapeHtml(booking.time)}</strong> · ${escapeHtml(booking.department || "진료과 미지정")}</p>
-        <p class="muted">${escapeHtml(booking.purpose || "상담 목적 미입력")}</p>
+        <p class="muted">개인정보를 사용하지 않는 샘플 예약 흐름입니다.</p>
         <label class="status-control">상태 변경
           <select data-status-id="${escapeHtml(booking.id)}">
             ${Object.entries(statusLabels).map(([value, label]) => `<option value="${value}" ${value === status ? "selected" : ""}>${label}</option>`).join("")}
@@ -1423,16 +1427,14 @@
       <article><strong>${active.length}</strong><span>활성 예약</span></article>
       <article><strong>${requested}</strong><span>접수 대기</span></article>
       <article><strong>${confirmed}</strong><span>확정 예약</span></article>
-      <article><strong>${apiAvailable ? "API" : "Local"}</strong><span>저장 모드</span></article>
+      <article><strong>DEMO</strong><span>저장 모드</span></article>
     `;
   }
 
   function updateBookingModeNotice() {
     const notice = byId("bookingModeNotice");
     if (!notice) return;
-    notice.textContent = apiAvailable
-      ? "Node 서버 API와 data/bookings.json에 예약을 저장합니다."
-      : "정적 실행 환경에서는 이 브라우저의 localStorage에만 예약을 저장하며 실제 병원에는 전송하지 않습니다.";
+    notice.textContent = "실제 병원 예약은 진행되지 않습니다. 이름·연락처·생년월일 없이 현재 탭의 임시 저장소에만 기록되며 예약 가능한 실제 시간과는 무관합니다.";
   }
 
   async function exportBookingsCsv() {
@@ -1441,19 +1443,15 @@
       alert("내보낼 예약 내역이 없습니다.");
       return;
     }
-    const headers = ["예약번호", "상태", "병원", "진료과", "검진항목", "이름", "연락처", "생년월일", "날짜", "시간", "상담목적", "접수일시"];
+    const headers = ["샘플번호", "데모 상태", "샘플 센터", "분류", "검진종류", "날짜", "시간", "생성일시"];
     const rows = bookings.map((booking) => [
       booking.id,
       statusLabels[booking.status] || booking.status,
       booking.hospital,
       booking.department,
       booking.packageName,
-      booking.name,
-      booking.phone,
-      booking.birthDate,
       booking.date,
       booking.time,
-      booking.purpose,
       booking.createdAt
     ]);
     const csv = [headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\n");
@@ -1461,7 +1459,7 @@
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `labinsight-bookings-${formatDate(new Date())}.csv`;
+    anchor.download = `labinsight-demo-only-${formatDate(new Date())}.csv`;
     anchor.click();
     URL.revokeObjectURL(url);
   }
