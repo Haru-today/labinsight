@@ -3,7 +3,8 @@
 
   const $ = (selector) => document.querySelector(selector);
   const byId = (id) => document.getElementById(id);
-  const storageKey = "labinsight-bookings";
+  const storageKey = "labinsight-demo-bookings-v2";
+  const oldBookingStorageKey = "labinsight-bookings";
   const reportStorageKey = "labinsight-latest-report";
   const apiBaseUrl = String(window.LABINSIGHT_CONFIG?.apiBaseUrl || "").trim().replace(/\/$/, "");
   const statusLabels = {
@@ -1226,7 +1227,7 @@
       modal.hidden = false;
       modal.classList.add("is-open");
     }
-    byId("bookName")?.focus();
+    byId("bookPackage")?.focus();
   }
 
   function closeBookingModal() {
@@ -1241,87 +1242,46 @@
     event.preventDefault();
     const booking = {
       hospitalId: selectedHospital?.id || "",
-      hospital: selectedHospital?.name || "선택 병원",
+      hospital: selectedHospital?.name || "샘플 센터",
       department: selectedHospital?.dept || "",
-      name: byId("bookName")?.value.trim() || "",
-      phone: byId("bookPhone")?.value.trim() || "",
-      birthDate: byId("bookBirthDate")?.value || "",
       packageName: byId("bookPackage")?.value || "",
       date: byId("bookDate")?.value || "",
       time: byId("bookTime")?.value || "",
-      purpose: byId("bookPurpose")?.value.trim() || "",
-      consent: Boolean(byId("bookConsent")?.checked),
-      status: "requested"
+      status: "requested",
+      demo: true
     };
-    if (!booking.hospitalId || !booking.name || !booking.phone || !booking.birthDate || !booking.packageName || !booking.date || !booking.time) {
-      setStatus("bookingStatus", "이름, 연락처, 생년월일, 검진 항목, 희망 날짜와 시간을 모두 입력해주세요.");
+    if (!booking.hospitalId || !booking.packageName || !booking.date || !booking.time) {
+      setStatus("bookingStatus", "샘플 검진 종류, 날짜, 시간을 선택해주세요.");
       return;
     }
-    if (!booking.consent) {
-      setStatus("bookingStatus", "예약 접수를 위해 개인정보 수집·이용 동의가 필요합니다.");
+    if (!byId("bookConsent")?.checked) {
+      setStatus("bookingStatus", "실제 병원 예약이 아닌 샘플 체험임을 확인해주세요.");
       return;
     }
     try {
-      const saved = await createBooking(booking);
-      setStatus("bookingStatus", `예약 요청이 저장되었습니다. 실제 병원에는 전송되지 않습니다. 예약번호: ${saved.id}`);
+      const saved = await createLocalBooking(booking);
+      setStatus("bookingStatus", "이 탭에 샘플 예약을 저장했습니다. 실제 병원 예약은 진행되지 않습니다. 샘플 번호: " + saved.id);
       byId("bookingForm")?.reset();
       await renderBookings();
       await renderHospitals();
       await updateTimeOptions();
     } catch (error) {
-      console.error(error);
-      setStatus("bookingStatus", error.message || "예약 정보를 저장하지 못했습니다. 다시 시도해주세요.");
+      setStatus("bookingStatus", error.message || "샘플 저장에 실패했습니다.");
     }
   }
 
   async function detectBookingApi() {
-    const nativeMobile = Boolean(window.Capacitor?.isNativePlatform?.());
-    if (window.location.protocol === "file:" || (nativeMobile && !apiBaseUrl)) {
-      apiAvailable = false;
-      updateBookingModeNotice();
-      return;
-    }
-    try {
-      await apiRequest("/api/bookings");
-      apiAvailable = true;
-    } catch (error) {
-      apiAvailable = false;
-    }
+    // Demo-only. There is deliberately no remote reservation API.
+    apiAvailable = false;
+    try { localStorage.removeItem(oldBookingStorageKey); } catch (_) {}
+    try { sessionStorage.removeItem(oldBookingStorageKey); } catch (_) {}
     updateBookingModeNotice();
-    updateBookingSummary();
+    await updateBookingSummary();
     renderHospitals();
   }
 
-  async function apiRequest(path, options = {}) {
-    const response = await fetch(`${apiBaseUrl}${path}`, {
-      headers: { "Content-Type": "application/json", ...(options.headers || {}) },
-      ...options
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(payload.error || "요청 처리 중 오류가 발생했습니다.");
-    }
-    return payload;
-  }
-
-  async function createBooking(booking) {
-    if (apiAvailable) {
-      return apiRequest("/api/bookings", {
-        method: "POST",
-        body: JSON.stringify(booking)
-      });
-    }
-    return createLocalBooking(booking);
-  }
-
   async function updateBookingStatus(id, status) {
-    if (apiAvailable) {
-      await apiRequest(`/api/bookings/${encodeURIComponent(id)}`, {
-        method: "PATCH",
-        body: JSON.stringify({ status })
-      });
-      return;
-    }
+    if (!Object.prototype.hasOwnProperty.call(statusLabels, status)) return;
     const bookings = await readLocalBookings();
     const target = bookings.find((booking) => booking.id === id);
     if (target) {
@@ -1332,21 +1292,12 @@
   }
 
   async function readBookings() {
-    if (apiAvailable) {
-      try {
-        const payload = await apiRequest("/api/bookings");
-        return Array.isArray(payload.bookings) ? payload.bookings : [];
-      } catch (error) {
-        apiAvailable = false;
-        updateBookingModeNotice();
-      }
-    }
     return readLocalBookings();
   }
 
   async function readLocalBookings() {
     try {
-      const parsed = JSON.parse(localStorage.getItem(storageKey) || "[]");
+      const parsed = JSON.parse(sessionStorage.getItem(storageKey) || "[]");
       return Array.isArray(parsed) ? parsed.map(normalizeBooking) : [];
     } catch (error) {
       console.error(error);
@@ -1355,7 +1306,7 @@
   }
 
   function writeLocalBookings(bookings) {
-    localStorage.setItem(storageKey, JSON.stringify(bookings));
+    sessionStorage.setItem(storageKey, JSON.stringify(bookings));
   }
 
   async function createLocalBooking(booking) {
