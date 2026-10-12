@@ -1002,3 +1002,7 @@ body.booking-modal-open{overflow:hidden}
 #bookingModal .modal:focus-within{outline-offset:0}
 #bookingModal .modal-close:focus-visible{outline:3px solid var(--primary);outline-offset:3px}
 @media(prefers-reduced-motion:reduce){#bookingModal,#bookingModal .modal{animation:none!important;transition:none!important}}
+
+/* Make stale source status unmistakable without implying a real-time quote. */
+.official-label.source-review-needed{color:#704518;background:#fff5de;border-color:#e2bd7e}
+.hospital-source-status span{line-height:1.45}

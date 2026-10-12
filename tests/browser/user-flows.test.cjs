@@ -150,3 +150,13 @@ test("sample booking dialog traps keyboard focus, closes with Escape and restore
   assert.equal(await page.evaluate(() => document.body.classList.contains("booking-modal-open")), false);
   assert.equal(errors.length, 0, errors.join("; "));
 });
+
+test("hospital cards distinguish historical official prices from current availability", async (t) => {
+  const { page, errors } = await openPage(t, "/hospitals.html");
+  await page.locator(".marketplace-card").first().waitFor();
+  assert.ok((await page.getByText("가격·구성 재확인 필요").count()) > 0);
+  assert.match(await page.locator(".marketplace-card").first().innerText(), /확인 당시 최저 표시가/);
+  assert.match(await page.locator(".source-disclaimer").innerText(), /2026-07-29/);
+  assert.match(await page.locator(".source-disclaimer").innerText(), /현재 시점의 가격/);
+  assert.equal(errors.length, 0, errors.join("; "));
+});
