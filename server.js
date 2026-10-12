@@ -19,8 +19,7 @@ const PUBLIC_ASSETS = new Set([
   "styles.css", "app.js", "hospital-data.js", "ocr-review.js",
   "reference-ranges.js", "runtime-config.js", "service-worker.js",
   "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png",
-  "icons/icon-512.png", "downloads/LabInsight-mac.zip",
-  "downloads/LabInsight-windows.zip", "downloads/mac/LabInsight.command",
+  "icons/icon-512.png", "downloads/mac/LabInsight.command",
   "downloads/mac/README.txt", "downloads/windows/LabInsight.bat",
   "downloads/windows/README.txt"
 ]);
