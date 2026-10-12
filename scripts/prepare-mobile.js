@@ -12,6 +12,7 @@ const files = [
   "hospital-data.js",
   "app.js",
   "ocr-review.js",
+  "reference-ranges.js",
   "manifest.webmanifest",
   "service-worker.js"
 ];
