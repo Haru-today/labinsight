@@ -22,7 +22,7 @@ function loadApp(inputs = {}) {
   assert.match(source, suffix, "app.js must keep its IIFE wrapper");
   const instrumented = source.replace(
     suffix,
-    "globalThis.__helpers = { safeNumber, calculateBmi, collectFormData, hasReportableValues, judgeItem, renderReport, readSavedReport, buildRecommendedCheckups, labItems };})();"
+    "globalThis.__helpers = { safeNumber, calculateBmi, collectFormData, hasReportableValues, judgeItem, renderReport, readSavedReport, buildRecommendedCheckups, buildGuides, confirmedOutside, adultGlycemicScreeningReview, labItems };})();"
   );
   vm.runInNewContext(instrumented, context, { filename: "app.js" });
   return { helpers: context.__helpers, report, fields };
@@ -128,5 +128,40 @@ test("an isolated eGFR of 82 does not trigger a kidney disease recommendation", 
   const onlyEgfr82 = buildRecommendedCheckups({ egfr: 82, creatinine: null, bmi: null, bpSys: null, bpDia: null });
   assert.equal(onlyEgfr82.some((card) => card.package === "신장 기능"), false);
   const onlyEgfr55 = buildRecommendedCheckups({ egfr: 55, creatinine: null, bmi: null, bpSys: null, bpDia: null });
-  assert.equal(onlyEgfr55.some((card) => card.package === "신장 기능"), true);
+  assert.equal(onlyEgfr55.some((card) => card.package === "신장 기능"), false);
+  const confirmedEgfr = buildRecommendedCheckups({ egfr: 55, creatinine: null, bmi: null, bpSys: null, bpDia: null,
+    referenceRanges: { egfr: { min: 60, max: 130 } } });
+  assert.equal(confirmedEgfr.some((card) => card.package === "신장 기능"), true);
+});
+
+test("unverified laboratory values never trigger organ-specific packages or tailored guidance", () => {
+  const { buildRecommendedCheckups, buildGuides } = loadApp().helpers;
+  const data = { age: 35, ast: 120, alt: 90, ldl: 200, creatinine: 1.9, hemoglobin: 6,
+    uricAcid: 11, egfr: 25, glucose: null, hba1c: null, bmi: null, bpSys: null, bpDia: null };
+  const cards = buildRecommendedCheckups(data);
+  assert.equal(cards.some((x) => ["간 기능", "이상지질혈증", "신장 기능", "빈혈"].includes(x.package)), false);
+  const guidance = buildGuides(data);
+  assert.equal(guidance.questions.some((x) => /복부초음파|빈혈 원인/.test(x)), false);
+  assert.match(cards[0].reason, /개별 검진 필요성을 판단하지 않습니다/);
+});
+
+test("patient-supplied original lab ranges enable cautious topic suggestions", () => {
+  const { buildRecommendedCheckups } = loadApp().helpers;
+  const data = { age: 35, ast: 55, alt: null, bmi: null, bpSys: null, bpDia: null,
+    referenceRanges: { ast: { min: 0, max: 40 } } };
+  assert.ok(buildRecommendedCheckups(data).some((card) => card.package === "간 기능"));
+});
+
+test("CDC adult screening comparison does not apply generic adult cutoffs to children", () => {
+  const { buildRecommendedCheckups } = loadApp().helpers;
+  const child = { age: 12, glucose: 112, hba1c: 5.9, bmi: null, bpSys: null, bpDia: null };
+  const adult = { ...child, age: 35 };
+  assert.equal(buildRecommendedCheckups(child).some((card) => card.package === "당뇨"), false);
+  assert.equal(buildRecommendedCheckups(adult).some((card) => card.package === "당뇨"), true);
+});
+
+test("unsupported generic laboratory thresholds are ignored even if a numeric value exists", () => {
+  const { confirmedOutside } = loadApp().helpers;
+  assert.equal(confirmedOutside({ alt: 300 }, "alt", "high"), false);
+  assert.equal(confirmedOutside({ alt: 300, referenceRanges: { alt: { min: 0, max: 50 } } }, "alt", "high"), true);
 });

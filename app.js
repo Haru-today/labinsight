@@ -663,13 +663,13 @@
           <div class="report-summary-stat"><strong>${abnormal.length}</strong><span>검사지 참고치 밖 항목</span></div>
           <div class="report-summary-stat"><strong>${needsReference}</strong><span>검사지 참고치 확인 필요</span></div>
         </section>
-        <section class="recommendation-panel no-print" aria-label="추천 건강검진">
+        <section class="recommendation-panel no-print" aria-label="검사결과 관련 일반 정보">
           <div class="panel-heading">
             <div>
-              <p class="eyebrow">결과 기반 추천 검진</p>
-              <h3>결과 기반 추천 건강검진</h3>
+              <p class="eyebrow">LAB DATA · REVIEW TOPICS</p>
+              <h3>검사결과 참고 주제</h3>
             </div>
-            <p>기존의 일반 예시 기준으로 관련 검진을 안내합니다. 개인별 검사기관 참고치 판정과 일치하지 않을 수 있으며 검진 필요성을 확정하지 않습니다.</p>
+            <p>사용자가 입력한 검사기관 참고치의 범위 밖 항목과 CDC 성인 당대사 선별 구간을 참고해 관련 검진 주제를 안내합니다. 확진이나 개인별 검사 처방이 아닙니다.</p>
           </div>
           <div class="checkup-grid">${checkups.map(renderCheckupCard).join("")}</div>
         </section>
@@ -742,7 +742,7 @@
         <h4>${checkup.title}</h4>
         <p>${checkup.reason}</p>
         <div class="tag-list">${checkup.tests.map((test) => `<span class="tag">${test}</span>`).join("")}</div>
-        <button class="button secondary" type="button" data-recommend-package="${checkup.package}" data-recommend-dept="${checkup.deptFilter}">이 검진의 병원·가격 보기</button>
+        <button class="button secondary" type="button" data-recommend-package="${checkup.package}" data-recommend-dept="${checkup.deptFilter}">관련 병원 공개정보 보기</button>
       </article>
     `;
   }
@@ -786,6 +786,20 @@
     return renderList(items, "키, 몸무게, 혈압을 입력하면 기본 건강지표가 함께 표시됩니다.");
   }
 
+  function confirmedOutside(data, id, direction = "either") {
+    const value = safeNumber(data?.[id]);
+    const range = window.LABINSIGHT_REFERENCES?.normalizeInterval(data?.referenceRanges?.[id]);
+    if (value === null || !range) return false;
+    return direction === "high" ? value > range.max :
+      direction === "low" ? value < range.min : value < range.min || value > range.max;
+  }
+
+  function adultGlycemicScreeningReview(data, id, cutoff) {
+    const age = safeNumber(data?.age);
+    return confirmedOutside(data, id, "high") ||
+      (age !== null && age >= 18 && isHigh(data?.[id], cutoff));
+  }
+
   function buildGuides(data) {
     const guides = {
       food: ["채소, 단백질, 통곡물 중심으로 식사를 구성하세요."],
@@ -794,38 +808,38 @@
       questions: ["현재 수치가 제 나이와 성별에서 어떤 의미인지 질문하세요."],
       tests: ["이상 항목은 의료진 판단에 따라 재검을 고려하세요."]
     };
-    if (isHigh(data.ast, 40) || isHigh(data.alt, 40) || isHigh(data.ggtp, 60)) {
+    if (confirmedOutside(data, "ast", "high") || confirmedOutside(data, "alt", "high") || confirmedOutside(data, "ggtp", "high")) {
       guides.food.push("간 기능 관리를 위해 음주와 야식을 줄이고 고지방 식사를 조절하세요.");
       guides.exercise.push("지방간 평가가 필요한 경우 무리한 운동보다 꾸준한 체중 관리를 우선하세요.");
       guides.questions.push("간수치 상승 원인과 복부초음파 필요성을 상담하세요.");
       guides.tests.push("복부초음파, 간염 바이러스 검사, 간 기능 재검");
     }
-    if (isHigh(data.glucose, 99) || isHigh(data.hba1c, 5.6)) {
+    if (adultGlycemicScreeningReview(data, "glucose", 99) || adultGlycemicScreeningReview(data, "hba1c", 5.6)) {
       guides.food.push("단순당, 음료, 과자 섭취를 줄이고 식후 혈당 변화를 관찰하세요.");
       guides.exercise.push("식후 10~20분 걷기를 생활화하세요.");
       guides.questions.push("당뇨 전단계 또는 당뇨 평가가 필요한지 질문하세요.");
       guides.tests.push("HbA1c 재검, 공복혈당, 인슐린 저항성 평가");
     }
-    if (isHigh(data.ldl, 129) || isHigh(data.triglyceride, 149) || isLow(data.hdl, 40)) {
+    if (confirmedOutside(data, "ldl", "high") || confirmedOutside(data, "triglyceride", "high") || confirmedOutside(data, "hdl", "low")) {
       guides.food.push("포화지방, 튀김, 가공육을 줄이고 불포화지방과 섬유질 섭취를 늘리세요.");
       guides.exercise.push("유산소 운동과 근력 운동을 병행해 지질 개선을 목표로 하세요.");
       guides.questions.push("심혈관 위험도 평가와 약물치료 필요성을 상담하세요.");
       guides.tests.push("지질 재검, 혈압, 심전도, 경동맥초음파");
     }
-    if (isHigh(data.creatinine, 1.2) || isLow(data.egfr, 60)) {
+    if (confirmedOutside(data, "creatinine", "high") || confirmedOutside(data, "egfr", "low")) {
       guides.food.push("단백질 보충제나 과도한 염분 섭취는 의료진과 상의하세요.");
       guides.questions.push("eGFR 및 크레아티닌 수치와 소변 알부민 검사를 함께 확인하고 재검 시점을 상담하세요.");
       guides.tests.push("소변검사, 미세알부민뇨, 신장 기능 재검");
     }
-    if (isHigh(data.uricAcid, 7.0)) {
+    if (confirmedOutside(data, "uricAcid", "high")) {
       guides.food.push("요산 관리를 위해 과음, 내장류, 과당 음료를 줄이세요.");
       guides.tests.push("요산 재검, 통풍 증상 평가");
     }
-    if (isLow(data.hemoglobin, 12)) {
+    if (confirmedOutside(data, "hemoglobin", "low")) {
       guides.questions.push("빈혈 원인 평가와 철분 검사 필요성을 상담하세요.");
       guides.tests.push("철분, 페리틴, 비타민 B12, 엽산 검사");
     }
-    if (data.bmi !== null && data.bmi >= 25) {
+    if (safeNumber(data.age) >= 18 && data.bmi !== null && data.bmi >= 25) {
       guides.food.push("BMI가 높은 범위라면 총 섭취 열량, 야식, 음료 섭취를 함께 조절하세요.");
       guides.exercise.push("체중 관리를 위해 유산소 운동과 하체·코어 근력 운동을 병행하세요.");
       guides.tests.push("대사증후군 평가, 혈압, 허리둘레 확인");
@@ -843,7 +857,7 @@
     const add = (item) => recommendations.push(item);
     const priority = ["결과지 확인", "caution"];
 
-    if (isHigh(data.ast, 40) || isHigh(data.alt, 40) || isHigh(data.ggtp, 60)) {
+    if (confirmedOutside(data, "ast", "high") || confirmedOutside(data, "alt", "high") || confirmedOutside(data, "ggtp", "high")) {
       add({
         title: "간 기능 정밀 검진",
         dept: "소화기내과",
@@ -856,7 +870,7 @@
       });
     }
 
-    if (isHigh(data.glucose, 99) || isHigh(data.hba1c, 5.6)) {
+    if (adultGlycemicScreeningReview(data, "glucose", 99) || adultGlycemicScreeningReview(data, "hba1c", 5.6)) {
       add({
         title: "당대사·당뇨 위험 검진",
         dept: "내분비내과",
@@ -869,7 +883,7 @@
       });
     }
 
-    if (isHigh(data.ldl, 129) || isHigh(data.triglyceride, 149) || isHigh(data.totalChol, 199) || isLow(data.hdl, 40)) {
+    if (confirmedOutside(data, "ldl", "high") || confirmedOutside(data, "triglyceride", "high") || confirmedOutside(data, "totalChol", "high") || confirmedOutside(data, "hdl", "low")) {
       add({
         title: "심혈관·지질 위험 검진",
         dept: "심장내과",
@@ -882,7 +896,7 @@
       });
     }
 
-    if (isHigh(data.creatinine, 1.2) || isLow(data.egfr, 60)) {
+    if (confirmedOutside(data, "creatinine", "high") || confirmedOutside(data, "egfr", "low")) {
       add({
         title: "신장 기능 추적 검진",
         dept: "신장내과",
@@ -890,12 +904,12 @@
         package: "신장 기능",
         priority: priority[0],
         priorityClass: priority[1],
-        reason: "eGFR가 60 미만이거나 크레아티닌이 일반 예시 기준보다 높으면 의료진과 재검 및 소변 검사를 상의하세요. 단일 수치만으로 만성콩팥병을 확정할 수 없습니다.",
+        reason: "직접 입력한 검사기관 참고치 밖에 있는 신장 기능 수치는 의료진에게 확인하고, 지속 여부와 소변 알부민 등 맥락을 함께 검토해야 합니다.",
         tests: ["eGFR 재검", "소변검사", "미세알부민뇨"]
       });
     }
 
-    if (isHigh(data.uricAcid, 7.0)) {
+    if (confirmedOutside(data, "uricAcid", "high")) {
       add({
         title: "요산·대사 상태 검진",
         dept: "내과",
@@ -908,7 +922,7 @@
       });
     }
 
-    if (isLow(data.hemoglobin, 12) || isLow(data.wbc, 4000) || isLow(data.platelet, 150)) {
+    if (confirmedOutside(data, "hemoglobin", "low") || confirmedOutside(data, "wbc", "low") || confirmedOutside(data, "platelet", "low")) {
       add({
         title: "혈액·빈혈 원인 검진",
         dept: "가정의학과",
@@ -921,7 +935,7 @@
       });
     }
 
-    if ((data.bmi !== null && data.bmi >= 25) || judgeBloodPressure(data.bpSys, data.bpDia) === "고혈압 관리 필요") {
+    if (safeNumber(data.age) >= 18 && ((data.bmi !== null && data.bmi >= 25) || judgeBloodPressure(data.bpSys, data.bpDia) === "고혈압 관리 필요")) {
       add({
         title: "대사증후군·혈압 검진",
         dept: "가정의학과",
@@ -936,15 +950,13 @@
 
     if (!recommendations.length) {
       add({
-        title: "정기 종합검진 유지",
+        title: "검사결과지 확인과 일반 상담 주제",
         dept: "가정의학과",
         deptFilter: "가정의학과",
         package: "종합검진",
-        priority: "정기 확인",
-        priorityClass: "normal",
-        reason: labItems.every((item) => safeNumber(data[item.id]) !== null)
-          ? "입력된 모든 검사 항목에서 설정된 참고 범위와 비교할 때 특이한 신호가 없어 정기검진과 전년도 변화 확인을 권장합니다."
-          : "미입력 항목은 평가되지 않았습니다. 원본 건강검진 결과지를 확인하고 정기검진 여부를 의료진과 상의하세요.",
+        priority: "개별 평가 아님",
+        priorityClass: "caution",
+        reason: "현재 입력값만으로 개별 검진 필요성을 판단하지 않습니다. 원본 결과지의 참고범위를 확인하고 의료진에게 검사 간격과 추적 항목을 질문하세요.",
         tests: ["기본 혈액검사", "혈압", "생활습관 점검"]
       });
     }

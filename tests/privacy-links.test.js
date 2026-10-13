@@ -29,6 +29,6 @@ test("privacy information is not used to claim clinical validation", () => {
 
 test("PWA CSS cache is versioned for the policy-link release", () => {
   const sw = fs.readFileSync(path.join(__dirname, "..", "service-worker.js"), "utf8");
-  assert.match(sw, /labinsight-app-v20261013-hospital-source/);
+  assert.match(sw, /labinsight-app-v20261013-clinical-guide/);
   assert.match(sw, /styles\.css\?v=hospital-source-20261013/);
 });
