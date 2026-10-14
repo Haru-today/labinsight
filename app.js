@@ -442,6 +442,15 @@
     meter.value = count;
     const detailText = pressureStatus + " · " + bmiStatus;
     if (detail.textContent !== detailText) detail.textContent = detailText;
+    const rangeSummary = byId("referenceCoverageStatus");
+    if (rangeSummary) {
+      const ranges = labItems.filter((item) => {
+        const low = byId(item.id + "RefMin")?.value;
+        const high = byId(item.id + "RefMax")?.value;
+        return Boolean(window.LABINSIGHT_REFERENCES?.normalizeInterval({ min: low, max: high }));
+      }).length;
+      rangeSummary.textContent = "검사기관 참고범위 " + ranges + " / " + labItems.length + "개 입력";
+    }
   }
 
   function bindForm() {
@@ -466,6 +475,13 @@
       ocr.open = true;
       ocr.scrollIntoView({ block: "start" });
       ocr.querySelector("summary")?.focus();
+    });
+    byId("openReferenceSettingsBtn")?.addEventListener("click", () => {
+      const settings = byId("referenceSettings");
+      if (!settings) return;
+      settings.open = true;
+      settings.scrollIntoView({ block: "start" });
+      settings.querySelector("summary")?.focus();
     });
     form?.addEventListener("input", updateInputProgress);
     form?.addEventListener("change", updateInputProgress);
@@ -679,11 +695,16 @@
           </div>
           <p class="report-actions-status" id="reportActionStatus" role="status" aria-live="polite"></p>
         </div>
+        <nav class="report-jump-links no-print" aria-label="리포트 빠른 이동">
+          <a href="#reportOverview">결과 요약</a>
+          <a href="#reportItemTable">검사 항목별 상세표</a>
+          <a href="#reportCareTopics">상담·추가 확인 주제</a>
+        </nav>
         <div class="report-print-heading print-only">
           <strong>LabInsight | 개인 참고용 건강검진 리포트</strong>
           <p>검사기관의 공식 결과지 또는 의료진 진단서가 아닙니다. 개인별 참고범위와 검사일은 원본 결과지를 확인하세요.</p>
         </div>
-        <div class="report-top">
+        <div class="report-top" id="reportOverview">
           <div class="score-box"><div><strong>${incomplete || unconfirmed ? "—" : abnormal.length}</strong><p>검사지 참고치 밖 · ${confirmedCount}/${enteredCount}개 비교</p><span class="badge ${gradeClass}">${grade}</span></div></div>
           <div>
             <p class="eyebrow">검진 리포트</p>
@@ -700,7 +721,7 @@
           <div class="report-summary-stat"><strong>${abnormal.length}</strong><span>검사지 참고치 밖 항목</span></div>
           <div class="report-summary-stat"><strong>${needsReference}</strong><span>검사지 참고치 확인 필요</span></div>
         </section>
-        <section class="recommendation-panel no-print" aria-label="검사결과 관련 일반 정보">
+        <section class="recommendation-panel no-print" id="reportCareTopics" aria-label="검사결과 관련 일반 정보">
           <div class="panel-heading">
             <div>
               <p class="eyebrow">LAB DATA · REVIEW TOPICS</p>
@@ -714,7 +735,7 @@
           <div>
             <p class="eyebrow">NEXT STEP</p>
             <h3>관련 검진 정보를 확인하고 의료진과 상담하세요.</h3>
-            <p>추천 조건을 적용한 병원 목록에서 패키지 구성, 예상 가격과 예약 가능 시간을 확인합니다.</p>
+            <p>과거 병원 공식 공개자료의 검사 구성과 표시 가격을 확인할 수 있습니다. 현재 가격과 실제 예약 가능 여부는 의료기관에서 직접 재확인하세요.</p>
           </div>
           <div>
             <a class="button primary large" href="${compareUrl}">STEP 3 병원·가격 비교하기</a>
@@ -730,10 +751,14 @@
           <div class="report-card"><h3>의료진 상담 질문</h3>${renderList(guides.questions)}</div>
           <div class="report-card"><h3>권장 추가 검사</h3>${renderList(guides.tests)}<p><strong>재검 시점:</strong> 검사기관 참고치와 의료진 상담에 따라 결정하세요.</p></div>
         </div>
-        <div class="report-card report-table-card">
+        <div class="report-card report-table-card" id="reportItemTable">
           <h3>검사항목별 참고 범위 확인표</h3>
+          <div class="report-table-toolbar no-print">
+            <p id="reportTableStatus" role="status" aria-live="polite">전체 ${labItems.length}개 중 ${enteredCount}개 검사 항목 입력 · 원본 결과지 참고치를 우선하세요.</p>
+            <button class="button ghost" type="button" id="reportEnteredOnlyBtn" aria-pressed="false" aria-controls="reportResultsTable">입력한 항목만 보기</button>
+          </div>
           <div class="table-scroll" role="region" aria-label="검사항목별 참고 범위 확인표" tabindex="0">
-            <table class="result-table">
+            <table class="result-table" id="reportResultsTable">
               <thead><tr><th>항목</th><th>입력값</th><th>적용 기준</th><th>확인 상태</th><th>설명</th></tr></thead>
               <tbody>${results.map(renderResultRow).join("")}</tbody>
             </table>
@@ -756,10 +781,32 @@
       }
       report.innerHTML = '<div class="empty-report"><h2>저장된 건강검진 결과를 삭제했습니다.</h2><p>이 브라우저의 LabInsight 리포트 저장 영역을 비웠습니다. 이미 인쇄하거나 다운로드한 파일은 별도로 삭제해야 합니다.</p><a class="button primary" href="./checkup.html">새 검사결과 입력하기</a></div>';
     });
+    const onlyEnteredBtn = byId("reportEnteredOnlyBtn");
+    onlyEnteredBtn?.addEventListener("click", () => {
+      const onlyEntered = onlyEnteredBtn.getAttribute("aria-pressed") !== "true";
+      onlyEnteredBtn.setAttribute("aria-pressed", String(onlyEntered));
+      onlyEnteredBtn.textContent = onlyEntered ? "모든 항목 보기" : "입력한 항목만 보기";
+      report.querySelectorAll("tr[data-lab-item]").forEach((row) => {
+        row.hidden = onlyEntered && row.dataset.entered !== "true";
+        if (row.hidden) {
+          const key = row.dataset.labItem;
+          const detail = report.querySelector(`[data-desc-row="${key}"]`);
+          const toggle = report.querySelector(`[data-desc-toggle="${key}"]`);
+          if (detail) detail.hidden = true;
+          if (toggle) toggle.setAttribute("aria-expanded", "false");
+        }
+      });
+      const status = byId("reportTableStatus");
+      if (status) status.textContent = onlyEntered
+        ? "입력한 검사 항목 " + enteredCount + "개만 표시 중 · 다른 항목은 숨겨졌습니다."
+        : "전체 " + labItems.length + "개 중 " + enteredCount + "개 검사 항목 입력 · 원본 결과지 참고치를 우선하세요.";
+    });
     report.querySelectorAll("[data-desc-toggle]").forEach((button) => {
       button.addEventListener("click", () => {
         const row = report.querySelector(`[data-desc-row="${button.dataset.descToggle}"]`);
-        if (row) row.hidden = !row.hidden;
+        if (!row) return;
+        row.hidden = !row.hidden;
+        button.setAttribute("aria-expanded", String(!row.hidden));
       });
     });
     report.querySelectorAll("[data-recommend-package]").forEach((button) => {
@@ -794,14 +841,14 @@
     const source = escapeHtml(result.judge.source || "개별 참고치 확인");
     const linked = result.judge.sourceUrl ? '<a href="' + escapeHtml(result.judge.sourceUrl) + '" target="_blank" rel="noopener noreferrer">판정 방식 참고 ↗</a>' : "";
     return `
-      <tr>
-        <td>${result.item.name}</td>
-        <td>${value}</td>
-        <td><strong class="reference-range">${shownRange}</strong><small class="reference-source">${source}</small></td>
-        <td><span class="badge ${badgeClass}">${escapeHtml(result.judge.label)}</span></td>
-        <td><button type="button" data-desc-toggle="${key}">근거 보기</button></td>
+      <tr data-lab-item="${key}" data-entered="${result.value !== null}">
+        <td data-label="검사 항목">${result.item.name}</td>
+        <td data-label="입력값">${value}</td>
+        <td data-label="적용 기준"><strong class="reference-range">${shownRange}</strong><small class="reference-source">${source}</small></td>
+        <td data-label="확인 상태"><span class="badge ${badgeClass}">${escapeHtml(result.judge.label)}</span></td>
+        <td data-label="상세 설명"><button type="button" data-desc-toggle="${key}" aria-controls="reportDetail-${key}" aria-expanded="false">근거 보기</button></td>
       </tr>
-      <tr class="desc-row" data-desc-row="${key}" hidden><td colspan="5">${escapeHtml(result.item.desc)} <span class="reference-more">${linked}</span> <span class="reference-note">이 항목 하나만으로 질환을 진단할 수 없습니다.</span></td></tr>
+      <tr class="desc-row" id="reportDetail-${key}" data-desc-row="${key}" hidden><td colspan="5">${escapeHtml(result.item.desc)} <span class="reference-more">${linked}</span> <span class="reference-note">이 항목 하나만으로 질환을 진단할 수 없습니다.</span></td></tr>
     `;
   }
 

@@ -217,3 +217,64 @@ test("narrow 320px LabInsight entry cards have no horizontal overflow", async (t
   assert.equal(layout.columns, 1);
   assert.equal(errors.length, 0, errors.join("; "));
 });
+
+
+for (const width of [320, 375]) {
+  test("mobile " + width + "px supports original reference intervals and a readable, filterable report", async (t) => {
+    const context = await browser.newContext({
+      viewport: { width, height: 812 },
+      reducedMotion: "reduce", serviceWorkers: "block"
+    });
+    t.after(async () => context.close());
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.goto(baseUrl + "/checkup.html");
+    assert.match(await page.locator("#referenceCoverageStatus").innerText(), /0 \/ 15개/);
+    await page.locator("#openReferenceSettingsBtn").click();
+    assert.equal(await page.locator("#referenceSettings").getAttribute("open"), "");
+    await page.locator("#astRefMin").fill("0");
+    await page.locator("#astRefMax").fill("40");
+    assert.match(await page.locator("#referenceCoverageStatus").innerText(), /1 \/ 15개/);
+
+    const astPanel = page.locator(".checkup-accordion details").filter({ has: page.locator("#ast") });
+    await astPanel.locator("summary").click();
+    await page.locator("#ast").fill("45");
+    await page.locator('#healthForm button[type="submit"]').click();
+    await page.waitForURL(/\/report\.html$/);
+    assert.match(await page.locator("#report").innerText(), /0–40 U\/L/);
+    assert.match(await page.locator("#report").innerText(), /검사지 참고치 밖/);
+    assert.equal(await page.locator(".report-jump-links a").count(), 3);
+    assert.match(await page.locator("#reportTableStatus").innerText(), /1개 검사 항목/);
+    assert.equal(await page.locator("#reportResultsTable tr[data-lab-item]").count(), 15);
+    const toggle = page.locator("#reportEnteredOnlyBtn");
+    await toggle.click();
+    assert.equal(await toggle.getAttribute("aria-pressed"), "true");
+    assert.equal(await page.locator("#reportResultsTable tr[data-lab-item]:visible").count(), 1);
+    assert.equal(await page.locator('#reportResultsTable tr[data-lab-item="ast"]').getAttribute("data-entered"), "true");
+    const expand = page.locator('[data-desc-toggle="ast"]');
+    await expand.click();
+    assert.equal(await expand.getAttribute("aria-expanded"), "true");
+    assert.equal(await page.locator('[data-desc-row="ast"]').isVisible(), true);
+
+    const layout = await page.evaluate(() => ({
+      content: document.documentElement.scrollWidth,
+      viewport: document.documentElement.clientWidth,
+      columns: getComputedStyle(document.querySelector("#reportResultsTable")).minWidth,
+      rows: document.querySelectorAll("#reportResultsTable tr[data-lab-item]").length
+    }));
+    assert.ok(layout.content <= layout.viewport + 1, JSON.stringify(layout));
+    assert.equal(layout.columns, "0px");
+    assert.equal(layout.rows, 15);
+
+    await page.emulateMedia({ media: "print" });
+    const hiddenRow = page.locator('#reportResultsTable tr[data-lab-item="alt"]');
+    assert.equal(await hiddenRow.evaluate((node) => getComputedStyle(node).display), "table-row");
+    assert.equal(await page.locator("#reportEnteredOnlyBtn").isVisible(), false);
+    await page.emulateMedia({ media: "screen" });
+    await toggle.click();
+    assert.equal(await toggle.getAttribute("aria-pressed"), "false");
+    assert.equal(await page.locator("#reportResultsTable tr[data-lab-item]:visible").count(), 15);
+    assert.deepEqual(errors, []);
+  });
+}
