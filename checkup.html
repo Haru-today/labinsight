@@ -10,11 +10,11 @@
     <title>STEP 1 결과 입력 | LabInsight</title>
     <link rel="manifest" href="./manifest.webmanifest">
     <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="./styles.css?v=hospital-source-20261013">
+    <link rel="stylesheet" href="./styles.css?v=first-run-20261014">
     <script src="./runtime-config.js"></script>
     <script src="./ocr-review.js?v=ocr-review-20261012" defer></script>
     <script src="./reference-ranges.js?v=clinical-review-20261013" defer></script>
-    <script src="./app.js?v=clinical-guide-20261013" defer></script>
+    <script src="./app.js?v=first-run-20261014" defer></script>
   </head>
   <body data-page="checkup">
     <a class="skip-link" href="#mainContent">본문으로 바로가기</a>
@@ -23,7 +23,7 @@
       <nav class="nav" aria-label="주요 메뉴">
         <a class="brand" href="./index.html" aria-label="LabInsight 홈"><span class="brand-mark" aria-hidden="true">L</span><span class="brand-copy"><strong>LabInsight</strong><small>LABDAM · 건강검진</small></span></a>
         <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks"><span aria-hidden="true">☰</span><span class="sr-only">전체 메뉴</span></button>
-        <div class="nav-links" id="navLinks"><a class="nav-portal" href="https://haru-today.github.io/">LABDAM 통합 포털</a><a href="./index.html">서비스 홈</a><a class="is-current" href="./checkup.html">결과 입력</a><a href="./report.html">결과 리포트</a><a href="./hospitals.html">병원 비교·예약</a><a class="nav-cta" href="./report.html">내 리포트 보기</a></div>
+        <div class="nav-links" id="navLinks"><a class="nav-portal" href="https://haru-today.github.io/">LABDAM 통합 포털</a><a href="./index.html">서비스 홈</a><a class="is-current" href="./checkup.html">결과 입력</a><a href="./report.html">결과 리포트</a><a href="./hospitals.html">병원 자료 비교</a><a class="nav-cta" href="./report.html">내 리포트 보기</a></div>
       </nav>
     </header>
 
@@ -47,8 +47,31 @@
           <h2>검사 수치 입력</h2>
           <p class="muted">검사기관마다 참고 범위가 다를 수 있습니다. 원본 결과지의 참고치와 의료진 설명을 우선하세요.</p>
         </div>
+        <div class="entry-paths" aria-label="검사결과 입력 방법 선택">
+          <a class="entry-path" href="#labFields">
+            <span class="entry-path-step">01 / MANUAL</span>
+            <strong>수치 직접 입력</strong>
+            <small>결과지 항목을 확인하면서 필요한 검사값만 입력합니다.</small>
+          </a>
+          <button class="entry-path" id="openOcrSectionBtn" type="button" aria-controls="ocr">
+            <span class="entry-path-step">02 / IMAGE</span>
+            <strong>검사결과지 이미지 읽기</strong>
+            <small>OCR로 추출하고 원본과 비교한 값만 적용합니다.</small>
+          </button>
+          <button class="entry-path" id="startSampleBtn" type="button">
+            <span class="entry-path-step">03 / DEMO</span>
+            <strong>가상 샘플로 체험하기</strong>
+            <small>실제 검사정보 없이 입력부터 리포트까지 시험합니다.</small>
+          </button>
+        </div>
         <form id="healthForm" class="lab-form">
           <p class="privacy-inline-note">검사값과 참고범위는 결과 리포트 생성을 위해 브라우저 탭의 임시 저장소에 보관될 수 있습니다. 사용 후 결과 삭제 기능을 이용하고 공용 기기를 피하세요. <a href="https://haru-today.github.io/privacy.html">자세한 개인정보 처리 안내</a></p>
+          <div class="entry-progress" id="entryProgress" role="status" aria-live="polite">
+            <div class="entry-progress-top"><strong>입력 현황</strong><span id="enteredMetricCount">검사 항목 0 / 15개</span></div>
+            <progress id="entryMeter" max="15" value="0" aria-label="입력한 검사 항목 수"></progress>
+            <p id="entryProgressDetail">혈압 미입력 · BMI 계산 정보 미입력</p>
+            <small>모든 항목을 채울 필요는 없습니다. 결과지 참고치가 없는 항목은 판정이 제한됩니다.</small>
+          </div>
           <div class="form-actions top-actions">
             <button class="button secondary" id="sampleBtn" type="button">샘플 데이터 불러오기</button>
             <button class="button ghost" id="clearBtn" type="button">입력 초기화</button>
@@ -82,7 +105,7 @@
               </div>
             </div>
           </details>
-          <div class="checkup-accordion">
+          <div class="checkup-accordion" id="labFields">
             <details open>
               <summary><span>기본 정보와 BMI</span><small>성별, 나이, 체격</small></summary>
               <div class="form-grid">
@@ -130,12 +153,13 @@
             <div><strong>입력이 끝났나요?</strong><span>다음 페이지에서 결과 해석과 추천 검진을 확인합니다.</span></div>
             <button class="button primary large" type="submit">STEP 2 리포트 보기</button>
           </div>
+          <p class="form-bottom-privacy">입력한 검진 결과는 해당 브라우저 탭에서만 임시 보관되며, 리포트 화면에서 삭제할 수 있습니다. 실제 검진 판단은 검사기관과 의료진에게 확인하세요.</p>
           <p id="formStatus" class="status" role="alert" aria-live="assertive"></p>
         </form>
       </section>
     </main>
 
-    <footer class="footer"><div class="footer-brand"><strong>LabInsight</strong><span>LABDAM 건강검진 연결 서비스</span></div><p>본 서비스의 의료 정보는 참고용이며 전문적인 진단이나 치료를 대신하지 않습니다.<br>검사기관 참고치와 의료진 설명을 우선하세요.</p><div class="footer-links"><a href="./index.html">서비스 홈</a><a href="./report.html">결과 리포트</a><a href="./hospitals.html">병원 비교</a><a href="https://haru-today.github.io/">LABDAM 통합 포털</a></div><div class="footer-policy-links" aria-label="이용 정책"><a href="https://haru-today.github.io/privacy.html">개인정보 처리 안내</a><span aria-hidden="true"> · </span><a href="https://haru-today.github.io/terms.html">서비스 이용 안내</a></div></footer>
+    <footer class="footer"><div class="footer-brand"><strong>LabInsight</strong><span>LABDAM 건강검진 연결 서비스</span></div><p>본 서비스의 의료 정보는 참고용이며 전문적인 진단이나 치료를 대신하지 않습니다.<br>검사기관 참고치와 의료진 설명을 우선하세요.</p><div class="footer-links"><a href="./index.html">서비스 홈</a><a href="./report.html">결과 리포트</a><a href="./hospitals.html">자료 비교</a><a href="https://haru-today.github.io/">LABDAM 통합 포털</a></div><div class="footer-policy-links" aria-label="이용 정책"><a href="https://haru-today.github.io/privacy.html">개인정보 처리 안내</a><span aria-hidden="true"> · </span><a href="https://haru-today.github.io/terms.html">서비스 이용 안내</a></div></footer>
     <nav class="app-tabbar" aria-label="앱 빠른 이동"><a href="./index.html"><span>홈</span></a><a class="is-current" href="./checkup.html"><span>입력</span></a><a href="./report.html"><span>리포트</span></a><a href="./hospitals.html"><span>비교·예약</span></a></nav>
   </body>
 </html>
