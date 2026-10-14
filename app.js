@@ -841,14 +841,14 @@
     const source = escapeHtml(result.judge.source || "개별 참고치 확인");
     const linked = result.judge.sourceUrl ? '<a href="' + escapeHtml(result.judge.sourceUrl) + '" target="_blank" rel="noopener noreferrer">판정 방식 참고 ↗</a>' : "";
     return `
-      <tr>
-        <td>${result.item.name}</td>
-        <td>${value}</td>
-        <td><strong class="reference-range">${shownRange}</strong><small class="reference-source">${source}</small></td>
-        <td><span class="badge ${badgeClass}">${escapeHtml(result.judge.label)}</span></td>
-        <td><button type="button" data-desc-toggle="${key}">근거 보기</button></td>
+      <tr data-lab-item="${key}" data-entered="${result.value !== null}">
+        <td data-label="검사 항목">${result.item.name}</td>
+        <td data-label="입력값">${value}</td>
+        <td data-label="적용 기준"><strong class="reference-range">${shownRange}</strong><small class="reference-source">${source}</small></td>
+        <td data-label="확인 상태"><span class="badge ${badgeClass}">${escapeHtml(result.judge.label)}</span></td>
+        <td data-label="상세 설명"><button type="button" data-desc-toggle="${key}" aria-controls="reportDetail-${key}" aria-expanded="false">근거 보기</button></td>
       </tr>
-      <tr class="desc-row" data-desc-row="${key}" hidden><td colspan="5">${escapeHtml(result.item.desc)} <span class="reference-more">${linked}</span> <span class="reference-note">이 항목 하나만으로 질환을 진단할 수 없습니다.</span></td></tr>
+      <tr class="desc-row" id="reportDetail-${key}" data-desc-row="${key}" hidden><td colspan="5">${escapeHtml(result.item.desc)} <span class="reference-more">${linked}</span> <span class="reference-note">이 항목 하나만으로 질환을 진단할 수 없습니다.</span></td></tr>
     `;
   }
 
