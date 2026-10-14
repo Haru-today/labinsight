@@ -10,11 +10,11 @@
     <title>STEP 1 결과 입력 | LabInsight</title>
     <link rel="manifest" href="./manifest.webmanifest">
     <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="./styles.css?v=first-run-20261014">
+    <link rel="stylesheet" href="./styles.css?v=report-mobile-20261014">
     <script src="./runtime-config.js"></script>
     <script src="./ocr-review.js?v=ocr-review-20261012" defer></script>
     <script src="./reference-ranges.js?v=clinical-review-20261013" defer></script>
-    <script src="./app.js?v=first-run-20261014" defer></script>
+    <script src="./app.js?v=report-mobile-20261014" defer></script>
   </head>
   <body data-page="checkup">
     <a class="skip-link" href="#mainContent">본문으로 바로가기</a>
@@ -41,7 +41,7 @@
         <nav class="workflow-steps page-workflow" aria-label="서비스 이용 단계">
           <a class="active" href="./checkup.html" aria-current="step"><span>1</span><strong>결과 입력</strong><small>현재 단계</small></a>
           <a href="./report.html"><span>2</span><strong>리포트 확인</strong><small>결과 해석</small></a>
-          <a href="./hospitals.html"><span>3</span><strong>병원 비교·예약</strong><small>패키지 선택</small></a>
+          <a href="./hospitals.html"><span>3</span><strong>병원 자료 비교</strong><small>공개자료 확인</small></a>
         </nav>
         <div class="section-heading compact-heading">
           <h2>검사 수치 입력</h2>
@@ -70,7 +70,11 @@
             <div class="entry-progress-top"><strong>입력 현황</strong><span id="enteredMetricCount">검사 항목 0 / 15개</span></div>
             <progress id="entryMeter" max="15" value="0" aria-label="입력한 검사 항목 수"></progress>
             <p id="entryProgressDetail">혈압 미입력 · BMI 계산 정보 미입력</p>
-            <small>모든 항목을 채울 필요는 없습니다. 결과지 참고치가 없는 항목은 판정이 제한됩니다.</small>
+            <small>모든 항목을 채울 필요는 없습니다. 검사기관 참고치가 없는 항목은 개별 판정이 제한됩니다.</small>
+            <div class="reference-entry-helper">
+              <span id="referenceCoverageStatus">검사기관 참고범위 0 / 15개 입력</span>
+              <button type="button" id="openReferenceSettingsBtn" aria-controls="referenceSettings">결과지 참고범위 입력하기 <span aria-hidden="true">↗</span></button>
+            </div>
           </div>
           <div class="form-actions top-actions">
             <button class="button secondary" id="sampleBtn" type="button">샘플 데이터 불러오기</button>
@@ -117,7 +121,7 @@
               <div class="bmi-preview" id="bmiPreview">키와 몸무게를 입력하면 BMI가 자동 계산됩니다.</div>
             </details>
             <details>
-              <summary><span>혈압</span><small>심혈관 기본 위험</small></summary>
+              <summary><span>혈압</span><small>수축기·이완기 혈압</small></summary>
               <div class="form-grid"><label>수축기 혈압 <small>mmHg</small><input id="bpSys" type="number" step="1" placeholder="예: 124" min="1"></label><label>이완기 혈압 <small>mmHg</small><input id="bpDia" type="number" step="1" placeholder="예: 78" min="1"></label></div>
             </details>
             <details>
