@@ -442,6 +442,15 @@
     meter.value = count;
     const detailText = pressureStatus + " · " + bmiStatus;
     if (detail.textContent !== detailText) detail.textContent = detailText;
+    const rangeSummary = byId("referenceCoverageStatus");
+    if (rangeSummary) {
+      const ranges = labItems.filter((item) => {
+        const low = byId(item.id + "RefMin")?.value;
+        const high = byId(item.id + "RefMax")?.value;
+        return Boolean(window.LABINSIGHT_REFERENCES?.normalizeInterval({ min: low, max: high }));
+      }).length;
+      rangeSummary.textContent = "검사기관 참고범위 " + ranges + " / " + labItems.length + "개 입력";
+    }
   }
 
   function bindForm() {
@@ -466,6 +475,13 @@
       ocr.open = true;
       ocr.scrollIntoView({ block: "start" });
       ocr.querySelector("summary")?.focus();
+    });
+    byId("openReferenceSettingsBtn")?.addEventListener("click", () => {
+      const settings = byId("referenceSettings");
+      if (!settings) return;
+      settings.open = true;
+      settings.scrollIntoView({ block: "start" });
+      settings.querySelector("summary")?.focus();
     });
     form?.addEventListener("input", updateInputProgress);
     form?.addEventListener("change", updateInputProgress);
