@@ -1006,3 +1006,87 @@ body.booking-modal-open{overflow:hidden}
 /* Make stale source status unmistakable without implying a real-time quote. */
 .official-label.source-review-needed{color:#704518;background:#fff5de;border-color:#e2bd7e}
 .hospital-source-status span{line-height:1.45}
+
+/* 2026-10 homepage and first-run LabInsight experience. */
+body[data-page="home"] .hero-panel {
+  border-top-color: #1f7196;
+  background: linear-gradient(165deg,#fff 72%,#f5f9fb);
+}
+body[data-page="home"] .preview-summary > div strong { color: #285978; }
+body[data-page="home"] .preview-recommendation { border-left-color: #1f7196; }
+body[data-page="home"] .preview-heading .badge { white-space: nowrap; }
+body[data-page="home"] .preview-lab .badge {
+  color: #425e73;
+  border-color: #cbd9e2;
+  background: #eef4f7;
+  font-size: .7rem;
+}
+.entry-paths {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 13px;
+  margin-bottom: 22px;
+}
+.entry-path {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 6px;
+  min-width: 0;
+  padding: 19px;
+  color: #1b384d;
+  background: #fff;
+  border: 1px solid #c9d9e3;
+  border-radius: 13px;
+  box-shadow: 0 5px 20px rgba(14,48,70,.04);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background .15s,border-color .15s,transform .15s;
+}
+.entry-path:hover { background: #f2f8fb; border-color: #5c94ae; transform: translateY(-1px); }
+.entry-path:focus-visible { outline: 3px solid #236b95; outline-offset: 3px; }
+.entry-path-step { font-size: .71rem; font-weight: 800; color: #386c87; letter-spacing: .05em; }
+.entry-path strong { font-size: 1.02rem; line-height: 1.4; }
+.entry-path small { font-size: .81rem; font-weight: 450; color: #536877; line-height: 1.6; }
+.entry-progress {
+  padding: 17px 20px 15px;
+  margin: 3px 0 19px;
+  background: #f3f8fc;
+  border: 1px solid #d4e4ed;
+  border-radius: 12px;
+}
+.entry-progress-top { display: flex; gap: 15px; justify-content: space-between; align-items: center; font-size: .91rem; }
+.entry-progress-top strong { color: var(--heading); }
+.entry-progress-top span { font-weight: 750; color: #285a7d; font-variant-numeric: tabular-nums; }
+.entry-progress progress {
+  display: block; width: 100%; height: 9px; margin: 11px 0 8px;
+  overflow: hidden; border: none; border-radius: 20px; accent-color: #296b92;
+}
+.entry-progress progress::-webkit-progress-bar { background: #dcebf3; border-radius: 20px; }
+.entry-progress progress::-webkit-progress-value { background: #296b92; border-radius: 20px; }
+.entry-progress progress::-moz-progress-bar { background: #296b92; border-radius: 20px; }
+.entry-progress p { margin: 0 0 2px; color: #35566c; font-size: .86rem; }
+.entry-progress small { display: block; color: #5b7280; font-size: .78rem; line-height: 1.55; }
+.form-bottom-privacy {
+  margin: 13px 0 0;
+  font-size: .83rem;
+  color: var(--muted);
+  line-height: 1.65;
+}
+@media(max-width:850px) {
+  .entry-paths { grid-template-columns: 1fr; gap: 9px; }
+  .entry-path { padding: 15px 17px; }
+  .entry-path strong { font-size: .96rem; }
+}
+@media(max-width:540px) {
+  .entry-progress { padding: 14px; }
+  .entry-progress-top { flex-wrap: wrap; gap: 1px 10px; }
+  body[data-page="home"] .preview-heading { flex-wrap: wrap; }
+  body[data-page="home"] .preview-lab { flex-wrap: wrap; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .entry-path { transition: none; }
+  .entry-path:hover { transform: none; }
+}
+@media print { .entry-paths,.entry-progress,.form-bottom-privacy { display:none!important; } }
