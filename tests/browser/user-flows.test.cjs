@@ -160,3 +160,60 @@ test("hospital cards distinguish historical official prices from current availab
   assert.match(await page.locator(".source-disclaimer").innerText(), /현재 시점의 가격/);
   assert.equal(errors.length, 0, errors.join("; "));
 });
+
+test("first-run LabInsight homepage never fabricates a clinical risk score", async (t) => {
+  const { page, errors } = await openPage(t, "/index.html");
+  const preview = await page.locator(".hero-panel").innerText();
+  assert.match(preview, /가상 예시 · 실제 검진 결과 아님/);
+  assert.match(preview, /참고치 필요/);
+  assert.doesNotMatch(preview, /주의 항목 지수|추천 검진 4개|상담 권장/);
+  await page.locator("#heroSampleBtn").click();
+  await page.waitForURL(/\/report\.html$/);
+  assert.ok((await page.locator("#report").innerText()).length > 150);
+  assert.equal(errors.length, 0, errors.join("; "));
+});
+
+test("checkup guided pathways, progress and reset operate without diagnosing blank fields", async (t) => {
+  const { page, errors } = await openPage(t, "/checkup.html");
+  assert.equal(await page.locator(".entry-path").count(), 3);
+  assert.match(await page.locator("#enteredMetricCount").innerText(), /0 \/ 15개/);
+  assert.equal(await page.locator("#entryMeter").inputValue(), "0");
+  await page.locator("#openOcrSectionBtn").click();
+  assert.equal(await page.locator("#ocr").getAttribute("open"), "");
+  await page.locator(".checkup-accordion details").filter({ has: page.locator("#ast") }).locator("summary").click();
+  await page.locator("#ast").fill("35");
+  assert.match(await page.locator("#enteredMetricCount").innerText(), /1 \/ 15개/);
+  await page.locator(".checkup-accordion details").filter({ has: page.locator("#bpSys") }).locator("summary").click();
+  await page.locator("#bpSys").fill("126");
+  assert.match(await page.locator("#entryProgressDetail").innerText(), /혈압 일부 입력/);
+  await page.locator("#bpDia").fill("80");
+  assert.match(await page.locator("#entryProgressDetail").innerText(), /혈압 입력 완료/);
+  await page.locator("#height").fill("170");
+  await page.locator("#weight").fill("70");
+  assert.match(await page.locator("#entryProgressDetail").innerText(), /BMI 계산 정보 입력됨/);
+  await page.locator("#clearBtn").click();
+  assert.match(await page.locator("#enteredMetricCount").innerText(), /0 \/ 15개/);
+  assert.equal(await page.locator("#ast").inputValue(), "");
+  await page.locator("#startSampleBtn").click();
+  assert.match(await page.locator("#enteredMetricCount").innerText(), /15 \/ 15개/);
+  assert.equal(await page.locator("#entryMeter").inputValue(), "15");
+  assert.equal(errors.length, 0, errors.join("; "));
+});
+
+test("narrow 320px LabInsight entry cards have no horizontal overflow", async (t) => {
+  const context = await browser.newContext({ viewport: { width: 320, height: 720 },
+    reducedMotion: "reduce", serviceWorkers: "block" });
+  t.after(async () => context.close());
+  const page = await context.newPage();
+  const errors = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto(baseUrl + "/checkup.html");
+  const layout = await page.evaluate(() => ({
+    client: document.documentElement.clientWidth,
+    width: document.documentElement.scrollWidth,
+    columns: getComputedStyle(document.querySelector(".entry-paths")).gridTemplateColumns.split(" ").length
+  }));
+  assert.ok(layout.width <= layout.client + 1, JSON.stringify(layout));
+  assert.equal(layout.columns, 1);
+  assert.equal(errors.length, 0, errors.join("; "));
+});
