@@ -177,7 +177,7 @@ test("checkup guided pathways, progress and reset operate without diagnosing bla
   const { page, errors } = await openPage(t, "/checkup.html");
   assert.equal(await page.locator(".entry-path").count(), 3);
   assert.match(await page.locator("#enteredMetricCount").innerText(), /0 \/ 15개/);
-  assert.equal(await page.locator("#entryMeter").inputValue(), "0");
+  assert.equal(await page.locator("#entryMeter").evaluate((el) => el.value), 0);
   await page.locator("#openOcrSectionBtn").click();
   assert.equal(await page.locator("#ocr").getAttribute("open"), "");
   await page.locator(".checkup-accordion details").filter({ has: page.locator("#ast") }).locator("summary").click();
@@ -196,7 +196,7 @@ test("checkup guided pathways, progress and reset operate without diagnosing bla
   assert.equal(await page.locator("#ast").inputValue(), "");
   await page.locator("#startSampleBtn").click();
   assert.match(await page.locator("#enteredMetricCount").innerText(), /15 \/ 15개/);
-  assert.equal(await page.locator("#entryMeter").inputValue(), "15");
+  assert.equal(await page.locator("#entryMeter").evaluate((el) => el.value), 15);
   assert.equal(errors.length, 0, errors.join("; "));
 });
 
