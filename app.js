@@ -378,6 +378,7 @@
     setStatus("ocrStatus", applied + "개 항목을 적용했습니다. " +
       (skipped ? skipped + "개는 잘못된 수치 또는 기존 입력값 보호로 제외했습니다. " : "") +
       "리포트를 생성하기 전에 원본 결과지와 모든 검사값을 다시 대조하세요.");
+    updateInputProgress();
   }
 
   function clearOcr() {
@@ -423,6 +424,26 @@
     });
   }
 
+  // Completeness is a count of entries, never a diagnosis or a risk score.
+  function updateInputProgress() {
+    const summary = byId("enteredMetricCount");
+    const meter = byId("entryMeter");
+    const detail = byId("entryProgressDetail");
+    if (!summary || !meter || !detail) return;
+    const count = labItems.filter((item) => safeNumber(byId(item.id)?.value) !== null).length;
+    const bpCount = ["bpSys", "bpDia"].filter((id) => safeNumber(byId(id)?.value) !== null).length;
+    const bmi = calculateBmi(safeNumber(byId("height")?.value), safeNumber(byId("weight")?.value));
+    const text = "검사 항목 " + count + " / " + labItems.length + "개";
+    const pressureStatus = bpCount === 2 ? "혈압 입력 완료"
+      : bpCount === 1 ? "혈압 일부 입력" : "혈압 미입력";
+    const bmiStatus = bmi !== null ? "BMI 계산 정보 입력됨" : "BMI 계산 정보 미입력";
+    if (summary.textContent !== text) summary.textContent = text;
+    meter.max = labItems.length;
+    meter.value = count;
+    const detailText = pressureStatus + " · " + bmiStatus;
+    if (detail.textContent !== detailText) detail.textContent = detailText;
+  }
+
   function bindForm() {
     const form = byId("healthForm");
     const showSampleReport = () => {
@@ -431,15 +452,30 @@
     };
     byId("heroSampleBtn")?.addEventListener("click", showSampleReport);
     byId("emptySampleBtn")?.addEventListener("click", showSampleReport);
-    byId("sampleBtn")?.addEventListener("click", () => {
+    const showSampleInputs = () => {
       fillForm(sampleData);
       updateBmiPreview();
+      updateInputProgress();
+      byId("labFields")?.scrollIntoView({ block: "start" });
+    };
+    byId("sampleBtn")?.addEventListener("click", showSampleInputs);
+    byId("startSampleBtn")?.addEventListener("click", showSampleInputs);
+    byId("openOcrSectionBtn")?.addEventListener("click", () => {
+      const ocr = byId("ocr");
+      if (!ocr) return;
+      ocr.open = true;
+      ocr.scrollIntoView({ block: "start" });
+      ocr.querySelector("summary")?.focus();
     });
+    form?.addEventListener("input", updateInputProgress);
+    form?.addEventListener("change", updateInputProgress);
+    updateInputProgress();
     byId("clearBtn")?.addEventListener("click", () => {
       form?.reset();
       restoreReferenceRangeFields();
       deleteSavedReport();
       updateBmiPreview();
+      updateInputProgress();
     });
     form?.addEventListener("submit", (event) => {
       event.preventDefault();
@@ -523,6 +559,7 @@
     if (byId("healthForm") && saved) {
       fillForm(saved);
       updateBmiPreview();
+      updateInputProgress();
     }
     if (byId("report") && saved) renderReport(saved);
   }
