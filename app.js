@@ -928,7 +928,13 @@
       guides.exercise.push("체중 관리를 위해 유산소 운동과 하체·코어 근력 운동을 병행하세요.");
       guides.tests.push("대사증후군 평가, 혈압, 허리둘레 확인");
     }
-    if (judgeBloodPressure(data.bpSys, data.bpDia) !== "미입력" && judgeBloodPressure(data.bpSys, data.bpDia) !== "정상") {
+    const bloodPressureStatus = judgeBloodPressure(data.bpSys, data.bpDia);
+    if (bloodPressureStatus.startsWith("부분 입력")) {
+      guides.questions.push("수축기와 이완기 혈압을 모두 확인하고, 동일한 조건에서 다시 측정해야 하는지 질문하세요.");
+      if (bloodPressureStatus === "부분 입력 · 높은 값 확인 필요") {
+        guides.lifestyle.push("혈압 한쪽 수치가 높게 입력되었습니다. 이 값만으로 판정하지 말고 두 수치를 함께 재확인하세요.");
+      }
+    } else if (bloodPressureStatus !== "미입력" && bloodPressureStatus !== "정상") {
       guides.lifestyle.push("혈압이 높은 편이면 가정혈압을 반복 측정하고 염분 섭취와 수면 상태를 함께 점검하세요.");
       guides.questions.push("혈압 재측정과 심혈관 위험도 평가가 필요한지 질문하세요.");
       guides.tests.push("혈압 재측정, 심전도, 신장 기능 확인");
@@ -1100,9 +1106,17 @@
   function isLow(value, limit) { return Number.isFinite(value) && value >= 0 && value < limit; }
 
   function judgeBloodPressure(sys, dia) {
-    if (sys === null && dia === null) return "미입력";
-    if ((sys !== null && sys >= 130) || (dia !== null && dia >= 85)) return "고혈압 관리 필요";
-    if ((sys !== null && sys >= 120) || (dia !== null && dia >= 80)) return "주의";
+    const hasSys = Number.isFinite(sys) && sys > 0;
+    const hasDia = Number.isFinite(dia) && dia > 0;
+    if (!hasSys && !hasDia) return "미입력";
+    // One pressure component cannot establish a normal blood-pressure reading.
+    // Preserve high single measurements for follow-up, without classifying them.
+    if (!hasSys || !hasDia) {
+      return (hasSys && sys >= 130) || (hasDia && dia >= 85)
+        ? "부분 입력 · 높은 값 확인 필요" : "부분 입력 · 판정 보류";
+    }
+    if (sys >= 130 || dia >= 85) return "고혈압 관리 필요";
+    if (sys >= 120 || dia >= 80) return "주의";
     return "정상";
   }
 
