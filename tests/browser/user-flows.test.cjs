@@ -367,3 +367,61 @@ test("sample preview works without storage permission and remains labeled in pri
   await page.emulateMedia({ media: "print" });
   assert.equal(await page.locator(".sample-report-notice").isVisible(), true);
 });
+
+
+test("CarePath stays in the active browser tab, compares two real-source records, and deletes everything", async (t) => {
+  const {page, errors} = await openPage(t, "/carepath.html", { mobile: true });
+  assert.match(await page.locator("h1").innerText(), /날짜별/);
+  assert.match(await page.locator(".carepath-warning").innerText(), /sessionStorage/);
+  for (const [date, lab, glucose] of [
+    ["2024-02-12", "검사기관 A", 94],
+    ["2026-02-12", "검사기관 B", 99]
+  ]) {
+    await page.evaluate(value => sessionStorage.setItem("labinsight-latest-report",
+      JSON.stringify({ glucose: value, ast: 23, referenceRanges: {
+        glucose: {min:70, max:100, unit:"mg/dL"} } })), glucose);
+    await page.locator("#carepathDate").fill(date);
+    await page.locator("#carepathLab").fill(lab);
+    await page.locator("#carepathConfirm").check();
+    await page.locator('#carepathForm button[type="submit"]').click();
+    assert.match(await page.locator("#carepathStatus").innerText(), /임시|브라우저 탭/);
+  }
+  assert.equal(await page.locator(".carepath-record").count(), 2);
+  await page.locator("#carepathItem").selectOption("glucose");
+  assert.match(await page.locator("#carepathComparison").innerText(), /5 mg\/dL 증가/);
+  assert.match(await page.locator("#carepathComparison").innerText(), /검사기관이 달라/);
+  assert.equal(await page.locator("#carepathChart svg").count(), 1);
+  assert.equal(await page.evaluate(() => localStorage.getItem("labinsight-carepath-session-v1")), null);
+  assert.equal(await page.evaluate(() => JSON.parse(sessionStorage.getItem("labinsight-carepath-session-v1")).records.length),2);
+  page.once("dialog", dialog => dialog.accept());
+  await page.locator("#carepathDeleteAll").click();
+  assert.equal(await page.evaluate(() => sessionStorage.getItem("labinsight-carepath-session-v1")),null);
+  assert.equal(await page.locator(".carepath-record").count(),0);
+  assert.equal(errors.length,0,errors.join("; "));
+});
+
+test("CarePath synthetic demo never persists to the user's history", async (t) => {
+  const {page, errors} = await openPage(t, "/carepath.html");
+  await page.locator("#carepathDemo").click();
+  assert.equal(await page.locator(".carepath-record").count(), 3);
+  assert.match(await page.locator("#carepathDemoNotice").innerText(), /가상/);
+  assert.equal(await page.evaluate(() => sessionStorage.getItem("labinsight-carepath-session-v1")), null);
+  await page.locator("#carepathExitDemo").click();
+  assert.equal(await page.locator(".carepath-record").count(), 0);
+  assert.equal(errors.length,0,errors.join("; "));
+});
+
+test("LabInsight report deletion also clears CarePath temporary health history", async (t) => {
+  const {page, errors} = await openPage(t, "/checkup.html");
+  await page.locator("details").filter({ has: page.locator("#ast") }).locator("summary").click();
+  await page.locator("#ast").fill("28");
+  await page.locator('#healthForm button[type="submit"]').click();
+  await page.waitForURL(/\/report.html$/);
+  await page.evaluate(() => sessionStorage.setItem("labinsight-carepath-session-v1",
+    JSON.stringify({version:1, records:[]})));
+  page.once("dialog", dialog => dialog.accept());
+  await page.locator("#deleteHealthReportBtn").click();
+  assert.equal(await page.evaluate(() => sessionStorage.getItem("labinsight-latest-report")), null);
+  assert.equal(await page.evaluate(() => sessionStorage.getItem("labinsight-carepath-session-v1")), null);
+  assert.equal(errors.length,0,errors.join("; "));
+});
