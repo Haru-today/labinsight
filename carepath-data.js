@@ -27,7 +27,13 @@
       .replace(/²/g, "2").replace(/³/g, "3").replace(/\s/g, "");
     return Boolean(a && b) && normalize(a) === normalize(b);
   }
-  function validDate(date, today = new Date().toISOString().slice(0, 10)) {
+  function localToday() {
+    const d = new Date();
+    return String(d.getFullYear()).padStart(4, "0") + "-" +
+      String(d.getMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getDate()).padStart(2, "0");
+  }
+  function validDate(date, today = localToday()) {
     if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return false;
     const dt = new Date(date + "T00:00:00Z");
     return Number.isFinite(dt.getTime()) && dt.toISOString().slice(0, 10) === date &&
@@ -35,6 +41,7 @@
   }
   function createRecord(report, date, laboratory, note, acknowledged, today) {
     if (!acknowledged) throw new Error("원본 검사일·검사기관·단위를 확인해야 기록할 수 있습니다.");
+    if (report?.provenance === "sample") throw new Error("가상 예시 리포트는 CarePath 실제 기록에 추가할 수 없습니다.");
     if (!validDate(date, today)) throw new Error("실제 검사일을 올바르게 입력해 주세요. 미래 날짜는 사용할 수 없습니다.");
     const lab = String(laboratory ?? "").trim();
     if (!lab || lab.length > 60) throw new Error("원본 검사결과지의 검사기관명을 60자 이내로 입력하세요.");
