@@ -16,7 +16,7 @@ GitHub Pages는 정적 호스팅이므로 Google OAuth와 D1 회원 승인 상�
 2. **Source: Deploy from a branch**, **Branch: main**, **Folder: /docs**를 선택하고 **Save**를 누릅니다.
 3. GitHub Pages 배포가 완료된 뒤 기존 `/labinsight/`, `/labinsight/checkup.html`, `/labinsight/report.html`, `/labinsight/hospitals.html`, `/labinsight/app.js`를 시크릿 없는 새 시크릿 창에서 각각 검사합니다.
 4. `*.html`은 로그인 안내만 표시한 뒤 Worker로 이동해야 하고, `app.js` 및 검사 앱 내부 JS/CSS는 더 이상 공개 Pages에서 HTTP 200으로 제공되면 안 됩니다. 예상치 못한 파일이 200으로 남아 있으면 배포 설정을 재확인하고 운영 완료로 표시하지 마세요.
-5. 기존 방문자는 브라우저 서비스워커가 이전 앱 셸을 캐시했을 수 있습니다. 새 `service-worker.js`가 이전 `labinsight-app-` 캐시를 삭제하도록 설계돼 있으나 사용자 브라우저 업데이트/오프라인 상태에 따라 전환 시점은 달라집니다. **기존 사용자 입력값은 새 Workers 도메인으로 자동 이전되지 않습니다.**
+5. 기존 방문자는 브라우저 서비스워커가 이전 앱 셸을 캐시했을 수 있습니다. 새 `service-worker.js`가 이전 `labinsight-app-` 캐시를 삭제하도록 설계돼 있으나 사용자 브라우저 업데이트/오프라인 상태에 따라 전환 시점은 달라집니다. **기존 사용자 입력값은 새 Workers 도메인으로 자동 이전되지 않습니다.** 기존 공개 Pages에서 사용자가 명시적으로 동의한 경우에만 [`/labinsight/legacy-data-cleanup.html`](https://haru-today.github.io/labinsight/legacy-data-cleanup.html)에서 LabInsight 한정 임시 기록·구버전 캐시·서비스워커 등록을 정리할 수 있습니다. 이 정리는 다른 탭의 `sessionStorage`, 다른 기기 또는 오프라인 설치 앱에 소급 적용되지 않습니다. Caffeine Atlas와 다른 서비스의 캐시·데이터는 보존합니다.
 6. 추가로 Google 계정 2개로 관리자 가입→일반 가입 대기→승인→철회 테스트를 진행합니다. 이 과정에서 실제 건강검진 자료를 사용하지 마세요.
 
 ## 보안·배포 범위
