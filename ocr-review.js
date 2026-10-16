@@ -69,19 +69,36 @@
       // If a line names two different analytes, column alignment is uncertain.
       if (labels.length !== 1) return;
       const { spec, hit } = labels[0];
+      // A single row can repeat the SAME analyte (e.g. "AST 26 U/L AST 90 U/L").
+      // The prior one-hit-per-spec lookup missed this ambiguous OCR layout.
+      // Keep it visible for review but never eligible for automatic form application.
       const tail = line.slice(hit.end);
+      // "(GOT)" and "(GPT)" immediately after AST/ALT are label synonyms,
+      // not a second measurement. They are already accepted by valueMatch.
+      const afterAlias = tail.replace(/^\s*\((?:GOT|GPT)\)\s*/i, "");
+      const repeatedInRow = Boolean(
+        matchAlias(line.slice(0, hit.position), spec) ||
+        matchAlias(afterAlias, spec)
+      );
       // Require a number immediately after the analyte label (or a short, harmless separator).
       // Never cross a newline to find a value or confuse a range in the next row.
       const valueMatch = /^\s*(?:\((?:GOT|GPT)\)\s*)?[:：=|·-]?\s*(\d{1,7}(?:[.,]\d{1,3})?)(?![\d.,])/.exec(tail);
       if (!valueMatch) return;
       const value = Number(valueMatch[1].replace(",", "."));
       if (!Number.isFinite(value) || value < 0) return;
-      const unit = findUnit(tail.slice(valueMatch[0].length));
+      const remainder = tail.slice(valueMatch[0].length).trim();
+      const unit = findUnit(remainder);
+      // "AST 26 35 U/L" and "AST 26 U/L 35" can be multiple columns.
+      // Without column provenance, do not present the first value as a safe candidate.
+      const compactRemainder = remainder.replace(/\s+/g, "");
+      const suffix = unit && compactRemainder.startsWith(unit)
+        ? compactRemainder.slice(unit.length) : "";
+      if (/^[+-]?\d/.test(remainder) || /^[+-]?\d/.test(suffix)) return;
       const mismatch = Boolean(unit) && !unitMatches(unit, spec.unit);
       const entry = {
         id: spec.id, label: spec.label, value, unit, expectedUnit: spec.unit,
         line: index + 1, source: original.trim().slice(0, 160),
-        status: mismatch ? "unit-mismatch" : unit ? "unit-matched" : "unit-unknown"
+        status: repeatedInRow ? "duplicate" : mismatch ? "unit-mismatch" : unit ? "unit-matched" : "unit-unknown"
       };
       if (candidates.has(spec.id)) {
         const existing = candidates.get(spec.id);

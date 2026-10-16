@@ -59,6 +59,7 @@ test("real browser form submits a single measurement and original reference rang
   await page.locator("#referenceSettings summary").click();
   await page.locator("#astRefMin").fill("0");
   await page.locator("#astRefMax").fill("40");
+  await page.locator("#astRefUnit").selectOption("U/L");
   await page.locator('#healthForm button[type="submit"]').click();
   await page.waitForURL(/\/report\.html$/);
   const output = await page.locator("#report").innerText();
@@ -235,6 +236,7 @@ for (const width of [320, 375]) {
     assert.equal(await page.locator("#referenceSettings").getAttribute("open"), "");
     await page.locator("#astRefMin").fill("0");
     await page.locator("#astRefMax").fill("40");
+    await page.locator("#astRefUnit").selectOption("U/L");
     assert.match(await page.locator("#referenceCoverageStatus").innerText(), /1 \/ 15개/);
 
     const astPanel = page.locator(".checkup-accordion details").filter({ has: page.locator("#ast") });
@@ -278,3 +280,31 @@ for (const width of [320, 375]) {
     assert.deepEqual(errors, []);
   });
 }
+
+test("reference intervals wait for original-unit confirmation before report creation", async (t) => {
+  const { page, errors } = await openPage(t, "/checkup.html");
+  await page.locator(".checkup-accordion details").filter({ has: page.locator("#ast") }).locator("summary").click();
+  await page.locator("#ast").fill("45");
+  await page.locator("#openReferenceSettingsBtn").click();
+  await page.locator("#astRefMin").fill("0");
+  await page.locator("#astRefMax").fill("40");
+  assert.match(await page.locator("#referenceCoverageStatus").innerText(), /0 \/ 15개/);
+  await page.locator('#healthForm button[type="submit"]').click();
+  assert.match(await page.locator("#formStatus").innerText(), /원본.*단위/);
+  assert.match(page.url(), /checkup.html/);
+  assert.equal(await page.evaluate(() => sessionStorage.getItem("labinsight-latest-report")), null);
+
+  await page.locator("#astRefUnit").selectOption("other");
+  await page.locator('#healthForm button[type="submit"]').click();
+  assert.match(await page.locator("#formStatus").innerText(), /자동 환산 없이 비교를 보류/);
+  assert.equal(await page.evaluate(() => sessionStorage.getItem("labinsight-latest-report")), null);
+
+  await page.locator("#astRefUnit").selectOption("U/L");
+  assert.match(await page.locator("#referenceCoverageStatus").innerText(), /1 \/ 15개/);
+  await page.locator('#healthForm button[type="submit"]').click();
+  await page.waitForURL(/\/report.html$/);
+  const reportData = await page.evaluate(() => JSON.parse(sessionStorage.getItem("labinsight-latest-report")));
+  assert.equal(reportData.referenceRanges.ast.unit, "U/L");
+  assert.match(await page.locator("#report").innerText(), /0–40 U\/L/);
+  assert.equal(errors.length, 0, errors.join("; "));
+});

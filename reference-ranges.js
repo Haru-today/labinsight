@@ -18,14 +18,32 @@
     return Number.isFinite(number) && number >= 0 ? number : null;
   }
 
-  function normalizeInterval(range) {
-    if (!range || typeof range !== "object") return null;
-    const min = validNumber(range.min);
-    const max = validNumber(range.max);
-    return min !== null && max !== null && min <= max ? { min, max } : null;
+  // Unit strings are compared as written on the original report. This never
+  // converts values between units (e.g. 10³/µL and /µL).
+  function normalizeUnit(unit) {
+    return String(unit ?? "").trim().toLowerCase()
+      .replace(/[µμ]/g, "u").replace(/㎡/g, "m2")
+      .replace(/²/g, "2").replace(/³/g, "3").replace(/×/g, "x")
+      .replace(/\^/g, "").replace(/\s/g, "").replace(",", ".");
   }
 
-  function parseIntervals(input, labItems) {
+  function unitMatches(found, expected) {
+    return Boolean(normalizeUnit(found)) && normalizeUnit(found) === normalizeUnit(expected);
+  }
+
+  function normalizeInterval(range, expectedUnit) {
+    if (!range || typeof range !== "object" || Array.isArray(range)) return null;
+    const min = validNumber(range.min);
+    const max = validNumber(range.max);
+    const declaredUnit = typeof range.unit === "string" ? range.unit.trim() : "";
+    if (declaredUnit && expectedUnit && !unitMatches(declaredUnit, expectedUnit)) return null;
+    if (min === null || max === null || min > max) return null;
+    return declaredUnit ? { min, max, unit: expectedUnit || declaredUnit } : { min, max };
+  }
+
+  // requireUnit is used for NEW form entries. Legacy saved intervals without
+  // unit metadata still load; users must select the source unit when editing.
+  function parseIntervals(input, labItems, options = {}) {
     const saved = {};
     const errors = [];
     labItems.forEach((item) => {
@@ -34,7 +52,16 @@
       const minText = String(range.min ?? "").trim();
       const maxText = String(range.max ?? "").trim();
       if (!minText && !maxText) return;
-      const interval = normalizeInterval(range);
+      const declaredUnit = String(range.unit ?? "").trim();
+      if (options.requireUnit && !declaredUnit) {
+        errors.push(item.name + ": 원본 검사결과지의 단위를 확인한 뒤 선택하세요.");
+        return;
+      }
+      if (declaredUnit && !unitMatches(declaredUnit, item.unit)) {
+        errors.push(item.name + ": 원본 단위와 입력 단위(" + item.unit + ")가 일치하지 않습니다. 자동 환산 없이 비교를 보류합니다.");
+        return;
+      }
+      const interval = normalizeInterval(range, item.unit);
       if (!interval) errors.push(item.name + ": 하한·상한을 모두 입력하고 하한이 상한보다 크지 않은지 확인하세요.");
       else saved[item.id] = interval;
     });
@@ -45,7 +72,15 @@
     if (!Number.isFinite(value) || value < 0) {
       return { level: "missing", label: "미입력", source: "평가 제외", rangeText: "—", confirmed: false, sourceUrl: MEDLINE };
     }
-    const range = normalizeInterval(rawRange);
+    if (rawRange && typeof rawRange.unit === "string" && rawRange.unit.trim() &&
+        !unitMatches(rawRange.unit, item.unit)) {
+      return {
+        level: "unverified", label: "검사기관 단위 확인 필요",
+        source: "원본 단위와 서비스 입력 단위 불일치 · 자동 환산하지 않음",
+        rangeText: "원본 검사결과지 단위 재확인", confirmed: false, sourceUrl: MEDLINE
+      };
+    }
+    const range = normalizeInterval(rawRange, item.unit);
     if (range) {
       const within = value >= range.min && value <= range.max;
       return {
@@ -81,7 +116,7 @@
   }
 
   root.LABINSIGHT_REFERENCES = Object.freeze({
-    normalizeInterval, parseIntervals, assess,
+    normalizeUnit, unitMatches, normalizeInterval, parseIntervals, assess,
     sources: Object.freeze({ medline: MEDLINE, cdc: CDC, niddk: NIDDK })
   });
 })(typeof window !== "undefined" ? window : globalThis);

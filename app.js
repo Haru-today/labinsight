@@ -335,6 +335,10 @@
           '><strong>' + escapeHtml(candidate.label) + '</strong></label>' +
           '<label class="ocr-candidate-value">검사값 <input type="number" min="0" step="any" data-ocr-value="' + index +
           '" value="' + candidate.value + '"' + (blocked ? ' disabled' : '') + '></label>' +
+          (candidate.status === "unit-unknown"
+            ? '<label class="ocr-unit-confirm"><input type="checkbox" data-ocr-unit-confirm="' + index +
+              '">원본 결과지에서 ' + escapeHtml(candidate.expectedUnit) + ' 단위를 직접 확인했습니다.</label>'
+            : '') +
           '<div class="ocr-candidate-meta"><span>인식 단위: ' + escapeHtml(unitLabel) +
           '</span><span>서비스 단위: ' + escapeHtml(candidate.expectedUnit) + '</span>' +
           '<small class="' + (blocked ? 'ocr-warning' : '') + '">' + warning + '</small>' +
@@ -363,6 +367,11 @@
         skipped += 1;
         continue;
       }
+      if (candidate.status === "unit-unknown" &&
+          !review.querySelector('[data-ocr-unit-confirm="' + index + '"]')?.checked) {
+        skipped += 1;
+        continue;
+      }
       const edited = review.querySelector('[data-ocr-value="' + index + '"]');
       const value = safeNumber(edited?.value);
       const target = byId(candidate.id);
@@ -376,7 +385,7 @@
       applied += 1;
     }
     setStatus("ocrStatus", applied + "개 항목을 적용했습니다. " +
-      (skipped ? skipped + "개는 잘못된 수치 또는 기존 입력값 보호로 제외했습니다. " : "") +
+      (skipped ? skipped + "개는 단위 미확인·잘못된 수치 또는 기존 입력값 보호로 제외했습니다. " : "") +
       "리포트를 생성하기 전에 원본 결과지와 모든 검사값을 다시 대조하세요.");
     updateInputProgress();
   }
@@ -400,16 +409,24 @@
     container.innerHTML = labItems.map((item) => {
       const id = item.id;
       return '<div class="ref-field-row"><strong>' + escapeHtml(item.name) + '</strong>' +
-        '<span class="ref-field-unit">' + escapeHtml(item.unit) + '</span>' +
+        '<span class="ref-field-unit">입력 단위: ' + escapeHtml(item.unit) + '</span>' +
         '<label for="' + id + 'RefMin">하한<input id="' + id + 'RefMin" type="number" min="0" step="any" placeholder="미입력"></label>' +
-        '<label for="' + id + 'RefMax">상한<input id="' + id + 'RefMax" type="number" min="0" step="any" placeholder="미입력"></label></div>';
+        '<label for="' + id + 'RefMax">상한<input id="' + id + 'RefMax" type="number" min="0" step="any" placeholder="미입력"></label>' +
+        '<label for="' + id + 'RefUnit">원본 결과지 단위<select id="' + id + 'RefUnit">' +
+        '<option value="">원본 단위 확인 필요</option>' +
+        '<option value="' + escapeHtml(item.unit) + '">' + escapeHtml(item.unit) + ' · 원본과 일치</option>' +
+        '<option value="other">다른 단위 · 비교 보류</option></select></label></div>';
     }).join("");
   }
 
   function collectReferenceRangeDraft() {
     const ranges = {};
     labItems.forEach((item) => {
-      ranges[item.id] = { min: byId(item.id + "RefMin")?.value, max: byId(item.id + "RefMax")?.value };
+      ranges[item.id] = {
+        min: byId(item.id + "RefMin")?.value,
+        max: byId(item.id + "RefMax")?.value,
+        unit: byId(item.id + "RefUnit")?.value || ""
+      };
     });
     return ranges;
   }
@@ -419,8 +436,11 @@
       const interval = window.LABINSIGHT_REFERENCES?.normalizeInterval(referenceRanges[item.id]);
       const min = byId(item.id + "RefMin");
       const max = byId(item.id + "RefMax");
+      const unit = byId(item.id + "RefUnit");
       if (min) min.value = interval ? String(interval.min) : "";
       if (max) max.value = interval ? String(interval.max) : "";
+      // Legacy reports keep their values, but must reconfirm source units on edits.
+      if (unit) unit.value = interval && window.LABINSIGHT_REFERENCES?.unitMatches(interval.unit, item.unit) ? item.unit : "";
     });
   }
 
@@ -447,7 +467,8 @@
       const ranges = labItems.filter((item) => {
         const low = byId(item.id + "RefMin")?.value;
         const high = byId(item.id + "RefMax")?.value;
-        return Boolean(window.LABINSIGHT_REFERENCES?.normalizeInterval({ min: low, max: high }));
+        const unit = byId(item.id + "RefUnit")?.value;
+        return Boolean(unit && window.LABINSIGHT_REFERENCES?.normalizeInterval({ min: low, max: high, unit }, item.unit));
       }).length;
       rangeSummary.textContent = "검사기관 참고범위 " + ranges + " / " + labItems.length + "개 입력";
     }
@@ -496,7 +517,7 @@
     form?.addEventListener("submit", (event) => {
       event.preventDefault();
       const data = collectFormData();
-      const parsedRanges = window.LABINSIGHT_REFERENCES?.parseIntervals(collectReferenceRangeDraft(), labItems);
+      const parsedRanges = window.LABINSIGHT_REFERENCES?.parseIntervals(collectReferenceRangeDraft(), labItems, { requireUnit: true });
       if (!parsedRanges) {
         setStatus("formStatus", "참고범위 기능을 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.");
         return;
@@ -872,7 +893,8 @@
 
   function confirmedOutside(data, id, direction = "either") {
     const value = safeNumber(data?.[id]);
-    const range = window.LABINSIGHT_REFERENCES?.normalizeInterval(data?.referenceRanges?.[id]);
+    const item = labItems.find((entry) => entry.id === id);
+    const range = window.LABINSIGHT_REFERENCES?.normalizeInterval(data?.referenceRanges?.[id], item?.unit);
     if (value === null || !range) return false;
     return direction === "high" ? value > range.max :
       direction === "low" ? value < range.min : value < range.min || value > range.max;

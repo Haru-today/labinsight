@@ -10,10 +10,7 @@ test("all LabInsight views link to the LABDAM privacy and service notices", () =
     const html = fs.readFileSync(path.join(__dirname, "..", filename), "utf8");
     assert.match(html, /href="https:\/\/haru-today\.github\.io\/privacy\.html"/, filename);
     assert.match(html, /href="https:\/\/haru-today\.github\.io\/terms\.html"/, filename);
-    const expected = filename === "checkup.html" || filename === "report.html"
-      ? /styles\.css\?v=report-mobile-20261014/
-      : filename === "index.html" ? /styles\.css\?v=first-run-20261014/
-      : /styles\.css\?v=hospital-source-20261013/;
+    const expected = /styles\.css\?v=labverify-units-20261016/;
     assert.match(html, expected, filename);
   }
 });
@@ -31,12 +28,11 @@ test("privacy information is not used to claim clinical validation", () => {
   assert.doesNotMatch(js, /localStorage\.setItem\(reportStorageKey/);
 });
 
-test("PWA CSS cache is versioned for the policy-link release", () => {
+test("PWA unit-validation assets are versioned without unrelated files", () => {
   const sw = fs.readFileSync(path.join(__dirname, "..", "service-worker.js"), "utf8");
-  assert.match(sw, /labinsight-app-v20261014-mobile-report/);
-  assert.match(sw, /styles\.css\?v=report-mobile-20261014/);
-  assert.match(sw, /app\.js\?v=report-mobile-20261014/);
-  assert.match(sw, /styles\.css\?v=first-run-20261014/);
-  assert.match(sw, /app\.js\?v=first-run-20261014/);
-  assert.match(sw, /styles\.css\?v=hospital-source-20261013/);
+  assert.match(sw, /labinsight-app-v20261016-labverify-units/);
+  assert.match(sw, /styles\.css\?v=labverify-units-20261016/);
+  assert.match(sw, /app\.js\?v=labverify-units-20261016/);
+  assert.match(sw, /reference-ranges\.js\?v=labverify-units-20261016/);
+  assert.doesNotMatch(sw, /caffeine-atlas/);
 });

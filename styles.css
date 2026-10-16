@@ -919,11 +919,11 @@ small { color: var(--muted); font-weight: 650; }
 .reference-settings-inner{padding:22px}
 .reference-settings-inner>.muted{font-size:.88rem;line-height:1.65;margin:0 0 10px}
 .reference-fields{margin-top:15px;display:grid;gap:0;border-top:1px solid var(--line)}
-.ref-field-row{display:grid;grid-template-columns:minmax(110px,1fr) minmax(110px,.75fr) minmax(120px,1fr) minmax(120px,1fr);align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--line)}
+.ref-field-row{display:grid;grid-template-columns:minmax(95px,.8fr) minmax(120px,.85fr) minmax(95px,.8fr) minmax(95px,.8fr) minmax(180px,1.3fr);align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--line)}
 .ref-field-row>strong{color:var(--heading);font-size:.9rem}
 .ref-field-unit{font-size:.81rem;color:var(--muted)}
 .ref-field-row label{font-size:.75rem;color:var(--muted);font-weight:700}
-.ref-field-row input{display:block;width:100%;min-height:40px;padding:8px;margin-top:4px;color:var(--ink)}
+.ref-field-row input,.ref-field-row select{display:block;width:100%;min-height:44px;padding:8px;margin-top:4px;color:var(--ink)}
 .reference-range{font-size:.86rem;word-break:normal}
 .reference-source{display:block;font-size:.72rem;color:var(--muted);font-weight:500;margin-top:3px;line-height:1.35}
 .reference-more{margin-left:10px}
@@ -931,7 +931,7 @@ small { color: var(--muted); font-weight: 650; }
 .reference-note{display:block;margin-top:7px}
 .report-evidence{background:#f7fbfd}
 .result-table{min-width:870px}
-@media(max-width:650px){.ref-field-row{grid-template-columns:1fr 1fr;gap:7px 12px}.ref-field-row>strong,.ref-field-row>.ref-field-unit{grid-column:auto}.reference-settings-inner{padding:15px}}
+@media(max-width:740px){.ref-field-row{grid-template-columns:1fr 1fr;gap:7px 12px}.ref-field-row>strong,.ref-field-row>.ref-field-unit{grid-column:auto}.ref-field-row label:last-child{grid-column:1/-1}.reference-settings-inner{padding:15px}}
 
 /* LabInsight report actions, limited-information summary and A4 print view */
 .print-only{display:none}
