@@ -12,7 +12,7 @@ function load() {
 }
 const report = { ast: 28, glucose: 95, hba1c: 5.4, age: 52, gender: "male",
   referenceRanges: { ast: { min: 0, max: 40, unit: "U/L" },
-    glucose: { min: 70, max: 100, unit: "mmol/L" } } };
+    glucose: { min: 70, max: 100, unit: "mg/dL" } } };
 const make = (api, date, lab, values=report) =>
   api.createRecord(values, date, lab, "<img src=x onerror=alert(1)>", true, "2026-10-16");
 
@@ -21,7 +21,7 @@ test("CarePath records only supported numeric analytes; no age, name or gender d
   assert.equal(r.values.ast.value, 28);
   assert.equal(r.values.ast.unit, "U/L");
   assert.equal(r.values.ast.range.min, 0);
-  assert.equal(r.values.glucose.range, null, "mismatched reference interval is not trusted");
+  assert.equal(r.values.glucose.range.min, 70);
   assert.equal(r.values.age, undefined);
   assert.equal(r.values.gender, undefined);
   assert.equal(r.date, "2024-08-01");
@@ -93,4 +93,40 @@ test("CarePath source contains no remote health APIs, fetches or persistent loca
   assert.match(code,/sessionStorage/);
   assert.match(code,/textContent/);
   assert.doesNotMatch(code,/innerHTML/);
+});
+
+test("source unit conflicts block the whole import instead of relabeling the number", () => {
+  const a = load();
+  assert.throws(() => make(a, "2024-01-01", "A", {
+    ast: 23, glucose: 5.2, referenceRanges: { glucose: { min: 4, max: 6, unit: "mmol/L" } }
+  }), /공복혈당.*단위/);
+  const aliases = make(a, "2024-01-01", "A", { platelet: 250,
+    referenceRanges: { platelet: { min: 150, max: 400, unit: "x10^3/uL" } } });
+  assert.equal(aliases.values.platelet.range.min, 150);
+});
+
+test("missing reference ranges always flag uncertainty, even when every range is missing", () => {
+  const a = load();
+  const first = make(a, "2024-01-01", "A", { ast: 20 });
+  const last = make(a, "2025-01-01", "A", { ast: 30 });
+  assert.equal(a.compare([first, last], "ast").rangesDiffer, true);
+  assert.equal(a.compare([make(a, "2024-01-01", "A"), make(a, "2025-01-01", "A")], "ast").rangesDiffer, false);
+});
+
+test("same-day records retain their values but do not imply a chronological trend", () => {
+  const a = load();
+  const result = a.compare([make(a, "2024-01-01", "Z", { ast: 20 }),
+    make(a, "2024-01-01", "A", { ast: 30 })], "ast");
+  assert.equal(result.status, "ambiguous-dates");
+  assert.equal(result.entries.length, 2);
+  assert.equal(result.difference, undefined);
+});
+
+test("restored records reject nondecimal strings and empty institutions", () => {
+  const a = load(), record = make(a, "2024-01-01", "A", { ast: 20 });
+  for (const value of ["0x20", "0b10", "1e2", true, [], {}, "", -1, Infinity]) {
+    assert.equal(a.normalizedRecords([{ ...record, values: { ast: {value, unit: "U/L"} } }]).length, 0);
+  }
+  assert.equal(a.normalizedRecords([{ ...record, laboratory: " ", id: record.date + "| " }]).length, 0);
+  assert.equal(make(a, "2024-01-01", "A", { ast: "23.5" }).values.ast.value, 23.5);
 });

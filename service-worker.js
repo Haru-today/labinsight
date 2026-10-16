@@ -3,7 +3,7 @@
 // Cache only known, public app-shell files. Never runtime-cache arbitrary requests,
 // query strings or cross-origin resources (including third-party OCR assets).
 const CACHE_PREFIX = "labinsight-app-";
-const CACHE_NAME = "labinsight-app-v20261016-carepath";
+const CACHE_NAME = "labinsight-app-v20261016-carepath-validation";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -11,8 +11,8 @@ const APP_SHELL = [
   "./report.html",
   "./hospitals.html",
   "./carepath.html",
-  "./carepath.js?v=carepath-20261016",
-  "./carepath-data.js?v=carepath-20261016",
+  "./carepath.js?v=carepath-validation-20261016",
+  "./carepath-data.js?v=carepath-validation-20261016",
   "./styles.css?v=carepath-20261016",
   "./hospital-data.js?v=real-packages-20260729a",
   "./app.js?v=carepath-20261016",
