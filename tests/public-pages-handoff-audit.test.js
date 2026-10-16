@@ -1,6 +1,8 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 
 const BASE = "https://haru-today.github.io";
 const WORKER = "https://labdam-free-approval.jleegenomics.workers.dev";
@@ -30,6 +32,12 @@ function fakeFetch(overrides = {}) {
       { status: 200 }
     );
     if (target.pathname.startsWith("/caffeine-atlas/")) return new Response("", { status: 200 });
+    if (target.pathname === "/labinsight/legacy-data-cleanup.html") {
+      return new Response(fs.readFileSync(path.join(__dirname, "../docs/legacy-data-cleanup.html"), "utf8"), { status: 200 });
+    }
+    if (target.pathname === "/labinsight/legacy-data-cleanup.js") {
+      return new Response(fs.readFileSync(path.join(__dirname, "../docs/legacy-data-cleanup.js"), "utf8"), { status: 200 });
+    }
     if (target.pathname === "/labinsight/service-worker.js") return new Response(
       'names.filter(name => name.startsWith("labinsight-app-")); self.registration.unregister();', { status: 200 });
     if (["/", "/index.html", "/checkup.html", "/report.html", "/hospitals.html", "/account.html"]
@@ -71,6 +79,24 @@ test("CarePath remains unavailable on old public Pages and protected on the Work
   assert.equal(exposed.passed, false);
   assert.equal(exposed.results.filter(x => !x.pass).length, 3);
   assert.doesNotMatch(JSON.stringify(exposed), /glucose|public data logic|unprotected/);
+});
+
+test("published opt-in cleanup has no implicit deletion, remote calls or broad storage API", async () => {
+  const { CHECKS, inspectAnonymous } = await load();
+  const cleanup = CHECKS.filter(item => item.kind.startsWith("legacy-cleanup-"));
+  assert.equal(cleanup.length, 2);
+  const ok = await inspectAnonymous(fakeFetch());
+  assert.equal(ok.passed, true, JSON.stringify(ok.results.filter(item => !item.pass)));
+
+  const unsafe = await inspectAnonymous(fakeFetch({
+    [BASE + "/labinsight/legacy-data-cleanup.js"]:
+      new Response("window.confirm('삭제?'); localStorage.clear(); fetch('/upload')", { status: 200 }),
+    [BASE + "/labinsight/legacy-data-cleanup.html"]:
+      new Response('<form><input name="glucose"><script>localStorage.clear()</script></form>', { status: 200 })
+  }));
+  assert.equal(unsafe.passed, false);
+  assert.equal(unsafe.results.filter(x => !x.pass && x.kind.startsWith("legacy-cleanup-")).length, 2);
+  assert.doesNotMatch(JSON.stringify(unsafe), /glucose|localStorage.clear|upload/);
 });
 
 test("stale publicly served app.js is a security failure despite a healthy login Worker", async () => {
