@@ -13,7 +13,7 @@
     ["creatinine", "크레아티닌", "mg/dL"], ["egfr", "eGFR", "mL/min/1.73㎡"],
     ["uricAcid", "요산", "mg/dL"], ["hemoglobin", "혈색소", "g/dL"],
     ["wbc", "백혈구", "/µL"], ["platelet", "혈소판", "×10³/µL"]
-  ].map(([id, label, unit]) => Object.freeze({ id, label, unit }))));
+  ].map(([id, label, unit]) => Object.freeze({ id, label, unit })));
   const itemById = Object.fromEntries(ITEMS.map(item => [item.id, item]));
   function asNumber(v) {
     if (typeof v !== "number" && (typeof v !== "string" || !v.trim())) return null;
