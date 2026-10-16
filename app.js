@@ -483,6 +483,8 @@
     byId("emptySampleBtn")?.addEventListener("click", showSampleReport);
     const showSampleInputs = () => {
       fillForm(sampleData);
+      const healthForm = byId("healthForm");
+      if (healthForm) healthForm.dataset.sample = "true";
       updateBmiPreview();
       updateInputProgress();
       byId("labFields")?.scrollIntoView({ block: "start" });
@@ -526,6 +528,7 @@
     updateInputProgress();
     byId("clearBtn")?.addEventListener("click", () => {
       form?.reset();
+      if (form) delete form.dataset.sample;
       form?.querySelectorAll('[aria-invalid="true"]').forEach(field => field.removeAttribute("aria-invalid"));
       setStatus("formStatus", "");
       restoreReferenceRangeFields();
@@ -547,6 +550,7 @@
         return;
       }
       data.referenceRanges = parsedRanges.saved;
+      data.provenance = form.dataset.sample === "true" ? "sample" : "manual";
       if (!hasReportableValues(data)) {
         setStatus("formStatus", "검사값, 혈압(수축기·이완기), 키·몸무게 중 한 가지 이상을 입력한 뒤 리포트를 생성하세요.");
         return;
@@ -584,7 +588,9 @@
   function deleteSavedReport() {
     let succeeded = true;
     for (const storage of [sessionStorage, localStorage]) {
-      try { storage.removeItem(reportStorageKey); } catch (_) { succeeded = false; }
+      for (const key of [reportStorageKey, "labinsight-carepath-session-v1"]) {
+        try { storage.removeItem(key); } catch (_) { succeeded = false; }
+      }
     }
     return succeeded;
   }
@@ -614,6 +620,8 @@
     const saved = readSavedReport();
     if (byId("healthForm") && saved) {
       fillForm(saved);
+      const healthForm = byId("healthForm");
+      if (healthForm) healthForm.dataset.sample = saved.provenance === "sample" ? "true" : "false";
       updateBmiPreview();
       updateInputProgress();
     }
@@ -736,6 +744,7 @@
             <p class="report-actions-desc">${sampleView ? "가상 예시를 보고 있습니다. 내 검사 결과를 보려면 위의 돌아가기 버튼을 이용하세요." : "검진 결과는 현재 브라우저 탭의 임시 저장소에 보관됩니다. 다른 사용자와 기기를 공유한다면 사용 후 삭제하세요. 브라우저의 세션 복원 기능 때문에 탭을 닫아도 데이터가 남을 수 있습니다."}</p>
           </div>
           <div class="report-actions-buttons">
+            ${sampleView ? "" : '<a class="button secondary" href="./carepath.html">CarePath 연도별 비교</a>'}
             <button class="button secondary" id="printHealthReportBtn" type="button">인쇄 · PDF 저장</button>
             ${sampleView ? "" : '<button class="button ghost" id="deleteHealthReportBtn" type="button">이 탭의 검사 결과 삭제</button>'}
           </div>
@@ -820,12 +829,12 @@
     `;
     byId("printHealthReportBtn")?.addEventListener("click", () => window.print());
     byId("deleteHealthReportBtn")?.addEventListener("click", () => {
-      if (!window.confirm("저장된 건강검진 결과와 검사기관 참고치를 이 기기의 LabInsight 저장소에서 삭제할까요? 이미 내려받은 PDF 파일은 별도로 삭제해야 합니다.")) return;
+      if (!window.confirm("최신 검사 결과와 CarePath 연도별 기록을 이 기기의 LabInsight 임시 저장소에서 모두 삭제할까요? 이미 내려받은 PDF 파일은 별도로 삭제해야 합니다.")) return;
       if (!deleteSavedReport()) {
         setStatus("reportActionStatus", "일부 저장소에서 삭제하지 못했습니다. 브라우저의 사이트 데이터 삭제 기능을 확인하세요.");
         return;
       }
-      report.innerHTML = '<div class="empty-report"><h2>저장된 건강검진 결과를 삭제했습니다.</h2><p>이 브라우저의 LabInsight 리포트 저장 영역을 비웠습니다. 이미 인쇄하거나 다운로드한 파일은 별도로 삭제해야 합니다.</p><a class="button primary" href="./checkup.html">새 검사결과 입력하기</a></div>';
+      report.innerHTML = '<div class="empty-report"><h2>저장된 검사 결과와 CarePath 기록을 삭제했습니다.</h2><p>이 브라우저의 LabInsight 임시 건강정보 저장 영역을 비웠습니다. 이미 인쇄하거나 다운로드한 파일은 별도로 삭제해야 합니다.</p><a class="button primary" href="./checkup.html">새 검사결과 입력하기</a></div>';
     });
     const onlyEnteredBtn = byId("reportEnteredOnlyBtn");
     onlyEnteredBtn?.addEventListener("click", () => {
