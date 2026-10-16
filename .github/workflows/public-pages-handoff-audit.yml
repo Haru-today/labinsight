@@ -2,6 +2,10 @@ name: LabInsight public Pages handoff audit (anonymous)
 
 on:
   workflow_dispatch:
+  # One low-volume anonymous GET audit daily (08:17 Asia/Seoul).
+  # Schedule is best effort; this job never deploys or reads user health data.
+  schedule:
+    - cron: '17 23 * * *'
   push:
     branches: [main]
     paths:
