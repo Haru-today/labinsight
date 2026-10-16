@@ -41,6 +41,8 @@
     },
     "files": [
       "app.js",
+      "carepath.js",
+      "carepath-data.js",
       "ocr-review.js",
       "reference-ranges.js",
       "hospital-data.js",
@@ -48,6 +50,7 @@
       "checkup.html",
       "report.html",
       "hospitals.html",
+      "carepath.html",
       "styles.css",
       "manifest.webmanifest",
       "service-worker.js",
