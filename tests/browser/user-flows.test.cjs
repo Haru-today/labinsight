@@ -338,6 +338,7 @@ for (const mobile of [false, true]) {
     await page.goto(baseUrl + "/index.html");
     assert.equal(await page.locator("#resumeReport").isVisible(), true);
     await page.getByRole("link", { name: "내 리포트 이어보기", exact: true }).click();
+    await page.waitForURL(/\/report\.html$/, { waitUntil: "load" });
     assert.match(await page.locator("#report").innerText(), /AST/);
     await page.goto(baseUrl + "/index.html");
     await page.locator("#heroSampleBtn").click();
@@ -348,7 +349,10 @@ for (const mobile of [false, true]) {
     await page.reload();
     assert.equal(await page.locator(".sample-report-notice").isVisible(), true);
     await page.getByRole("link", { name: "내 결과 화면으로 돌아가기", exact: true }).click();
+    await page.waitForURL(/\/report\.html$/, { waitUntil: "load" });
     await page.getByRole("link", { name: "입력값 수정하기", exact: true }).click();
+    // Restoration runs on DOMContentLoaded; a visible input may still be empty before it.
+    await page.waitForURL(/\/checkup\.html$/, { waitUntil: "load" });
     assert.equal(await page.locator("#ast").inputValue(), "45");
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     assert.deepEqual(errors, []);
