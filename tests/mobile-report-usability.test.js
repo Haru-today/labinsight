@@ -13,7 +13,8 @@ test("input links directly to original laboratory reference-range editor", () =>
   assert.match(input, /id="openReferenceSettingsBtn" aria-controls="referenceSettings"/);
   assert.match(input, /id="referenceCoverageStatus"/);
   assert.match(app, /function updateInputProgress\(\)/);
-  assert.match(app, /normalizeInterval\(\{ min: low, max: high \}\)/);
+  assert.match(app, /normalizeInterval\(\{ min: low, max: high, unit \}, item\.unit\)/);
+  assert.match(app, /id \+ 'RefUnit'/);
   assert.match(app, /settings\.open = true/);
   assert.match(app, /settings\.scrollIntoView/);
 });
