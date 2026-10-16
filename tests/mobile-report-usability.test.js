@@ -41,8 +41,8 @@ test("mobile card layout does not compromise screen-reader or PDF table", () => 
   assert.match(css, /content:attr\(data-label\)/);
   assert.match(css, /@media print/);
   assert.match(css, /tr\[data-lab-item\]\[hidden\]\s*\{display:table-row!important\}/);
-  assert.match(report, /report-resume-20261016/);
-  assert.match(input, /report-resume-20261016/);
+  assert.match(report, /carepath-20261016/);
+  assert.match(input, /carepath-20261016/);
   assert.match(worker, /labinsight-app-v20261016-report-resume/);
 });
 
