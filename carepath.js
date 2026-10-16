@@ -176,7 +176,7 @@
     const links = $("navLinks"), toggle = $("navToggle");
     const opening = toggle.getAttribute("aria-expanded") !== "true";
     toggle.setAttribute("aria-expanded", String(opening));
-    links?.classList.toggle("is-open", opening);
+    links?.classList.toggle("open", opening);
   });
   render();
 })();
