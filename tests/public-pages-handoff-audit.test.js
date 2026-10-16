@@ -16,10 +16,10 @@ function fakeFetch(overrides = {}) {
     const target = new URL(url);
     if (target.origin === WORKER) {
       if (target.pathname === "/login.html") return new Response("", { status: 200 });
-      if (target.pathname === "/labinsight/") return new Response(null, { status: 303,
+      if (["/labinsight/", "/labinsight/carepath.html"].includes(target.pathname)) return new Response(null, { status: 303,
         headers: { Location: WORKER + "/login.html?next=%2Flabinsight%2F", "Cache-Control": "private, no-store" }
       });
-      if (target.pathname === "/labinsight/app.js") return new Response("", { status: 401,
+      if (["/labinsight/app.js", "/labinsight/carepath.js", "/labinsight/carepath-data.js"].includes(target.pathname)) return new Response("", { status: 401,
         headers: { "Cache-Control": "no-store" }
       });
       throw Error("Unexpected protected path");
@@ -51,6 +51,26 @@ test("all anonymous read-only cases pass when Pages serves handoffs and the Work
   assert.equal(r.passed, true, JSON.stringify(r.results.filter(x => !x.pass)));
   assert.ok(r.results.some(x => x.path === "/labinsight/app.js" && x.origin === "pages"));
   assert.ok(r.results.some(x => x.path === "/labinsight/app.js" && x.origin === "worker"));
+});
+
+test("CarePath remains unavailable on old public Pages and protected on the Worker", async () => {
+  const { CHECKS, inspectAnonymous } = await load();
+  const pages = CHECKS.filter(x => x.kind === "missing-carepath");
+  const worker = CHECKS.filter(x => x.origin === WORKER && x.path.startsWith("/labinsight/carepath"));
+  assert.deepEqual(pages.map(x => x.path), [
+    "/labinsight/carepath.html", "/labinsight/carepath.js", "/labinsight/carepath-data.js"
+  ]);
+  assert.deepEqual(worker.map(x => x.expected), [303, 401, 401]);
+  const baseline = await inspectAnonymous(fakeFetch());
+  assert.equal(baseline.passed, true);
+  const exposed = await inspectAnonymous(fakeFetch({
+    [BASE + "/labinsight/carepath.html"]: new Response('<form><input name="glucose"></form>', { status: 200 }),
+    [BASE + "/labinsight/carepath-data.js"]: new Response("public data logic", { status: 200 }),
+    [WORKER + "/labinsight/carepath.js"]: new Response("unprotected", { status: 200 })
+  }));
+  assert.equal(exposed.passed, false);
+  assert.equal(exposed.results.filter(x => !x.pass).length, 3);
+  assert.doesNotMatch(JSON.stringify(exposed), /glucose|public data logic|unprotected/);
 });
 
 test("stale publicly served app.js is a security failure despite a healthy login Worker", async () => {

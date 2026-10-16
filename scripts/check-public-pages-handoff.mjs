@@ -24,6 +24,16 @@ const OLD_APP_ASSETS = [
   "/labinsight/styles.css",
   "/labinsight/manifest.webmanifest"
 ];
+const CAREPATH_PUBLIC_MISSING = [
+  "/labinsight/carepath.html",
+  "/labinsight/carepath.js",
+  "/labinsight/carepath-data.js"
+];
+const CAREPATH_WORKER_GATES = [
+  { path: "/labinsight/carepath.html", kind: "private-redirect", expected: 303 },
+  { path: "/labinsight/carepath.js", kind: "private-asset", expected: 401 },
+  { path: "/labinsight/carepath-data.js", kind: "private-asset", expected: 401 }
+];
 const CAFFEINE = [
   "/caffeine-atlas/",
   "/caffeine-atlas/caffeine-sensitivity-app/analyzer.html",
@@ -38,6 +48,10 @@ export const CHECKS = Object.freeze([
   ...OLD_APP_ASSETS.map(path => ({
     path, origin: PAGES, kind: "missing-app-asset", expected: 404
   })),
+  // The public /docs Pages source must not serve CarePath input forms or scripts.
+  ...CAREPATH_PUBLIC_MISSING.map(path => ({
+    path, origin: PAGES, kind: "missing-carepath", expected: 404
+  })),
   { path: "/labinsight/service-worker.js", origin: PAGES, kind: "retire-sw", expected: 200 },
   { path: "/", origin: PAGES, kind: "public-brand", expected: 200 },
   ...CAFFEINE.map(path => ({
@@ -45,7 +59,10 @@ export const CHECKS = Object.freeze([
   })),
   { path: "/login.html", origin: PRIVATE, kind: "public-login", expected: 200 },
   { path: "/labinsight/", origin: PRIVATE, kind: "private-redirect", expected: 303 },
-  { path: "/labinsight/app.js", origin: PRIVATE, kind: "private-asset", expected: 401 }
+  { path: "/labinsight/app.js", origin: PRIVATE, kind: "private-asset", expected: 401 },
+  ...CAREPATH_WORKER_GATES.map(({ path, kind, expected }) => ({
+    path, origin: PRIVATE, kind, expected
+  }))
 ]);
 
 export async function inspectAnonymous(fetchImpl = fetch) {
