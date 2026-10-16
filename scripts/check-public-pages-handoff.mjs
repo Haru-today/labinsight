@@ -100,7 +100,7 @@ export async function inspectAnonymous(fetchImpl = fetch) {
           html.includes('href="https://labdam-free-approval.jleegenomics.workers.dev/labinsight/"') &&
           html.includes('href="https://haru-today.github.io/caffeine-atlas/"') &&
           !/http-equiv=["']refresh["']/i.test(html) &&
-          !/<(?:input|form)\\b/i.test(html);
+          !/<(?:input|form)\b/i.test(html);
         if (!pass) reason = "cleanup-consent-ui-not-present";
       } else if (pass && check.kind === "legacy-cleanup-script") {
         const js = await response.text();
@@ -109,7 +109,7 @@ export async function inspectAnonymous(fetchImpl = fetch) {
           js.includes('registration.scope === retiredScope') &&
           js.includes('"labinsight-latest-report"') &&
           js.includes('"labinsight-carepath-session-v1"') &&
-          !/(?:fetch\\s*\\(|XMLHttpRequest|sendBeacon|\\.clear\\s*\\(|\\.setItem\\s*\\()/i.test(js);
+          !/(?:fetch\s*\(|XMLHttpRequest|sendBeacon|\.clear\s*\(|\.setItem\s*\()/i.test(js);
         if (!pass) reason = "cleanup-script-scope-regression";
       } else if (pass && check.kind === "retire-sw") {
         const js = await response.text();
