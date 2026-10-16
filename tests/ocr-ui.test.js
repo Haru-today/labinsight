@@ -13,10 +13,11 @@ function buildHarness(text, previousValue = "") {
     applyOcrBtn: { disabled: true },
     ocrReview: {
       hidden: true, innerHTML: "", textContent: "",
-      selected: [], values: [],
+      selected: [], values: [], unitConfirmations: [],
       querySelectorAll(selector) { return selector === "[data-ocr-select]:checked" ? this.selected : []; },
       querySelector(selector) {
         const index = Number(selector.match(/\d+/)?.[0]);
+        if (selector.startsWith("[data-ocr-unit-confirm")) return this.unitConfirmations[index] || null;
         return this.values[index] || null;
       }
     }
@@ -89,4 +90,30 @@ test("OCR row with unlabeled numeric columns never appears as an application can
   assert.equal(fields.applyOcrBtn.disabled, true);
   assert.equal(fields.ast.value, "");
   assert.match(fields.ocrStatus.textContent, /인식된 검사 후보가 없습니다/);
+});
+
+test("unknown OCR units require a separate explicit original-unit confirmation", () => {
+  const { actions, fields } = buildHarness("AST 27");
+  actions.reviewOcrText();
+  assert.match(fields.ocrReview.innerHTML, /data-ocr-unit-confirm="0"/);
+  assert.match(fields.ocrReview.innerHTML, /원본 결과지에서 U\/L 단위를 직접 확인/);
+  fields.ocrReview.selected = [{ dataset: { ocrSelect: "0" } }];
+  fields.ocrReview.values = [{ value: "27" }];
+  actions.applyReviewedOcr();
+  assert.equal(fields.ast.value, "");
+  assert.match(fields.ocrStatus.textContent, /단위 미확인/);
+  fields.ocrReview.unitConfirmations = [{ checked: true }];
+  actions.applyReviewedOcr();
+  assert.equal(fields.ast.value, "27");
+});
+
+test("a mismatched OCR unit remains blocked even if unit confirmation is forged", () => {
+  const { actions, fields } = buildHarness("AST 27 mg/dL");
+  actions.reviewOcrText();
+  assert.match(fields.ocrReview.innerHTML, /disabled/);
+  fields.ocrReview.selected = [{ dataset: { ocrSelect: "0" } }];
+  fields.ocrReview.values = [{ value: "27" }];
+  fields.ocrReview.unitConfirmations = [{ checked: true }];
+  actions.applyReviewedOcr();
+  assert.equal(fields.ast.value, "");
 });
