@@ -13,7 +13,9 @@ test("input links directly to original laboratory reference-range editor", () =>
   assert.match(input, /id="openReferenceSettingsBtn" aria-controls="referenceSettings"/);
   assert.match(input, /id="referenceCoverageStatus"/);
   assert.match(app, /function updateInputProgress\(\)/);
-  assert.match(app, /normalizeInterval\(\{ min: low, max: high \}\)/);
+  assert.match(app, /normalizeInterval\(\{ min: low, max: high, unit \}, item\.unit\)/);
+  assert.match(app, /id \+ 'RefUnit/);
+  assert.match(app, /requireUnit: true/);
   assert.match(app, /settings\.open = true/);
   assert.match(app, /settings\.scrollIntoView/);
 });
@@ -39,9 +41,9 @@ test("mobile card layout does not compromise screen-reader or PDF table", () => 
   assert.match(css, /content:attr\(data-label\)/);
   assert.match(css, /@media print/);
   assert.match(css, /tr\[data-lab-item\]\[hidden\]\s*\{display:table-row!important\}/);
-  assert.match(report, /report-mobile-20261014/);
-  assert.match(input, /report-mobile-20261014/);
-  assert.match(worker, /labinsight-app-v20261014-mobile-report/);
+  assert.match(report, /labverify-units-20261016/);
+  assert.match(input, /labverify-units-20261016/);
+  assert.match(worker, /labinsight-app-v20261016-labverify-units/);
 });
 
 test("guidance is scoped to original result sheet and past publicly listed hospitals", () => {
