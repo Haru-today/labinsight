@@ -17,7 +17,7 @@ const route = {
 test("Pages publication contains only approval handoff documents, not legacy health app", () => {
   assert.deepEqual(fs.readdirSync(docs).sort(), [
     ".nojekyll", "404.html", "account.html", "checkup.html", "hospitals.html",
-    "index.html", "report.html", "service-worker.js"
+    "index.html", "legacy-data-cleanup.html", "legacy-data-cleanup.js", "report.html", "service-worker.js"
   ]);
   for(const privateAsset of [
     "app.js","ocr-review.js","reference-ranges.js","hospital-data.js",
@@ -37,6 +37,7 @@ test("all old document routes hand off to approved Worker, never to public Pages
     assert.ok(html.includes('http-equiv="refresh" content="8;url='+privateOrigin+tail+'"'),file);
     assert.ok(html.includes('href="'+privateOrigin+tail+'"'),file);
     assert.match(html,/브라우저 임시 데이터는 새 주소로 자동 이전되지 않습니다/);
+    assert.match(html, /href="\.\/legacy-data-cleanup\.html"/);
     assert.match(html,/https:\/\/haru-today\.github\.io\/caffeine-atlas\//);
     assert.doesNotMatch(html,/<(input|form|script)\b|<link[^>]+(?:app\.js|styles\.css)/i);
   }
