@@ -52,6 +52,9 @@ export const CHECKS = Object.freeze([
   ...CAREPATH_PUBLIC_MISSING.map(path => ({
     path, origin: PAGES, kind: "missing-carepath", expected: 404
   })),
+  // Published opt-in cleanup is a consent-only page, not another health form.
+  { path: "/labinsight/legacy-data-cleanup.html", origin: PAGES, kind: "legacy-cleanup-page", expected: 200 },
+  { path: "/labinsight/legacy-data-cleanup.js", origin: PAGES, kind: "legacy-cleanup-script", expected: 200 },
   { path: "/labinsight/service-worker.js", origin: PAGES, kind: "retire-sw", expected: 200 },
   { path: "/", origin: PAGES, kind: "public-brand", expected: 200 },
   ...CAFFEINE.map(path => ({
@@ -88,6 +91,26 @@ export async function inspectAnonymous(fetchImpl = fetch) {
           html.includes('noindex,nofollow') &&
           !/<(?:script|form|input)\b/i.test(html);
         if (!pass) reason = "legacy-health-app-or-missing-handoff";
+      } else if (pass && check.kind === "legacy-cleanup-page") {
+        const html = await response.text();
+        pass = html.includes('id="clearOldLabInsight"') &&
+          html.includes('id="cleanupStatus"') &&
+          html.includes('src="./legacy-data-cleanup.js"') &&
+          html.includes('noindex,nofollow') &&
+          html.includes('href="https://labdam-free-approval.jleegenomics.workers.dev/labinsight/"') &&
+          html.includes('href="https://haru-today.github.io/caffeine-atlas/"') &&
+          !/http-equiv=["']refresh["']/i.test(html) &&
+          !/<(?:input|form)\\b/i.test(html);
+        if (!pass) reason = "cleanup-consent-ui-not-present";
+      } else if (pass && check.kind === "legacy-cleanup-script") {
+        const js = await response.text();
+        pass = js.includes('window.confirm(') &&
+          js.includes('startsWith("labinsight-app-")') &&
+          js.includes('registration.scope === retiredScope') &&
+          js.includes('"labinsight-latest-report"') &&
+          js.includes('"labinsight-carepath-session-v1"') &&
+          !/(?:fetch\\s*\\(|XMLHttpRequest|sendBeacon|\\.clear\\s*\\(|\\.setItem\\s*\\()/i.test(js);
+        if (!pass) reason = "cleanup-script-scope-regression";
       } else if (pass && check.kind === "retire-sw") {
         const js = await response.text();
         pass = js.includes('startsWith("labinsight-app-")') &&
@@ -109,7 +132,7 @@ export async function inspectAnonymous(fetchImpl = fetch) {
         pass = /no-store/i.test(response.headers.get("Cache-Control") || "");
         if (!pass) reason = "worker-private-cache-policy";
       }
-      if (!["handoff", "retire-sw", "public-brand"].includes(check.kind)) {
+      if (!["handoff", "retire-sw", "public-brand", "legacy-cleanup-page", "legacy-cleanup-script"].includes(check.kind)) {
         try { await response.body?.cancel(); } catch (_) { /* response may lack a body */ }
       }
       if (pass) reason = "ok";
