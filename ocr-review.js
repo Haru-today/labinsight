@@ -72,11 +72,14 @@
       // A single row can repeat the SAME analyte (e.g. "AST 26 U/L AST 90 U/L").
       // The prior one-hit-per-spec lookup missed this ambiguous OCR layout.
       // Keep it visible for review but never eligible for automatic form application.
+      const tail = line.slice(hit.end);
+      // "(GOT)" and "(GPT)" immediately after AST/ALT are label synonyms,
+      // not a second measurement. They are already accepted by valueMatch.
+      const afterAlias = tail.replace(/^\s*\((?:GOT|GPT)\)\s*/i, "");
       const repeatedInRow = Boolean(
         matchAlias(line.slice(0, hit.position), spec) ||
-        matchAlias(line.slice(hit.end), spec)
+        matchAlias(afterAlias, spec)
       );
-      const tail = line.slice(hit.end);
       // Require a number immediately after the analyte label (or a short, harmless separator).
       // Never cross a newline to find a value or confuse a range in the next row.
       const valueMatch = /^\s*(?:\((?:GOT|GPT)\)\s*)?[:：=|·-]?\s*(\d{1,7}(?:[.,]\d{1,3})?)(?![\d.,])/.exec(tail);
