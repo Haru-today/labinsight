@@ -15,8 +15,8 @@ const ROOT_DIR = __dirname;
  * Existing files in LABINSIGHT_DATA_DIR are NOT read, served or deleted here.
  */
 const PUBLIC_ASSETS = new Set([
-  "index.html", "checkup.html", "report.html", "hospitals.html",
-  "styles.css", "app.js", "hospital-data.js", "ocr-review.js",
+  "index.html", "checkup.html", "report.html", "hospitals.html", "carepath.html",
+  "styles.css", "app.js", "carepath.js", "carepath-data.js", "hospital-data.js", "ocr-review.js",
   "reference-ranges.js", "runtime-config.js", "service-worker.js",
   "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png",
   "icons/icon-512.png", "downloads/mac/LabInsight.command",
