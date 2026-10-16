@@ -17,14 +17,16 @@
   const itemById = Object.fromEntries(ITEMS.map(item => [item.id, item]));
   function asNumber(v) {
     if (typeof v !== "number" && (typeof v !== "string" || !v.trim())) return null;
-    if (typeof v === "boolean") return null;
+    // Reject JS-only forms such as hexadecimal and binary values in restored data.
+    if (typeof v === "string" && !/^\+?(?:\d+(?:\.\d*)?|\.\d+)$/.test(v.trim())) return null;
     const number = Number(v);
     return Number.isFinite(number) && number >= 0 && number <= 1e9 ? number : null;
   }
   function unitsEqual(a, b) {
     const normalize = s => String(s ?? "").trim().toLowerCase()
       .replace(/[µμ]/g, "u").replace(/㎡/g, "m2")
-      .replace(/²/g, "2").replace(/³/g, "3").replace(/\s/g, "");
+      .replace(/²/g, "2").replace(/³/g, "3").replace(/×/g, "x")
+      .replace(/\^/g, "").replace(/\s/g, "").replace(",", ".");
     return Boolean(a && b) && normalize(a) === normalize(b);
   }
   function localToday() {
@@ -53,6 +55,12 @@
       const value = asNumber(report[item.id]);
       if (value === null) continue;
       const rawRange = report.referenceRanges?.[item.id];
+      // A declared source-unit conflict must not become a canonical-unit value.
+      // Stop the import instead of silently omitting an analyte from the record.
+      if (rawRange?.unit != null && String(rawRange.unit).trim() &&
+          !unitsEqual(rawRange.unit, item.unit)) {
+        throw new Error(item.label + ": 원본 단위가 입력 단위(" + item.unit + ")와 다릅니다. 결과 입력에서 단위를 확인하세요. 기록은 추가하지 않았습니다.");
+      }
       const min = asNumber(rawRange?.min);
       const max = asNumber(rawRange?.max);
       const range = min !== null && max !== null && min <= max &&
@@ -67,7 +75,7 @@
     if (!Array.isArray(input)) return [];
     return input.slice(0, MAX_RECORDS).filter(r =>
       r && typeof r === "object" && validDate(r.date) &&
-      typeof r.laboratory === "string" && r.laboratory.length <= 60 &&
+      typeof r.laboratory === "string" && r.laboratory.trim().length > 0 && r.laboratory.length <= 60 &&
       r.id === r.date + "|" + r.laboratory && r.values && typeof r.values === "object" &&
       !Array.isArray(r.values) && Object.keys(r.values).some(id =>
         itemById[id] && asNumber(r.values[id]?.value) !== null &&
@@ -101,9 +109,14 @@
     if (entries.length < 2) return { status: "insufficient", entries };
     const first = entries[0], last = entries[entries.length - 1];
     if (!unitsEqual(first.unit, last.unit)) return { status: "unit-mismatch", entries };
+    // Same-day measurements from different labs have no known temporal order.
+    if (new Set(entries.map(e => e.date)).size !== entries.length) {
+      return { status: "ambiguous-dates", entries };
+    }
     return { status: "numeric-only", entries, difference: last.value - first.value,
       laboratoriesDiffer: new Set(entries.map(e => e.laboratory)).size > 1,
-      rangesDiffer: new Set(entries.map(e => e.range ? e.range.min + ":" + e.range.max : "?")).size > 1 };
+      rangesDiffer: entries.some(e => !e.range) ||
+        new Set(entries.map(e => e.range.min + ":" + e.range.max)).size > 1 };
   }
   function read(storage) {
     try {

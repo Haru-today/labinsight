@@ -338,6 +338,7 @@ for (const mobile of [false, true]) {
     await page.goto(baseUrl + "/index.html");
     assert.equal(await page.locator("#resumeReport").isVisible(), true);
     await page.getByRole("link", { name: "내 리포트 이어보기", exact: true }).click();
+    await page.waitForURL(/\/report\.html$/, { waitUntil: "load" });
     assert.match(await page.locator("#report").innerText(), /AST/);
     await page.goto(baseUrl + "/index.html");
     await page.locator("#heroSampleBtn").click();
@@ -348,7 +349,10 @@ for (const mobile of [false, true]) {
     await page.reload();
     assert.equal(await page.locator(".sample-report-notice").isVisible(), true);
     await page.getByRole("link", { name: "내 결과 화면으로 돌아가기", exact: true }).click();
+    await page.waitForURL(/\/report\.html$/, { waitUntil: "load" });
     await page.getByRole("link", { name: "입력값 수정하기", exact: true }).click();
+    // Restoration runs on DOMContentLoaded; a visible input may still be empty before it.
+    await page.waitForURL(/\/checkup\.html$/, { waitUntil: "load" });
     assert.equal(await page.locator("#ast").inputValue(), "45");
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     assert.deepEqual(errors, []);
@@ -424,4 +428,65 @@ test("LabInsight report deletion also clears CarePath temporary health history",
   assert.equal(await page.evaluate(() => sessionStorage.getItem("labinsight-latest-report")), null);
   assert.equal(await page.evaluate(() => sessionStorage.getItem("labinsight-carepath-session-v1")), null);
   assert.equal(errors.length,0,errors.join("; "));
+});
+
+test("CarePath rejects conflicting source units without writing partial history", async (t) => {
+  const { page, errors } = await openPage(t, "/carepath.html");
+  await page.evaluate(() => sessionStorage.setItem("labinsight-latest-report", JSON.stringify({
+    ast: 23, glucose: 5.2, referenceRanges: { glucose: { min: 4, max: 6, unit: "mmol/L" } }
+  })));
+  await page.locator("#carepathDate").fill("2024-01-01");
+  await page.locator("#carepathLab").fill("합성 검사기관");
+  await page.locator("#carepathConfirm").check();
+  await page.locator('#carepathForm button[type="submit"]').click();
+  assert.match(await page.locator("#carepathStatus").innerText(), /공복혈당.*단위/);
+  assert.equal(await page.evaluate(() => sessionStorage.getItem("labinsight-carepath-session-v1")), null);
+  assert.equal(await page.locator(".carepath-record").count(), 0);
+  assert.deepEqual(errors, []);
+});
+
+test("CarePath preserves source text and suspends same-day trends", async (t) => {
+  const { page, errors } = await openPage(t, "/carepath.html", { mobile: true });
+  await page.evaluate(() => {
+    const a = window.LABINSIGHT_CAREPATH;
+    a.write(sessionStorage, [
+      a.createRecord({ ast: 20 }, "2024-01-01", "A", "<img src=x onerror=alert(1)>", true),
+      a.createRecord({ ast: 30 }, "2024-01-01", "B", "", true)
+    ]);
+  });
+  await page.reload();
+  assert.match(await page.locator("#carepathComparison").innerText(), /시간 순서/);
+  assert.equal(await page.locator("#carepathValues tr").count(), 2);
+  assert.equal(await page.locator("#carepathChart svg").count(), 0);
+  assert.equal(await page.locator("#carepathRecords img").count(), 0);
+  assert.match(await page.locator("#carepathRecords").innerText(), /<img/);
+  assert.deepEqual(errors, []);
+});
+
+test("CarePath chart uses elapsed dates and warns when all reference ranges are unknown", async (t) => {
+  const { page, errors } = await openPage(t, "/carepath.html");
+  await page.evaluate(() => {
+    const a = window.LABINSIGHT_CAREPATH;
+    a.write(sessionStorage, ["2024-01-01", "2024-01-02", "2024-01-11"].map((date, i) =>
+      a.createRecord({ ast: 20 + i * 10 }, date, "합성 기관", "", true)));
+  });
+  await page.reload();
+  assert.match(await page.locator("#carepathComparison").innerText(), /참고범위.*확인되지/);
+  const xs = await page.locator("#carepathChart circle").evaluateAll(nodes => nodes.map(n => Number(n.getAttribute("cx"))));
+  assert.ok(Math.abs((xs[1] - xs[0]) / (xs[2] - xs[0]) - 0.1) < 0.001);
+  assert.deepEqual(errors, []);
+});
+
+test("CarePath still offers a memory-only demo when accessing sessionStorage throws", async (t) => {
+  const { page, errors } = await openPage(t, "/carepath.html");
+  await page.addInitScript(() => Object.defineProperty(window, "sessionStorage", {
+    get() { throw new DOMException("blocked", "SecurityError"); }
+  }));
+  await page.reload();
+  assert.match(await page.locator("#carepathStatus").innerText(), /저장소에 접근할 수 없습니다/);
+  await page.locator("#carepathDemo").click();
+  assert.equal(await page.locator(".carepath-record").count(), 3);
+  await page.locator("#carepathExitDemo").click();
+  assert.equal(await page.locator(".carepath-record").count(), 0);
+  assert.deepEqual(errors, []);
 });

@@ -19,6 +19,6 @@ jobs:
         with:
           node-version: '22'
       - name: Check application syntax
-        run: node --check app.js && node --check ocr-review.js && node --check reference-ranges.js
+        run: node --check app.js && node --check ocr-review.js && node --check reference-ranges.js && node --check carepath.js && node --check carepath-data.js
       - name: Run regression tests
         run: node --test tests/*.test.js

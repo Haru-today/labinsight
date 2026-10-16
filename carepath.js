@@ -24,7 +24,14 @@
     if (cls) element.className = cls;
     return element;
   }
-  function activeRecords() { return demo ? memoryDemo : api.read(sessionStorage); }
+  function activeRecords() {
+    if (demo) return memoryDemo;
+    try { return api.read(window.sessionStorage); }
+    catch (_) {
+      message("브라우저 임시 저장소에 접근할 수 없습니다. 기록을 읽거나 저장할 수 없으며 가상 예시는 이용할 수 있습니다.");
+      return [];
+    }
+  }
   function message(msg) { $("carepathStatus").textContent = msg; }
   function fmt(num) { return Number(num).toLocaleString("ko-KR", { maximumFractionDigits: 3 }); }
   function renderChart(entries, item) {
@@ -42,8 +49,10 @@
     let min = Math.min(...values), max = Math.max(...values);
     if (min === max) { const pad = Math.max(1, Math.abs(min) * .1); min -= pad; max += pad; }
     else { const pad = (max - min) * .2; min -= pad; max += pad; }
-    const point = (r, i) => ({
-      x: 58 + i * 525 / (entries.length - 1),
+    const start = Date.parse(entries[0].date + "T00:00:00Z");
+    const duration = Date.parse(entries[entries.length - 1].date + "T00:00:00Z") - start;
+    const point = r => ({
+      x: 58 + (Date.parse(r.date + "T00:00:00Z") - start) * 525 / duration,
       y: 205 - (r.value - min) / (max - min) * 150
     });
     const pts = entries.map(point);
@@ -74,6 +83,8 @@
     if (result.status !== "numeric-only") {
       $("carepathComparison").textContent = result.status === "unit-mismatch"
         ? "단위 불일치: 자동 환산이나 수치 비교를 하지 않습니다."
+        : result.status === "ambiguous-dates"
+        ? "같은 검사일의 기록이 여러 개 있어 시간 순서를 확인할 수 없습니다. 수치 차이와 추세 그래프를 보류하고 원본 기록을 표로 표시합니다."
         : "해당 검사 항목에 대한 기록을 2개 이상 추가하면 수치 차이를 확인할 수 있습니다.";
     } else {
       const direction = result.difference > 0 ? "증가" : result.difference < 0 ? "감소" : "변화 없음";
@@ -83,7 +94,11 @@
         (result.laboratoriesDiffer ? " 검사기관이 달라 비교에 주의가 필요합니다." : "") +
         (result.rangesDiffer ? " 검사기관 참고범위가 다르거나 확인되지 않은 기록이 있습니다." : "");
     }
-    renderChart(result.entries, item);
+    if (result.status === "ambiguous-dates" || result.status === "unit-mismatch") {
+      $("carepathChart").replaceChildren();
+    } else {
+      renderChart(result.entries, item);
+    }
     const tbody = $("carepathValues");
     tbody.replaceChildren();
     for (const e of result.entries) {
