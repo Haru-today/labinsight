@@ -70,3 +70,23 @@ test("recognized source is HTML escaped in review markup", () => {
   assert.doesNotMatch(fields.ocrReview.innerHTML, /<img src=x>/);
   assert.match(fields.ocrReview.innerHTML, /&lt;img src=x&gt;/);
 });
+
+test("same-row duplicate OCR is visibly disabled and is rejected even if selection is forged", () => {
+  const { actions, fields } = buildHarness("AST 26 U/L AST 90 U/L");
+  actions.reviewOcrText();
+  assert.match(fields.ocrReview.innerHTML, /data-ocr-select="0" disabled/);
+  assert.match(fields.ocrReview.innerHTML, /중복 인식/);
+  fields.ocrReview.selected = [{ dataset: { ocrSelect: "0" } }];
+  fields.ocrReview.values = [{ value: "26" }];
+  actions.applyReviewedOcr();
+  assert.equal(fields.ast.value, "");
+  assert.match(fields.ocrStatus.textContent, /0개 항목을 적용/);
+});
+
+test("OCR row with unlabeled numeric columns never appears as an application candidate", () => {
+  const { actions, fields } = buildHarness("AST 26 35 U/L");
+  actions.reviewOcrText();
+  assert.equal(fields.applyOcrBtn.disabled, true);
+  assert.equal(fields.ast.value, "");
+  assert.match(fields.ocrStatus.textContent, /인식된 검사 후보가 없습니다/);
+});
