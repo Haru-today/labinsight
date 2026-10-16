@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex,follow">
+  <meta name="description" content="검사값을 날짜별로 비교하는 CarePath 브라우저 임시 시제품. 의료 진단이 아닙니다.">
+  <title>CarePath 검사값 변화 비교 | LabInsight</title>
+  <link rel="stylesheet" href="./styles.css?v=carepath-20261016">
+  <script src="./carepath-data.js?v=carepath-20261016" defer></script>
+  <script src="./carepath.js?v=carepath-20261016" defer></script>
+</head>
+<body data-page="carepath">
+<a class="skip-link" href="#mainContent">본문으로 바로가기</a>
+<div class="utility-bar"><div><span class="ecosystem-context"><a href="https://haru-today.github.io/">LABDAM</a><span aria-hidden="true"> / </span><strong>LabInsight</strong></span><a class="utility-service-link" href="https://haru-today.github.io/caffeine-atlas/caffeine-sensitivity-app/analyzer.html">Caffeine Atlas 검사</a></div></div>
+<header class="site-header">
+  <nav class="nav" aria-label="주요 메뉴">
+    <a class="brand" href="./index.html" aria-label="LabInsight 홈"><span class="brand-mark" aria-hidden="true">L</span><span class="brand-copy"><strong>LabInsight</strong><small>LABDAM · 건강검진</small></span></a>
+    <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks"><span aria-hidden="true">☰</span><span class="sr-only">전체 메뉴</span></button>
+    <div class="nav-links" id="navLinks">
+      <a class="nav-portal" href="https://haru-today.github.io/">LABDAM 통합 포털</a>
+      <a href="./index.html">서비스 홈</a><a href="./checkup.html">결과 입력</a><a href="./report.html">결과 리포트</a>
+      <a class="is-current" aria-current="page" href="./carepath.html">CarePath</a><a href="./hospitals.html">병원 자료 비교</a>
+      <a class="nav-cta" href="./checkup.html">새 결과 입력</a>
+    </div>
+  </nav>
+</header>
+<main id="mainContent">
+<section class="page-masthead"><div class="section">
+  <p class="breadcrumb"><a href="./index.html">홈</a><span aria-hidden="true">/</span> CarePath</p>
+  <p class="eyebrow">CAREPATH · 1차 시제품</p>
+  <h1>검사 결과를 날짜별로 비교하세요.</h1>
+  <p>과거 검사값과 현재 검사값을 <strong>같은 항목·같은 단위</strong>로 나란히 확인합니다. 숫자의 증감은 건강 호전·악화나 질병 진단을 의미하지 않습니다.</p>
+</div></section>
+<section class="section page-content-section">
+  <div class="carepath-warning" role="note">
+    <strong>개인정보 보호 · 브라우저 탭에서만 임시 보관</strong>
+    <p>기록은 서버·Cloudflare D1·외부 API로 전송하지 않습니다. 이 탭의 sessionStorage에만 저장되며, 브라우저 세션 복원 시 남아 있을 수 있습니다. 다른 기기나 계정과 동기화되지 않으며 반드시 사용 후 삭제하세요. 공개·공용 기기에서는 실제 건강정보를 입력하지 마세요.</p>
+  </div>
+  <section class="report-card" aria-labelledby="carepathAddTitle">
+    <h2 id="carepathAddTitle">검사일별 기록 추가</h2>
+    <p>먼저 <a href="./checkup.html">검사 결과를 입력하고 리포트를 생성</a>하세요. 원본 검사결과지를 확인한 후 버튼을 누르면 그 리포트의 혈액검사 수치만 기록됩니다. 기존 기록을 자동으로 변경하지 않습니다.</p>
+    <form id="carepathForm" autocomplete="off">
+      <div class="carepath-form-grid">
+        <label>검사일 <input id="carepathDate" type="date" required min="1900-01-01"></label>
+        <label>검사기관 <input id="carepathLab" type="text" required maxlength="60" placeholder="원본 결과지에 기재된 기관"></label>
+      </div>
+      <label>진료 준비 메모 (선택, 200자 이내) <textarea id="carepathNote" maxlength="200" rows="2" placeholder="상담 시 질문하거나 생활 습관을 기록하세요."></textarea></label>
+      <label class="carepath-confirm"><input id="carepathConfirm" type="checkbox" required> 원본 결과지의 검사일·검사기관과 단위를 직접 확인했습니다. 가상 예시 데이터가 아닙니다.</label>
+      <div class="hero-actions">
+        <button class="button primary" type="submit">현재 리포트를 날짜별 기록에 추가</button>
+        <button class="button secondary" id="carepathDemo" type="button">가상 연도별 예시 체험</button>
+      </div>
+    </form>
+    <p id="carepathStatus" role="status" aria-live="polite"></p>
+  </section>
+  <section class="report-card" aria-labelledby="carepathHistoryTitle">
+    <div class="carepath-heading"><div><h2 id="carepathHistoryTitle">연도별 검사 기록</h2><p class="muted" id="carepathCount">저장된 기록 없음</p></div><button class="button ghost" type="button" id="carepathDeleteAll">CarePath 기록 모두 삭제</button></div>
+    <p id="carepathDemoNotice" class="notice" hidden>가상 연도별 예시입니다. 실제 건강검진 데이터가 아니며 브라우저 저장소에 저장되지 않습니다. <button class="button secondary" type="button" id="carepathExitDemo">내 기록으로 돌아가기</button></p>
+    <div id="carepathRecords" class="carepath-records" aria-live="polite"></div>
+  </section>
+  <section class="report-card" aria-labelledby="carepathTrendTitle">
+    <h2 id="carepathTrendTitle">검사 항목 변화</h2>
+    <label class="carepath-select-label" for="carepathItem">비교할 항목 <select id="carepathItem"></select></label>
+    <p id="carepathComparison" role="status" aria-live="polite">날짜가 다른 검사 기록이 두 개 이상 필요합니다.</p>
+    <div id="carepathChart" class="carepath-chart" aria-label="검사값 변화 그래프"></div>
+    <div class="table-scroll"><table class="carepath-table"><caption>날짜별 원본 검사 수치와 확인된 참고범위</caption><thead><tr><th>검사일</th><th>기관</th><th>결과</th><th>참고범위</th></tr></thead><tbody id="carepathValues"></tbody></table></div>
+    <p class="muted">검사기관·검사방법·참고범위가 다르면 단순한 수치 비교에 한계가 있습니다. 수치를 자동 환산하지 않으며 추세 그래프는 임상적 위험 점수가 아닙니다.</p>
+  </section>
+</section>
+</main>
+<footer class="footer"><div class="footer-brand"><strong>CarePath</strong><span>LABDAM · LabInsight</span></div><p>검사값 변화는 개인 참고용입니다. 진단·치료 및 재검 시점은 의료진과 상담하세요.</p><div class="footer-links"><a href="./index.html">서비스 홈</a><a href="./checkup.html">결과 입력</a><a href="./report.html">결과 리포트</a></div><div class="footer-policy-links"><a href="https://haru-today.github.io/privacy.html">개인정보 처리 안내</a> · <a href="https://haru-today.github.io/terms.html">서비스 이용 안내</a></div></footer>
+<nav class="app-tabbar" aria-label="앱 빠른 이동"><a href="./index.html"><span>홈</span></a><a href="./checkup.html"><span>입력</span></a><a href="./report.html"><span>리포트</span></a><a href="./carepath.html" class="is-current"><span>추이</span></a></nav>
+</body>
+</html>
