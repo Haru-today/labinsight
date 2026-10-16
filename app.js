@@ -335,6 +335,10 @@
           '><strong>' + escapeHtml(candidate.label) + '</strong></label>' +
           '<label class="ocr-candidate-value">검사값 <input type="number" min="0" step="any" data-ocr-value="' + index +
           '" value="' + candidate.value + '"' + (blocked ? ' disabled' : '') + '></label>' +
+          (candidate.status === "unit-unknown"
+            ? '<label class="ocr-unit-confirm"><input type="checkbox" data-ocr-unit-confirm="' + index +
+              '">원본 결과지에서 ' + escapeHtml(candidate.expectedUnit) + ' 단위를 직접 확인했습니다.</label>'
+            : '') +
           '<div class="ocr-candidate-meta"><span>인식 단위: ' + escapeHtml(unitLabel) +
           '</span><span>서비스 단위: ' + escapeHtml(candidate.expectedUnit) + '</span>' +
           '<small class="' + (blocked ? 'ocr-warning' : '') + '">' + warning + '</small>' +
@@ -363,6 +367,11 @@
         skipped += 1;
         continue;
       }
+      if (candidate.status === "unit-unknown" &&
+          !review.querySelector('[data-ocr-unit-confirm="' + index + '"]')?.checked) {
+        skipped += 1;
+        continue;
+      }
       const edited = review.querySelector('[data-ocr-value="' + index + '"]');
       const value = safeNumber(edited?.value);
       const target = byId(candidate.id);
@@ -376,7 +385,7 @@
       applied += 1;
     }
     setStatus("ocrStatus", applied + "개 항목을 적용했습니다. " +
-      (skipped ? skipped + "개는 잘못된 수치 또는 기존 입력값 보호로 제외했습니다. " : "") +
+      (skipped ? skipped + "개는 단위 미확인·잘못된 수치 또는 기존 입력값 보호로 제외했습니다. " : "") +
       "리포트를 생성하기 전에 원본 결과지와 모든 검사값을 다시 대조하세요.");
     updateInputProgress();
   }
