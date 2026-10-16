@@ -456,8 +456,7 @@
   function bindForm() {
     const form = byId("healthForm");
     const showSampleReport = () => {
-      if (saveReport(sampleData)) window.location.href = "./report.html";
-      else window.alert("브라우저의 임시 저장을 사용할 수 없습니다. 사이트 데이터 권한을 확인해주세요.");
+      window.location.href = "./report.html?view=sample";
     };
     byId("heroSampleBtn")?.addEventListener("click", showSampleReport);
     byId("emptySampleBtn")?.addEventListener("click", showSampleReport);
@@ -483,11 +482,31 @@
       settings.scrollIntoView({ block: "start" });
       settings.querySelector("summary")?.focus();
     });
+    // Native constraint validation runs before submit. Reveal collapsed fields
+    // synchronously so the browser can focus the first invalid control.
+    form?.addEventListener("invalid", (event) => {
+      const field = event.target;
+      let section = field.parentElement;
+      while (section && section !== form) {
+        if (section.tagName === "DETAILS") section.open = true;
+        section = section.parentElement;
+      }
+      field.setAttribute("aria-invalid", "true");
+      const first = form.querySelector("input:invalid, select:invalid, textarea:invalid");
+      const label = first?.labels?.[0]?.textContent.trim() || "입력값";
+      setStatus("formStatus", label + " 항목을 확인해 주세요. " + (first?.validationMessage || ""));
+    }, true);
+    form?.addEventListener("input", (event) => {
+      if (event.target.validity?.valid) event.target.removeAttribute("aria-invalid");
+      if (!form.querySelector(":invalid")) setStatus("formStatus", "");
+    });
     form?.addEventListener("input", updateInputProgress);
     form?.addEventListener("change", updateInputProgress);
     updateInputProgress();
     byId("clearBtn")?.addEventListener("click", () => {
       form?.reset();
+      form?.querySelectorAll('[aria-invalid="true"]').forEach(field => field.removeAttribute("aria-invalid"));
+      setStatus("formStatus", "");
       restoreReferenceRangeFields();
       deleteSavedReport();
       updateBmiPreview();
@@ -577,7 +596,12 @@
       updateBmiPreview();
       updateInputProgress();
     }
-    if (byId("report") && saved) renderReport(saved);
+    const resume = byId("resumeReport");
+    if (resume) resume.hidden = !saved;
+    if (byId("report")) {
+      if (new URLSearchParams(window.location.search).get("view") === "sample") renderReport(sampleData, true);
+      else if (saved) renderReport(saved);
+    }
   }
 
   function bindBmiPreview() {
@@ -650,7 +674,7 @@
     return { level: "caution", label: "확인 필요", points: 6 };
   }
 
-  function renderReport(data) {
+  function renderReport(data, sampleView = false) {
     const evaluation = window.LABINSIGHT_REFERENCES;
     const results = labItems.map((item) => {
       const value = safeNumber(data[item.id]);
@@ -684,14 +708,15 @@
     if (!report) return;
     report.innerHTML = `
       <div class="report-wrap">
+        ${sampleView ? '<section class="sample-report-notice" aria-label="가상 예시 안내"><strong>가상 예시 · 실제 검진 결과 아님</strong><p>화면 체험을 위한 예시입니다. 이 탭에 저장된 검사 결과는 변경되지 않습니다.</p><a class="button secondary no-print" href="./report.html">내 결과 화면으로 돌아가기</a></section>' : ""}
         <div class="report-actions no-print">
           <div>
             <p class="eyebrow">PERSONAL REFERENCE REPORT</p>
-            <p class="report-actions-desc">검진 결과는 현재 브라우저 탭의 임시 저장소에 보관됩니다. 다른 사용자와 기기를 공유한다면 사용 후 삭제하세요. 브라우저의 세션 복원 기능 때문에 탭을 닫아도 데이터가 남을 수 있습니다.</p>
+            <p class="report-actions-desc">${sampleView ? "가상 예시를 보고 있습니다. 내 검사 결과를 보려면 위의 돌아가기 버튼을 이용하세요." : "검진 결과는 현재 브라우저 탭의 임시 저장소에 보관됩니다. 다른 사용자와 기기를 공유한다면 사용 후 삭제하세요. 브라우저의 세션 복원 기능 때문에 탭을 닫아도 데이터가 남을 수 있습니다."}</p>
           </div>
           <div class="report-actions-buttons">
             <button class="button secondary" id="printHealthReportBtn" type="button">인쇄 · PDF 저장</button>
-            <button class="button ghost" id="deleteHealthReportBtn" type="button">이 탭의 검사 결과 삭제</button>
+            ${sampleView ? "" : '<button class="button ghost" id="deleteHealthReportBtn" type="button">이 탭의 검사 결과 삭제</button>'}
           </div>
           <p class="report-actions-status" id="reportActionStatus" role="status" aria-live="polite"></p>
         </div>
@@ -739,7 +764,7 @@
           </div>
           <div>
             <a class="button primary large" href="${compareUrl}">STEP 3 병원·가격 비교하기</a>
-            <a class="button ghost" href="./checkup.html">입력값 수정하기</a>
+            <a class="button ghost" href="./checkup.html">${sampleView ? "내 검사값 입력하기" : "입력값 수정하기"}</a>
           </div>
         </div>
         <div class="report-grid">

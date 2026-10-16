@@ -39,9 +39,9 @@ test("mobile card layout does not compromise screen-reader or PDF table", () => 
   assert.match(css, /content:attr\(data-label\)/);
   assert.match(css, /@media print/);
   assert.match(css, /tr\[data-lab-item\]\[hidden\]\s*\{display:table-row!important\}/);
-  assert.match(report, /report-mobile-20261014/);
-  assert.match(input, /report-mobile-20261014/);
-  assert.match(worker, /labinsight-app-v20261014-mobile-report/);
+  assert.match(report, /post-login-20261016/);
+  assert.match(input, /post-login-20261016/);
+  assert.match(worker, /labinsight-app-v20261016-post-login/);
 });
 
 test("guidance is scoped to original result sheet and past publicly listed hospitals", () => {

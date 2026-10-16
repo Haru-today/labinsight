@@ -49,6 +49,6 @@ test("layout supports mobile, a11y and existing temporary health data privacy", 
   assert.match(input, /role="status" aria-live="polite"/);
   assert.match(input, /href="https:\/\/haru-today\.github\.io\/privacy\.html"/);
   assert.match(landing, /\.<\/strong>|검사기관 참고범위/);
-  assert.match(input, /\.\/styles\.css\?v=report-mobile-20261014/);
-  assert.match(input, /\.\/app\.js\?v=report-mobile-20261014/);
+  assert.match(input, /\.\/styles\.css\?v=post-login-20261016/);
+  assert.match(input, /\.\/app\.js\?v=post-login-20261016/);
 });

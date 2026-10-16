@@ -168,7 +168,7 @@ test("first-run LabInsight homepage never fabricates a clinical risk score", asy
   assert.match(preview, /참고치 필요/);
   assert.doesNotMatch(preview, /주의 항목 지수|추천 검진 4개|상담 권장/);
   await page.locator("#heroSampleBtn").click();
-  await page.waitForURL(/\/report\.html$/);
+  await page.waitForURL(/\/report\.html\?view=sample$/);
   assert.ok((await page.locator("#report").innerText()).length > 150);
   assert.equal(errors.length, 0, errors.join("; "));
 });
@@ -278,3 +278,62 @@ for (const width of [320, 375]) {
     assert.deepEqual(errors, []);
   });
 }
+
+test("invalid value in a collapsed input section is revealed and focused on mobile", async (t) => {
+  const { page, errors } = await openPage(t, "/checkup.html", { mobile: true });
+  await page.locator("#ast").evaluate(input => { input.value = "-1"; });
+  assert.equal(await page.locator("#ast").evaluate(input => input.closest("details").open), false);
+  await page.locator('#healthForm button[type="submit"]').click();
+  assert.equal(await page.locator("#ast").evaluate(input => input.closest("details").open), true);
+  assert.equal(await page.locator("#ast").evaluate(input => input === document.activeElement), true);
+  assert.equal(await page.locator("#ast").getAttribute("aria-invalid"), "true");
+  assert.match(await page.locator("#formStatus").innerText(), /AST.*확인/);
+  assert.equal(await page.evaluate(() => sessionStorage.getItem("labinsight-latest-report")), null);
+  await page.locator("#ast").fill("30");
+  assert.equal(await page.locator("#ast").getAttribute("aria-invalid"), null);
+  await page.locator('#healthForm button[type="submit"]').click();
+  await page.waitForURL(/\/report\.html$/);
+  assert.equal(errors.length, 0, errors.join("; "));
+});
+
+for (const mobile of [false, true]) {
+  test(`saved result resumes through home and sample never overwrites it (${mobile ? "mobile" : "desktop"})`, async (t) => {
+    const { page, errors } = await openPage(t, "/checkup.html", { mobile });
+    await page.locator("#age").fill("35");
+    await page.locator("details").filter({ has: page.locator("#ast") }).locator("summary").click();
+    await page.locator("#ast").fill("45");
+    await page.locator('#healthForm button[type="submit"]').click();
+    await page.waitForURL(/report\.html$/);
+    const original = await page.evaluate(() => sessionStorage.getItem("labinsight-latest-report"));
+    await page.goto(baseUrl + "/index.html");
+    assert.equal(await page.locator("#resumeReport").isVisible(), true);
+    await page.getByRole("link", { name: "내 리포트 이어보기", exact: true }).click();
+    assert.match(await page.locator("#report").innerText(), /AST/);
+    await page.goto(baseUrl + "/index.html");
+    await page.locator("#heroSampleBtn").click();
+    await page.waitForURL(/view=sample$/);
+    assert.equal(await page.locator(".sample-report-notice").isVisible(), true);
+    assert.equal(await page.locator("#deleteHealthReportBtn").count(), 0);
+    assert.equal(await page.evaluate(() => sessionStorage.getItem("labinsight-latest-report")), original);
+    await page.reload();
+    assert.equal(await page.locator(".sample-report-notice").isVisible(), true);
+    await page.getByRole("link", { name: "내 결과 화면으로 돌아가기", exact: true }).click();
+    await page.getByRole("link", { name: "입력값 수정하기", exact: true }).click();
+    assert.equal(await page.locator("#ast").inputValue(), "45");
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    assert.deepEqual(errors, []);
+  });
+}
+
+test("sample preview works without storage permission and remains labeled in print", async (t) => {
+  const { page } = await openPage(t, "/index.html");
+  assert.equal(await page.locator("#resumeReport").isVisible(), false);
+  await page.addInitScript(() => {
+    Storage.prototype.setItem = () => { throw new DOMException("blocked", "SecurityError"); };
+  });
+  await page.locator("#heroSampleBtn").click();
+  await page.waitForURL(/view=sample$/);
+  assert.equal(await page.locator(".sample-report-notice").isVisible(), true);
+  await page.emulateMedia({ media: "print" });
+  assert.equal(await page.locator(".sample-report-notice").isVisible(), true);
+});
