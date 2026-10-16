@@ -106,7 +106,7 @@ test("deletion requires confirmation and clears the displayed report only after 
   x.listeners.get("delete")();
   assert.equal(x.state.confirmed, 1);
   assert.equal(x.sessionStorage.getItem(KEY), null);
-  assert.match(x.report.innerHTML, /저장된 건강검진 결과를 삭제했습니다/);
+  assert.match(x.report.innerHTML, /저장된 검사 결과와 CarePath 기록을 삭제했습니다/);
 });
 
 test("declining deletion leaves the user's report unchanged", () => {
