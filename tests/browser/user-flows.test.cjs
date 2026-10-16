@@ -101,7 +101,7 @@ test("printing calls browser print and deletion clears the temporary health repo
   assert.equal(await page.evaluate(() => window.__printCalled), true);
   page.once("dialog", (dialog) => dialog.accept());
   await page.locator("#deleteHealthReportBtn").click();
-  assert.match(await page.locator("#report").innerText(), /저장된 건강검진 결과를 삭제했습니다/);
+  assert.match(await page.locator("#report").innerText(), /저장된 검사 결과와 CarePath 기록을 삭제했습니다/);
   assert.equal(await page.evaluate(() => sessionStorage.getItem("labinsight-latest-report")), null);
   assert.equal(await page.evaluate(() => localStorage.getItem("labinsight-latest-report")), null);
   assert.equal(errors.length, 0, errors.join("; "));
