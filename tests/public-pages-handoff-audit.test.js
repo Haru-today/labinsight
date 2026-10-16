@@ -83,3 +83,14 @@ test("disallowed unauthenticated Worker access is a failure", async () => {
   assert.equal(r.passed, false);
   assert.ok(r.results.filter(x => x.origin === "worker" && !x.pass).length >= 2);
 });
+
+
+test("daily Pages boundary checks only use read-only anonymous public probes", () => {
+  const fs = require("node:fs");
+  const src = fs.readFileSync(".github/workflows/public-pages-handoff-audit.yml", "utf8");
+  assert.match(src, /schedule:\s*\n\s*- cron: '17 23 \* \* \*'/);
+  assert.match(src, /workflow_dispatch:/);
+  assert.match(src, /contents: read/);
+  assert.match(src, /run: node scripts\/check-public-pages-handoff\.mjs/);
+  assert.doesNotMatch(src, /wrangler|CLOUDFLARE_API_TOKEN|secrets\.|(?:POST|PUT|DELETE) /);
+});
