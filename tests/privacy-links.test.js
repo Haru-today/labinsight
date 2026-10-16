@@ -4,13 +4,13 @@ const fs = require("node:fs");
 const path = require("node:path");
 const test = require("node:test");
 
-const pages = ["index.html", "checkup.html", "report.html", "hospitals.html"];
+const pages = ["index.html", "checkup.html", "report.html", "hospitals.html", "carepath.html"];
 test("all LabInsight views link to the LABDAM privacy and service notices", () => {
   for (const filename of pages) {
     const html = fs.readFileSync(path.join(__dirname, "..", filename), "utf8");
     assert.match(html, /href="https:\/\/haru-today\.github\.io\/privacy\.html"/, filename);
     assert.match(html, /href="https:\/\/haru-today\.github\.io\/terms\.html"/, filename);
-    const expected = /styles\.css\?v=report-resume-20261016/;
+    const expected = /styles\.css\?v=carepath-20261016/;
     assert.match(html, expected, filename);
   }
 });
@@ -30,9 +30,9 @@ test("privacy information is not used to claim clinical validation", () => {
 
 test("PWA unit-validation assets are versioned without unrelated files", () => {
   const sw = fs.readFileSync(path.join(__dirname, "..", "service-worker.js"), "utf8");
-  assert.match(sw, /labinsight-app-v20261016-report-resume/);
-  assert.match(sw, /styles\.css\?v=report-resume-20261016/);
-  assert.match(sw, /app\.js\?v=report-resume-20261016/);
+  assert.match(sw, /labinsight-app-v20261016-carepath/);
+  assert.match(sw, /styles\.css\?v=carepath-20261016/);
+  assert.match(sw, /app\.js\?v=carepath-20261016/);
   assert.match(sw, /reference-ranges\.js\?v=labverify-units-20261016/);
   assert.doesNotMatch(sw, /caffeine-atlas/);
 });

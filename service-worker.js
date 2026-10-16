@@ -3,16 +3,19 @@
 // Cache only known, public app-shell files. Never runtime-cache arbitrary requests,
 // query strings or cross-origin resources (including third-party OCR assets).
 const CACHE_PREFIX = "labinsight-app-";
-const CACHE_NAME = "labinsight-app-v20261016-report-resume";
+const CACHE_NAME = "labinsight-app-v20261016-carepath";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./checkup.html",
   "./report.html",
   "./hospitals.html",
-  "./styles.css?v=report-resume-20261016",
+  "./carepath.html",
+  "./carepath.js?v=carepath-20261016",
+  "./carepath-data.js?v=carepath-20261016",
+  "./styles.css?v=carepath-20261016",
   "./hospital-data.js?v=real-packages-20260729a",
-  "./app.js?v=report-resume-20261016",
+  "./app.js?v=carepath-20261016",
   "./ocr-review.js?v=ocr-review-20261012",
   "./reference-ranges.js?v=labverify-units-20261016",
   "./runtime-config.js",
@@ -24,7 +27,7 @@ const APP_SHELL = [
 
 const scopeUrl = new URL(self.registration.scope);
 const shellUrls = new Set(APP_SHELL.map((asset) => new URL(asset, scopeUrl).href));
-const documentPaths = new Set(["./", "./index.html", "./checkup.html", "./report.html", "./hospitals.html"]
+const documentPaths = new Set(["./", "./index.html", "./checkup.html", "./report.html", "./hospitals.html", "./carepath.html"]
   .map((asset) => new URL(asset, scopeUrl).pathname));
 
 self.addEventListener("install", (event) => {

@@ -1254,3 +1254,31 @@ body[data-page="checkup"],body[data-page="report"] {
 .resume-report p,.sample-report-notice p{line-height:1.65}
 @media(max-width:600px){.resume-report .button{width:100%}}
 @media print{.sample-report-notice{border:2px solid #333;background:white;color:#000;break-inside:avoid}}
+
+/* CarePath: browser-session-only, human-reviewed longitudinal comparison. */
+.carepath-warning{background:#f0f6ff;border:1px solid #bed2e5;border-radius:14px;padding:17px 20px;margin-bottom:18px}
+.carepath-warning strong{color:var(--heading)}
+.carepath-warning p{margin:7px 0 0;line-height:1.7}
+.carepath-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+#carepathForm label{display:block;margin:12px 0;font-weight:650}
+#carepathForm input[type=date],#carepathForm input[type=text],#carepathForm textarea,.carepath-select-label select{width:100%;border:1px solid var(--line-strong);border-radius:9px;background:white;color:var(--ink);font:inherit;min-height:44px;padding:9px 12px;margin-top:5px}
+#carepathForm .carepath-confirm{display:flex;gap:10px;align-items:flex-start;font-weight:500}
+#carepathForm .carepath-confirm input{margin-top:5px;min-width:18px;min-height:18px}
+.carepath-heading,.carepath-record-head{display:flex;align-items:flex-start;justify-content:space-between;gap:15px}
+.carepath-record{padding:17px 0;border-bottom:1px solid var(--line)}
+.carepath-record:last-child{border-bottom:0}
+.carepath-record h3{margin:0;font-size:1.05rem}
+.carepath-record p{margin:6px 0}
+.carepath-select-label{display:block;max-width:420px;font-weight:650}
+.carepath-chart{overflow-x:auto;margin:18px 0}
+.carepath-chart svg{display:block;width:100%;min-width:330px;height:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft)}
+.carepath-table{width:100%;border-collapse:collapse;min-width:500px}
+.carepath-table th,.carepath-table td{padding:12px 10px;text-align:left;border-bottom:1px solid var(--line)}
+#carepathStatus:not(:empty){padding:10px 0;color:var(--heading);font-weight:600}
+#carepathDemoNotice[hidden]{display:none}
+@media(max-width:650px){
+ .carepath-form-grid{grid-template-columns:1fr;gap:0}
+ .carepath-heading,.carepath-record-head{flex-direction:column}
+ .carepath-heading .button,.carepath-record-head .button{width:100%}
+ .carepath-chart svg{min-width:320px}
+}
